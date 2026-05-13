@@ -1,0 +1,64 @@
+x-backend-common: &backend-common
+  build:
+    context: ../digi-tax-backend
+    dockerfile: Dockerfile
+  env_file: .env
+  networks:
+    - digi-tax-network
+  depends_on:
+    - postgres
+    - redis
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: digi-tax-postgres
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - digi-tax-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-digitax} -d ${POSTGRES_DB:-digi_tax}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: digi-tax-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - digi-tax-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    <<: *backend-common
+    container_name: digi-tax-api
+    ports:
+      - "8000:8000"
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -f http://localhost:8000/health/check || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  digi-tax-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
