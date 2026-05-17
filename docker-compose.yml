@@ -56,6 +56,28 @@ services:
       timeout: 5s
       retries: 5
 
+  frontend:
+    build:
+      context: ../digi-tax-frontend
+      dockerfile: Dockerfile
+      network: host
+      args:
+        HTTP_PROXY: ${FRONTEND_BUILD_HTTP_PROXY:-}
+        HTTPS_PROXY: ${FRONTEND_BUILD_HTTPS_PROXY:-}
+        ALL_PROXY: ${FRONTEND_BUILD_ALL_PROXY:-}
+        http_proxy: ${FRONTEND_BUILD_HTTP_PROXY:-}
+        https_proxy: ${FRONTEND_BUILD_HTTPS_PROXY:-}
+        all_proxy: ${FRONTEND_BUILD_ALL_PROXY:-}
+    container_name: digi-tax-frontend
+    env_file: .env
+    ports:
+      - "9000:9000"
+    networks:
+      - digi-tax-network
+    depends_on:
+      - api
+    command: ["pnpm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "9000"]
+
 networks:
   digi-tax-network:
     driver: bridge

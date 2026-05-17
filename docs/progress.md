@@ -1,55 +1,64 @@
 # Implementation Progress Tracker
 
-## Phase 0: Local Docker Compose Setup ✅ COMPLETED
+## Phase 0.1: Local Docker Compose with Frontend ✅ COMPLETED
 
 | Task | Status | Notes |
 |------|--------|-------|
-| docker-compose.yml | ✅ | Simplified Phase 0: postgres, redis, api only |
-| .env.example | ✅ | Environment variables templated |
-| README.md | ✅ | Updated for simple 3-service setup |
+| docker-compose.yml | ✅ | Fixed frontend build with proxy args |
+| .env.example | ✅ | Added frontend build proxy and env vars |
+| README.md | ✅ | Updated for full-stack setup |
 | docs/progress.md | ✅ | This progress tracker |
+| docs/current_state.md | ✅ | Current state tracker |
 
-## Phase 0 Services Status
+## Phase 0.1 Services Status
 
 | Service | Built | Running | Health | Port |
 |---------|-------|---------|--------|------|
-| postgres | ✅ | ⏳ | Pending | 5432 (local) |
-| redis | ✅ | ⏳ | Pending | 6379 (local) |
-| api | ✅ | ⏳ | Pending | 8000 |
+| postgres | ✅ | ✅ | Healthy | 5432 (local) |
+| redis | ✅ | ✅ | Healthy | 6379 (local) |
+| api | ✅ | ✅ | Healthy | 8000 |
+| frontend | ✅ | ✅ | Running | 9000 |
 
 ## Files Created/Modified
 
-- `docker-compose.yml` - Simplified compose with postgres, redis, api services
-- `.env.example` - Simplified env vars: DATABASE_URL, REDIS_URL, APP_NAME, DEBUG, API_PORT
-- `README.md` - Updated Phase 0 instructions for simple setup
+- `docker-compose.yml` - Fixed frontend build with proxy args
+- `.env.example` - Added frontend build proxy and env vars
+- `README.md` - Updated Phase 0.1 instructions for full-stack setup
 - `docs/progress.md` - This progress tracker
+- `docs/current_state.md` - Current implementation status
 
 ## Notes
 
 - Backend builds from `../digi-tax-backend`
-- No frontend service (future note only)
-- No nginx, MinIO, Prometheus, Grafana
+- Frontend builds from `../digi-tax-frontend`
+- Frontend requires HTTP proxy for build-time pnpm installation
+- No workers, nginx, MinIO, Prometheus, Grafana
 - No Kubernetes
 - No CI/CD
-
-## Next Steps
-
-- [ ] Phase 1: CI/CD integration
-- [ ] Phase 2: Kubernetes orchestration
-- [ ] Phase 3: Production-ready configs
 
 ## Validation Commands Run
 
 ```bash
 docker compose config      # Validate compose syntax
-docker compose build api   # Build backend service
-docker compose up -d postgres redis  # Start storage services
-docker compose up -d api   # Start backend API
+docker compose build frontend   # Build frontend service (with proxy)
+docker compose up -d postgres redis api frontend  # Start all services
 docker compose ps          # Check service status
 curl -s http://localhost:8000/health/check
-curl -s http://localhost:8000/api/v1/transports/default
+curl -s http://localhost:8000/health/db
+curl -I http://localhost:9000
 docker compose down        # Stop all services
 ```
-```
 
-Now let me run the validation commands:
+## Validation Results
+
+- ✅ `docker-compose config` - Configuration valid
+- ✅ `docker-compose build frontend` - Built successfully
+- ✅ `curl -s http://localhost:8000/health/check` - Returns `{"status":"ok"}`
+- ✅ `curl -s http://localhost:8000/health/db` - Returns `{"status":"ok","database":"connected"}`
+- ✅ `curl -I http://localhost:9000` - Returns HTTP 200
+
+## Next Steps
+
+- [ ] Phase 1: Worker services integration
+- [ ] Phase 2: Kubernetes orchestration
+- [ ] Phase 3: Production-ready configs
