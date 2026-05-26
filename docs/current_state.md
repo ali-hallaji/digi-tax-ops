@@ -1,4 +1,4 @@
-# Current State - Phase 0.1 COMPLETED
+# Current State - Phase 0.2 Bootstrap/Preflight/Smoke Workflow In Progress
 
 ## Services Status
 
@@ -38,6 +38,14 @@
 | Backend DB health | ✅ Pass | `curl -s http://localhost:8000/health/db` returns `{"status":"ok","database":"connected"}` |
 | Frontend availability | ✅ Pass | `curl -I http://localhost:9000` returns HTTP 200 |
 
+## Phase 0.2 Ops Workflow
+
+- Added `scripts/bootstrap.sh` for safe DB creation and Alembic bootstrap inside Docker.
+- Added `scripts/preflight.sh` for compose/env/readiness validation before or after deploy.
+- Added `scripts/smoke_test.sh` for backend health, CORS, auth, dashboard, and frontend checks.
+- Scripts are intended for repeatable local/staging deploy verification without host Python, Node, Bun, or Poetry.
+- Current preflight explicitly checks that `DATABASE_URL` and `POSTGRES_DB` point to the same database name.
+
 ## Proxy Configuration
 
 For restricted networks, the frontend build requires HTTP proxy settings in `.env`:
@@ -50,7 +58,8 @@ FRONTEND_BUILD_ALL_PROXY=http://127.0.0.1:2080
 
 ## Next Steps
 
-1. Add worker services (worker-submission, worker-inquiry, worker-default, scheduler)
-2. Implement nginx reverse proxy for production-like setup
-3. Add monitoring with Prometheus and Grafana as optional profiles
-4. Add CI/CD integration for automated deployments
+1. Validate the new bootstrap/preflight/smoke workflow against the real staging `.env`
+2. Add worker services (worker-submission, worker-inquiry, worker-default, scheduler)
+3. Implement nginx reverse proxy for production-like setup
+4. Add monitoring with Prometheus and Grafana as optional profiles
+5. Add CI/CD integration for automated deployments

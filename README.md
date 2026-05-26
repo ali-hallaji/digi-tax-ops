@@ -100,6 +100,29 @@ docker compose build api
 docker compose build frontend
 ```
 
+## Staging/local deploy checklist
+
+Run from `digi-tax-ops` after updating both sibling repos:
+
+```bash
+cd ../digi-tax-backend && git pull
+cd ../digi-tax-frontend && git pull
+cd ../digi-tax-ops
+
+docker-compose build --no-cache api frontend
+docker-compose up -d --force-recreate postgres redis api frontend
+bash scripts/bootstrap.sh
+bash scripts/preflight.sh
+bash scripts/smoke_test.sh
+```
+
+Notes:
+- `scripts/bootstrap.sh` creates `POSTGRES_DB` if it does not exist, then runs `alembic upgrade head` inside the `api` container.
+- `scripts/preflight.sh` checks compose validity, required services, `.env` requirements, DB-name consistency, Postgres readiness, and `DATABASE_URL` visibility in `api`.
+- `scripts/smoke_test.sh` checks backend health, CORS preflight, dev OTP auth flow, bearer-auth endpoints, dashboard endpoints, and frontend availability when `frontend` is enabled.
+- Ensure `.env` has a `DATABASE_URL` whose database name matches `POSTGRES_DB`.
+- Optional staging example: set `VITE_API_BASE_URL=http://<your-host>:8000/api/v1` instead of `localhost`.
+
 ## Environment Variables
 
 Required env vars (see `.env.example`):

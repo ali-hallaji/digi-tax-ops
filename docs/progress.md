@@ -59,6 +59,29 @@ docker compose down        # Stop all services
 
 ## Next Steps
 
+## Phase 0.2: Bootstrap, Preflight, and Smoke Workflow ✅
+
+| Task | Status | Notes |
+|------|--------|-------|
+| `scripts/bootstrap.sh` | ✅ | Loads `.env`, checks running containers, creates DB if missing, runs Alembic |
+| `scripts/preflight.sh` | ✅ | Validates compose, services, `.env`, DB-name consistency, readiness, and `DATABASE_URL` visibility |
+| `scripts/smoke_test.sh` | ✅ | Checks health, CORS preflight, dev OTP flow, authenticated API paths, and frontend URL |
+| `README.md` | ✅ | Added staging/local deploy checklist |
+| `docs/current_state.md` | ✅ | Updated Phase 0.2 status |
+| `docs/progress.md` | ✅ | Recorded Phase 0.2 workflow |
+
+## Phase 0.2 Validation Commands
+
+```bash
+bash -n scripts/bootstrap.sh
+bash -n scripts/preflight.sh
+bash -n scripts/smoke_test.sh
+docker-compose config
+```
+
+## Next Steps
+
+- [ ] Validate Phase 0.2 scripts against the staging `.env` and running containers
 - [ ] Phase 1: Worker services integration
 - [ ] Phase 2: Kubernetes orchestration
 - [ ] Phase 3: Production-ready configs
