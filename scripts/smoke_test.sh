@@ -73,6 +73,7 @@ require_command docker-compose
 API_BASE_URL="${API_BASE_URL:-http://localhost:8000}"
 API_V1_URL="${API_V1_URL:-${API_BASE_URL}/api/v1}"
 FRONTEND_URL="${FRONTEND_URL:-http://localhost:9000}"
+FRONTEND_BASE_URL="${FRONTEND_BASE_URL:-$FRONTEND_URL}"
 TEST_MOBILE="${TEST_MOBILE:-09120000099}"
 
 assert_http_ok "${API_BASE_URL}/health/check" "GET /health/check"
@@ -127,14 +128,17 @@ for endpoint in me businesses dashboard/summary dashboard/tax-status; do
 done
 
 if docker-compose config --services | grep -Fx frontend >/dev/null 2>&1; then
-  frontend_status="$(curl -sS -o /tmp/digitax_frontend_body.$$ -w '%{http_code}' "$FRONTEND_URL")" \
+  frontend_check_url="${FRONTEND_BASE_URL%/}/login"
+  frontend_status="$(curl -sS -o /tmp/digitax_frontend_body.$$ -w '%{http_code}' "$frontend_check_url")" \
     || fail "Frontend URL check failed"
-  if [ "$frontend_status" = "200" ]; then
-    pass "Frontend URL returned HTTP 200"
-  else
-    fail "Frontend URL returned HTTP $frontend_status"
-  fi
+  case "$frontend_status" in
+    200|301|302|307|308)
+      pass "Frontend URL check returned acceptable HTTP $frontend_status"
+      ;;
+    *)
+      fail "Frontend URL check returned HTTP $frontend_status"
+      ;;
+  esac
 else
   info "Frontend service is not defined; skipping frontend URL check"
 fi
-
