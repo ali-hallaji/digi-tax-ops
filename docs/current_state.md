@@ -9,18 +9,19 @@ Last updated: 2026-05-31
 | postgres | Configured/runnable | 5432 | PostgreSQL 16 database |
 | redis | Configured/runnable | 6379 | Redis 7 cache/store |
 | api | Configured/runnable | 8000 | Backend API from `../digi-tax-backend` |
-| frontend | Configured/runnable | 9000 | React/TanStack frontend from `../digi-tax-frontend` |
+| frontend | Configured/runnable | 3000 | React/TanStack SSR frontend from `../digi-tax-frontend` |
 
 ## Ownership
 - `digi-tax-ops` owns Docker Compose, Nginx, scripts, API contract snapshots, integration docs, and environment examples.
 - Backend logic belongs in `../digi-tax-backend`.
 - Frontend logic belongs in `../digi-tax-frontend`.
-- The frontend stack is React/TanStack/Vite.
+- The frontend stack is React/TanStack/Vite with a production SSR Node container.
+- Frontend runtime listens on container port `3000`; `VITE_API_BASE_URL` is build-time bundle configuration and frontend images must be rebuilt when it changes.
 
 ## Phase 0.2 Workflow
 - `scripts/bootstrap.sh` creates the configured database if needed and runs Alembic inside Docker.
 - `scripts/preflight.sh` validates compose/env/readiness and database-name consistency.
-- `scripts/smoke_test.sh` checks backend health, CORS, auth, dashboard, and frontend availability.
+- `scripts/smoke_test.sh` checks backend health, CORS, auth, dashboard, frontend availability, `/login`, `/app`, and obvious hardcoded backend IPs in fetched frontend responses.
 
 ## Current Boundaries
 - Do not edit backend or frontend app logic from this repo.

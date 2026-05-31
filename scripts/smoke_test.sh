@@ -66,13 +66,82 @@ assert_http_ok() {
   fi
 }
 
+assert_frontend_route() {
+  local url="$1"
+  local name="$2"
+  local body_file="$3"
+  local response
+
+  response="$(curl -sS -L -o "$body_file" -w '%{http_code}' "$url")" || fail "$name request failed"
+  case "$response" in
+    200|301|302|307|308|401|403)
+      pass "$name returned acceptable HTTP $response"
+      ;;
+    404|5??)
+      fail "$name returned HTTP $response"
+      ;;
+    *)
+      fail "$name returned unexpected HTTP $response"
+      ;;
+  esac
+}
+
+assert_no_hardcoded_backend_ip() {
+  local body_file="$1"
+  local name="$2"
+
+  if grep -E 'https?://([0-9]{1,3}\.){3}[0-9]{1,3}(:[0-9]+)?/api' "$body_file" >/dev/null 2>&1; then
+    fail "$name contains an apparent hardcoded backend IP URL"
+  fi
+
+  pass "$name does not contain an obvious hardcoded backend IP URL"
+}
+
+scan_frontend_script_urls() {
+  local body_file="$1"
+  local base_url="$2"
+  local script_paths script_path script_url script_body
+
+  script_paths="$(
+    grep -Eo 'src="[^"]+\.js[^"]*"' "$body_file" 2>/dev/null \
+      | sed 's/^src="//; s/"$//' \
+      | head -n 5
+  )"
+
+  [ -n "$script_paths" ] || return 0
+
+  while IFS= read -r script_path; do
+    case "$script_path" in
+      http://*|https://*)
+        script_url="$script_path"
+        ;;
+      /*)
+        script_url="${base_url%/}${script_path}"
+        ;;
+      *)
+        script_url="${base_url%/}/${script_path}"
+        ;;
+    esac
+
+    script_body="/tmp/digitax_frontend_script.$$"
+    if curl -sS -L -o "$script_body" "$script_url" >/dev/null 2>&1; then
+      assert_no_hardcoded_backend_ip "$script_body" "Frontend JS asset $script_path"
+    else
+      info "Skipping frontend JS asset scan for $script_path; asset fetch failed"
+    fi
+  done <<EOF
+$script_paths
+EOF
+}
+
 load_env
 require_command curl
 require_command docker-compose
 
 API_BASE_URL="${API_BASE_URL:-http://localhost:8000}"
 API_V1_URL="${API_V1_URL:-${API_BASE_URL}/api/v1}"
-FRONTEND_URL="${FRONTEND_URL:-http://localhost:9000}"
+FRONTEND_PORT="${FRONTEND_PORT:-3000}"
+FRONTEND_URL="${FRONTEND_URL:-http://localhost:${FRONTEND_PORT}}"
 FRONTEND_BASE_URL="${FRONTEND_BASE_URL:-$FRONTEND_URL}"
 TEST_MOBILE="${TEST_MOBILE:-09120000099}"
 
@@ -128,17 +197,18 @@ for endpoint in me businesses dashboard/summary dashboard/tax-status; do
 done
 
 if docker-compose config --services | grep -Fx frontend >/dev/null 2>&1; then
-  frontend_check_url="${FRONTEND_BASE_URL%/}/login"
-  frontend_status="$(curl -sS -o /tmp/digitax_frontend_body.$$ -w '%{http_code}' "$frontend_check_url")" \
-    || fail "Frontend URL check failed"
-  case "$frontend_status" in
-    200|301|302|307|308)
-      pass "Frontend URL check returned acceptable HTTP $frontend_status"
-      ;;
-    *)
-      fail "Frontend URL check returned HTTP $frontend_status"
-      ;;
-  esac
+  frontend_root_body="/tmp/digitax_frontend_root.$$"
+  frontend_login_body="/tmp/digitax_frontend_login.$$"
+  frontend_app_body="/tmp/digitax_frontend_app.$$"
+
+  assert_frontend_route "${FRONTEND_BASE_URL%/}/" "Frontend root" "$frontend_root_body"
+  assert_frontend_route "${FRONTEND_BASE_URL%/}/login" "Frontend /login" "$frontend_login_body"
+  assert_frontend_route "${FRONTEND_BASE_URL%/}/app" "Frontend /app deep route" "$frontend_app_body"
+
+  assert_no_hardcoded_backend_ip "$frontend_root_body" "Frontend root HTML"
+  assert_no_hardcoded_backend_ip "$frontend_login_body" "Frontend /login HTML"
+  assert_no_hardcoded_backend_ip "$frontend_app_body" "Frontend /app HTML"
+  scan_frontend_script_urls "$frontend_login_body" "$FRONTEND_BASE_URL"
 else
   info "Frontend service is not defined; skipping frontend URL check"
 fi

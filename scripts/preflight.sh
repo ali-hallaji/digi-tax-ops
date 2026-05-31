@@ -53,10 +53,18 @@ container_running() {
   [ "$(docker inspect -f '{{.State.Running}}' "$container_id" 2>/dev/null)" = "true" ]
 }
 
+frontend_config() {
+  printf '%s\n' "$COMPOSE_CONFIG" | awk '
+    /^  frontend:/ { in_frontend=1; print; next }
+    /^  [A-Za-z0-9_-]+:/ { in_frontend=0 }
+    in_frontend { print }
+  '
+}
+
 require_command docker-compose
 require_command docker
 
-if docker-compose config >/dev/null 2>&1; then
+if COMPOSE_CONFIG="$(docker-compose config 2>/dev/null)"; then
   pass "docker-compose config is valid"
 else
   fail "docker-compose config is invalid"
@@ -74,6 +82,32 @@ done
 
 if service_exists frontend; then
   pass "Compose service 'frontend' exists"
+
+  FRONTEND_CONFIG="$(frontend_config)"
+
+  if printf '%s\n' "$FRONTEND_CONFIG" | grep -E 'context: .*/digi-tax-frontend$|context: ../digi-tax-frontend$' >/dev/null 2>&1; then
+    pass "Frontend build context points to ../digi-tax-frontend"
+  else
+    fail "Frontend build context does not point to ../digi-tax-frontend"
+  fi
+
+  if printf '%s\n' "$FRONTEND_CONFIG" | grep -Ei 'pnpm.*dev|vite[[:space:]]+dev|--port[[:space:]]+9000|target:[[:space:]]+9000' >/dev/null 2>&1; then
+    fail "Frontend service still appears to use a Vite dev server or port 9000"
+  else
+    pass "Frontend service does not use a Vite dev server override"
+  fi
+
+  if printf '%s\n' "$FRONTEND_CONFIG" | grep -E 'target:[[:space:]]+3000' >/dev/null 2>&1; then
+    pass "Frontend service publishes container port 3000"
+  else
+    fail "Frontend service does not publish container port 3000"
+  fi
+
+  if printf '%s\n' "$FRONTEND_CONFIG" | grep -E 'VITE_API_BASE_URL:' >/dev/null 2>&1; then
+    pass "Frontend build config includes VITE_API_BASE_URL"
+  else
+    fail "Frontend build config is missing VITE_API_BASE_URL"
+  fi
 else
   info "Compose service 'frontend' is not defined"
 fi
@@ -87,6 +121,14 @@ for var_name in POSTGRES_USER POSTGRES_DB POSTGRES_PASSWORD POSTGRES_HOST POSTGR
     fail ".env is missing required variable $var_name"
   fi
 done
+
+if service_exists frontend; then
+  if [ -n "${VITE_API_BASE_URL:-}" ]; then
+    pass ".env contains VITE_API_BASE_URL for frontend builds"
+  else
+    fail ".env is missing VITE_API_BASE_URL for frontend builds"
+  fi
+fi
 
 if [ -n "${DATABASE_URL:-}" ]; then
   database_url_db_name="$(extract_db_name "$DATABASE_URL")"
@@ -123,4 +165,3 @@ if docker-compose exec -T api sh -lc 'test -n "${DATABASE_URL:-}"' >/dev/null 2>
 else
   fail "API container cannot see DATABASE_URL"
 fi
-

@@ -65,7 +65,7 @@ docker compose down
 | postgres | PostgreSQL 16 database | 5432 (local dev only) |
 | redis | Redis 7 cache/store | 6379 (local dev only) |
 | api | Backend API server | 8000 |
-| frontend | React/TanStack frontend | 9000 |
+| frontend | React/TanStack SSR frontend | 3000 |
 
 ## Project Structure
 
@@ -96,7 +96,7 @@ docker compose ps
 # Rebuild backend services
 docker compose build api
 
-# Rebuild frontend (requires proxy for restricted networks)
+# Rebuild frontend after dependency/build-config changes or VITE_API_BASE_URL changes
 docker compose build frontend
 ```
 
@@ -119,9 +119,11 @@ bash scripts/smoke_test.sh
 Notes:
 - `scripts/bootstrap.sh` creates `POSTGRES_DB` if it does not exist, then runs `alembic upgrade head` inside the `api` container.
 - `scripts/preflight.sh` checks compose validity, required services, `.env` requirements, DB-name consistency, Postgres readiness, and `DATABASE_URL` visibility in `api`.
-- `scripts/smoke_test.sh` checks backend health, CORS preflight, dev OTP auth flow, bearer-auth endpoints, dashboard endpoints, and frontend availability when `frontend` is enabled.
+- `scripts/smoke_test.sh` checks backend health, CORS preflight, dev OTP auth flow, bearer-auth endpoints, dashboard endpoints, frontend availability, `/login`, `/app`, and obvious hardcoded backend IPs in frontend responses when `frontend` is enabled.
 - Ensure `.env` has a `DATABASE_URL` whose database name matches `POSTGRES_DB`.
-- Optional staging example: set `VITE_API_BASE_URL=http://<your-host>:8000/api/v1` instead of `localhost`.
+- The frontend image is a production SSR Node container that runs `node server.mjs` from `../digi-tax-frontend` and listens on container port `3000`.
+- `VITE_API_BASE_URL` is build-time frontend configuration. Use `/api/v1` behind the ops Nginx reverse proxy, or provide an environment-specific public API URL from ignored local/staging env before rebuilding the frontend image.
+- Runtime frontend secrets, such as `LOVABLE_API_KEY` if needed, must be passed only at runtime through ignored environment configuration.
 
 ## Environment Variables
 
@@ -130,8 +132,9 @@ Required env vars (see `.env.example`):
 - `REDIS_URL` - Redis connection string
 - `APP_NAME` - Application name
 - `DEBUG` - Enable debug mode
-- `VITE_API_BASE_URL` - Frontend API base URL
+- `VITE_API_BASE_URL` - Build-time public frontend API base URL
 - `VITE_API_TIMEOUT_MS` - Frontend API timeout in milliseconds
+- `FRONTEND_PORT` - Host port mapped to frontend container port `3000`
 
 ## Next Steps
 
