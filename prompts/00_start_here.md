@@ -1,6 +1,11 @@
-Read AGENTS.md first.
-Then read only the docs required for the current phase.
-Do not scan the whole repo unless necessary.
-We are implementing only the task I describe.
-First summarize the task in 10 lines max and list files you plan to create or modify.
-Do not edit files until I approve.
+Read these files first:
+1. AGENTS.md
+2. docs/current_phase.md
+3. docs/progress.md
+
+If the task touches repo strategy, service ownership, deployment architecture, or workflow rules, also read docs/architecture_decisions.md.
+
+Work only inside digi-tax-ops.
+Summarize the task in 10 lines max.
+List files you plan to create or modify.
+Do not edit files until I approve, unless I explicitly told you to proceed.

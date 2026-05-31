@@ -1,86 +1,80 @@
-# Repository Strategy v1.3
+# Repository Strategy
 
-## Final repo count
-Create exactly three repos:
+## Canonical Repositories
+Keep exactly three canonical repositories:
 
 ```txt
 digi-tax-backend
+digi-tax-Front-source
 digi-tax-frontend
 digi-tax-ops
 ```
 
-Do not create one giant root repo containing backend and frontend. Do not create many small service repos. Three repos gives clean IDE context and keeps deployment manageable.
-
-## Why not one repo?
-A single repo makes Zed/Ollama context noisy. The frontend agent may read backend tax code. The backend agent may modify UI files. Long prompts become expensive. Search context becomes polluted.
-
-## Why not many repos?
-More than three repos creates orchestration overhead before the product is stable. This is not yet the time for microservices.
+`digi-tax-Front-source` is the canonical React/TanStack/Lovable frontend source repo. `digi-tax-frontend` is the synced deploy/build frontend repo generated from it.
 
 ## Ownership
 
 ### digi-tax-backend
 Owns:
-- FastAPI async API
-- Database models and Alembic migrations
-- Domain modules
-- Compliance engine
-- Invoice engine
-- Submission engine
-- Tax organization transports
-- Workers
-- Import processing
-- Accounting/payroll boundaries
-- Backend tests
+- FastAPI async API.
+- Database models and Alembic migrations.
+- Backend API/OpenAPI contracts.
+- Domain modules and backend tests.
+- Compliance, invoice, submission, transport, worker, import, reporting, accounting/payroll boundary code.
 
 Does not own:
-- Vue components
-- Docker Compose root orchestration
-- Production Nginx config, except API path assumptions
+- Frontend UI implementation.
+- Docker Compose root orchestration.
+- Nginx configuration, except API path assumptions.
 
 ### digi-tax-frontend
 Owns:
-- Quasar/Vue app
-- App shell and layouts
-- Taxpayer panel
-- Central admin panel
-- API client wrappers
-- Form validation UX
-- Bulk import UI
-- Status polling/SSE UI
+- Synced deploy/build frontend output.
+- Docker/static build and deployment-facing frontend files.
+- Routine sync from `../digi-tax-Front-source` through `scripts/sync_lovable.sh`.
 
 Does not own:
-- Business tax calculations
-- taxid generation
-- signing/encryption
-- database schema
+- Canonical product UI source.
+- Backend API contracts.
+
+### digi-tax-Front-source
+Owns:
+- Canonical React/TanStack/Lovable frontend source.
+- UI/UX design and React source generation.
+- Frontend API integration code that follows backend-owned contracts and `VITE_API_BASE_URL`.
+
+Does not own:
+- Official tax calculations.
+- Tax ID generation.
+- Signing/encryption.
+- Database schema.
+- Backend API contracts.
 
 ### digi-tax-ops
 Owns:
-- docker-compose.yml
-- Nginx config
-- .env.example for local orchestration
-- local volumes and service names
-- shared docs
-- API contract snapshots
-- integration/run instructions
-- future Kubernetes migration notes
+- Docker Compose.
+- Nginx.
+- Scripts.
+- API contract snapshots.
+- Environment examples.
+- Integration and local/staging run instructions.
 
 Does not own:
-- Domain logic
-- UI components
-- migrations except orchestration commands
+- Backend application logic.
+- Frontend application logic.
+- Migrations except orchestration commands.
 
-## Workspace layout
+## Workspace Layout
 
 ```txt
-~/work/digitax/
+workspace/
   digi-tax-backend/
+  digi-tax-Front-source/   # canonical React/TanStack/Lovable source
   digi-tax-frontend/
   digi-tax-ops/
 ```
 
-`digi-tax-ops/docker-compose.yml` references sibling repos by relative path:
+`digi-tax-ops/docker-compose.yml` references canonical sibling repos:
 
 ```yaml
 services:
@@ -90,10 +84,10 @@ services:
     build: ../digi-tax-frontend
 ```
 
-## Zed opening order
-1. Open `digi-tax-ops` first and create orchestration.
-2. Open `digi-tax-backend` and create backend skeleton.
-3. Open `digi-tax-frontend` only after backend health/API skeleton exists.
+Frontend product changes normally happen in `digi-tax-Front-source`, then sync into `digi-tax-frontend`.
 
-## Agent concurrency rule
-Start with one build agent and one review agent. Do not run backend and frontend generation simultaneously until Phase 0 is stable.
+## Codex Workflow
+- Work in one canonical repo at a time.
+- Start from `AGENTS.md`, `docs/current_phase.md`, and `docs/progress.md`.
+- Keep changes inside the repo that owns the requested behavior.
+- Do not add Kubernetes or optional observability/storage stacks by default.

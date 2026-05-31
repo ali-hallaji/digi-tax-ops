@@ -1,84 +1,54 @@
-# Token-Saving Workflow for Zed/Ollama Agents
+# Codex-First Workflow
 
-## Golden rules
+## Golden Rules
 1. Keep backend, frontend, and ops in separate repos.
-2. Open only the repo you are working on.
-3. Put rules in files; do not paste the whole architecture every time.
-4. Use short phase prompts that reference files by path.
-5. Ask the agent to list planned files before editing.
-6. Tell the agent to modify only the current phase.
-7. Use a reviewer prompt with `git diff`, not the whole repo.
-8. Commit after each small milestone.
-9. Never ask: "build the whole project".
-10. Never let agents change architecture silently.
+2. Start each Codex session by reading `AGENTS.md`, `docs/current_phase.md`, and `docs/progress.md`.
+3. Read `docs/architecture_decisions.md` only when the task touches architecture or boundaries.
+4. Work on one task per session unless the user explicitly broadens scope.
+5. Read the smallest relevant docs/code slice; do not scan the whole repo by default.
+6. Ask Codex to list planned files before editing unless the task already approved implementation.
+7. Review `git diff`, not the whole repo.
+8. Update `docs/progress.md` after meaningful changes.
+9. Keep active docs concise; do not add long architecture dumps.
 
-## Standard task loop
+## Standard Task Loop
 
-### Step A — planning prompt
+### Plan
 ```txt
-Read AGENTS.md and docs/<phase-doc>.md.
-We are implementing only Phase X / Task Y.
+Read AGENTS.md, docs/current_phase.md, and docs/progress.md.
+We are implementing only <task>.
 Summarize the task in 10 lines max.
-List files you plan to create/modify.
-Do not edit files yet.
+List files you plan to create or modify.
+Do not edit files until approved.
 ```
 
-### Step B — approval
-Review its plan. If acceptable, say:
-
+### Implement
 ```txt
-Proceed with the listed files only.
-Implement the task.
-Write/update tests.
-Run lint/tests if available.
+Proceed with the approved files only.
+Keep the patch minimal.
+Run relevant Docker Compose or shell checks if configured.
 Update docs/progress.md.
-Return changed files, commands run, test results, and remaining risks.
+Return changed files, validation, and risks.
 ```
 
-### Step C — review prompt
+## Validation And Network Rules
+- Use Docker/Compose for backend and ops validation unless explicitly approved otherwise.
+- Do not use Python, Poetry, or Python package installation on the host.
+- Do not rebuild Docker images for every small change when existing containers or volume mounts are enough.
+- Rebuild only for dependency, Dockerfile, base image, or environment/build config changes.
+- Do not embed proxy URLs, ports, credentials, tokens, or network workarounds.
+- Proxy values may come only from the developer shell, ignored local env files, or explicit one-off user-provided build args.
+
+### Review
 ```txt
 Review the current git diff only.
-Check against AGENTS.md, docs/<phase-doc>.md, and docs/phase_checklists.md.
-Do not rewrite everything.
-Return only: critical issues, minor issues, missing tests, and recommended patch.
+Check AGENTS.md, docs/current_phase.md, docs/progress.md, and docs/architecture_decisions.md.
+Return critical issues, env/secrets risks, service dependency risks, and minimal patch recommendations.
 ```
 
-### Step D — fix prompt
+## Reset Prompt
 ```txt
-Apply only the minimal patch for the review issues.
-Do not refactor unrelated code.
-Run tests again.
-```
-
-## Context packing rule
-When the agent gets confused, do not paste more docs. Instead ask:
-
-```txt
-Stop. Re-read AGENTS.md and docs/current_phase.md. State the exact boundary of this task. Then continue only within that boundary.
-```
-
-## Daily workflow
-At the end of each day, ask the agent to update:
-
-```txt
-docs/progress.md
-```
-
-Format:
-
-```txt
-Completed:
-- ...
-
-Changed files:
-- ...
-
-Tests:
-- ...
-
-Known issues:
-- ...
-
-Next task:
-- ...
+Stop. Re-read AGENTS.md, docs/current_phase.md, and docs/progress.md.
+State the exact task boundary.
+Continue only within that boundary.
 ```

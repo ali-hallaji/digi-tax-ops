@@ -1,3 +1,7 @@
+# HISTORICAL
+
+Archived on 2026-05-31. This file is old model/editor workflow guidance and is not active. Use `AGENTS.md`, `docs/current_phase.md`, `docs/progress.md`, and `docs/architecture_decisions.md` for the current Codex workflow.
+
 # Ollama Cloud Model Guide for Zed v1.3
 
 Use Zed primarily with Ollama Cloud to keep costs predictable. Use ChatGPT Pro for architecture review, final decisions, and complex debugging summaries.

@@ -1,3 +1,7 @@
+# HISTORICAL
+
+Archived on 2026-05-31. This file contains old repository/workflow guidance and is not active. Use `docs/repo_strategy.md`, `docs/architecture_decisions.md`, `docs/current_phase.md`, and `docs/progress.md` for current ops guidance.
+
 # Repository Strategy v1.3
 
 ## Final repo count

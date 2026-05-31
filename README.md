@@ -1,14 +1,16 @@
-# digi-tax-ops - Phase 0
+# digi-tax-ops
 
-Local orchestration and operational documentation for DigiTax.
+Local/staging orchestration and cross-repo coordination for DigiTax.
 
 ## Overview
 
-This repository contains the Phase 0 infrastructure setup for DigiTax, including:
+This repository owns operational setup for DigiTax, including:
 
 - Docker Compose configuration for local development
+- Nginx and integration documentation
+- Scripts for bootstrap, preflight, and smoke validation
+- API contract snapshots
 - Environment variable templates
-- Progress tracking for implementation phases
 
 ## Prerequisites
 
@@ -34,10 +36,8 @@ git clone <digi-tax-frontend-repo>
 cd digi-tax-ops
 cp .env.example .env
 # Edit .env with your actual values if needed
-# For restricted networks, add proxy values:
-# FRONTEND_BUILD_HTTP_PROXY=http://127.0.0.1:2080
-# FRONTEND_BUILD_HTTPS_PROXY=http://127.0.0.1:2080
-# FRONTEND_BUILD_ALL_PROXY=http://127.0.0.1:2080
+# For restricted networks, provide proxy values from your shell or ignored local env only.
+# Do not commit real proxy URLs, ports, credentials, or tokens.
 ```
 
 ### 3. Run services
@@ -58,14 +58,14 @@ docker compose logs -f
 docker compose down
 ```
 
-## Phase 0 Services
+## Local Services
 
 | Service | Description | Port |
 |---------|-------------|------|
 | postgres | PostgreSQL 16 database | 5432 (local dev only) |
 | redis | Redis 7 cache/store | 6379 (local dev only) |
 | api | Backend API server | 8000 |
-| frontend | Quasar/Vue frontend | 9000 |
+| frontend | React/TanStack frontend | 9000 |
 
 ## Project Structure
 
@@ -135,10 +135,10 @@ Required env vars (see `.env.example`):
 
 ## Next Steps
 
-- **Phase 0** ✅ - Local Docker Compose setup (current)
-- **Phase 1** - Worker services integration
-- **Phase 2** - Kubernetes orchestration
-- **Phase 3** - Production-ready configs
+- **Current** - Local/staging orchestration hardening and cross-repo coordination
+- **Next** - Worker service wiring when backend worker contracts are ready
+- **Deferred** - Kubernetes, observability, and optional storage stacks only when explicitly requested
+- **Future** - Production-ready configs
 
 ## License
 

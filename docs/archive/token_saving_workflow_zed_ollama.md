@@ -1,3 +1,7 @@
+# HISTORICAL
+
+Archived on 2026-05-31. This file is old model/editor workflow guidance and is not active. Use `docs/token_saving_workflow.md` for the current Codex workflow.
+
 # Token-Saving Workflow for Zed/Ollama Agents
 
 ## Golden rules

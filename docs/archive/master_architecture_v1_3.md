@@ -1,3 +1,7 @@
+# HISTORICAL
+
+Archived on 2026-05-31. This file contains old architecture guidance and is not active. Use `docs/architecture_decisions.md`, `docs/current_phase.md`, and `docs/progress.md` for current ops guidance.
+
 # DigiTax Platform Architecture v1.3 — Agent Source of Truth
 
 This file is the shared architecture source for all Zed/Ollama agents. Keep this file in every repo, or keep it in `digi-tax-ops/docs` and reference it from backend/frontend prompts.
