@@ -11,6 +11,9 @@
 
 Run Docker Compose from `digi-tax-ops`.
 
+For staging/server deployment steps, use
+[`docs/server_deploy_runbook.md`](server_deploy_runbook.md).
+
 ## Initial files
 Create:
 ```txt

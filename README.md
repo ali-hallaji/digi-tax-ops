@@ -102,6 +102,9 @@ docker compose build frontend
 
 ## Staging/local deploy checklist
 
+For server deployments, use the full runbook in
+[`docs/server_deploy_runbook.md`](docs/server_deploy_runbook.md).
+
 Run from `digi-tax-ops` after updating both sibling repos:
 
 ```bash

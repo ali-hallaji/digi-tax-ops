@@ -15,6 +15,7 @@ Phase 0.2 local/staging orchestration hardening.
 - `scripts/smoke_test.sh` for backend health, CORS, auth, dashboard, and frontend availability.
 - README includes local/staging deploy workflow.
 - Frontend orchestration updated for the production SSR Node container on port `3000` with build-time `VITE_API_BASE_URL`.
+- Added a server deployment runbook for separate repo updates, targeted rebuilds, migrations/bootstrap, restarts, and validation.
 
 ## Active Next
 - Re-validate Phase 0.2 scripts against the current staging `.env`.
