@@ -1,16 +1,18 @@
 # Repository Strategy
 
-## Canonical Repositories
-Keep exactly three canonical repositories:
+## Repository Model
+Keep three active canonical repositories plus one historical frontend reference:
 
 ```txt
-digi-tax-backend
-digi-tax-Front-source
-digi-tax-frontend
-digi-tax-ops
+digi-tax-backend       # canonical backend
+digi-tax-frontend      # canonical frontend
+digi-tax-ops           # canonical ops
+digi-tax-Front-source  # historical Lovable/design reference
 ```
 
-`digi-tax-Front-source` is the canonical React/TanStack/Lovable frontend source repo. `digi-tax-frontend` is the synced deploy/build frontend repo generated from it.
+`digi-tax-frontend` is canonical for future Codex-driven frontend development. `digi-tax-Front-source` is historical Lovable/design reference only. Lovable sync is deprecated and manual-emergency-only.
+digi-tax-frontend is canonical for future Codex-driven frontend development.
+digi-tax-Front-source is historical Lovable/design reference only.
 
 ## Ownership
 
@@ -29,21 +31,19 @@ Does not own:
 
 ### digi-tax-frontend
 Owns:
-- Synced deploy/build frontend output.
-- Docker/static build and deployment-facing frontend files.
-- Routine sync from `../digi-tax-Front-source` through `scripts/sync_lovable.sh`.
+- Canonical React/TanStack frontend implementation.
+- Product UI, app shell, routes, forms, and frontend API integration.
+- Frontend validation UX that follows backend-owned contracts and `VITE_API_BASE_URL`.
 
 Does not own:
-- Canonical product UI source.
 - Backend API contracts.
 
 ### digi-tax-Front-source
 Owns:
-- Canonical React/TanStack/Lovable frontend source.
-- UI/UX design and React source generation.
-- Frontend API integration code that follows backend-owned contracts and `VITE_API_BASE_URL`.
+- Historical Lovable/design reference only.
 
 Does not own:
+- Future product frontend implementation.
 - Official tax calculations.
 - Tax ID generation.
 - Signing/encryption.
@@ -69,9 +69,9 @@ Does not own:
 ```txt
 workspace/
   digi-tax-backend/
-  digi-tax-Front-source/   # canonical React/TanStack/Lovable source
   digi-tax-frontend/
   digi-tax-ops/
+  digi-tax-Front-source/   # historical Lovable/design reference
 ```
 
 `digi-tax-ops/docker-compose.yml` references canonical sibling repos:
@@ -84,7 +84,7 @@ services:
     build: ../digi-tax-frontend
 ```
 
-Frontend product changes normally happen in `digi-tax-Front-source`, then sync into `digi-tax-frontend`.
+Frontend product changes normally happen directly in `digi-tax-frontend`.
 
 ## Codex Workflow
 - Work in one canonical repo at a time.
