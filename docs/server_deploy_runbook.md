@@ -37,6 +37,61 @@ Dirty files must be understood before pulling. Do not overwrite local server
 changes, ignored deployment env files, or emergency hotfixes without deciding
 whether they should be committed, backed up, or discarded.
 
+## Server Update Quick Path
+
+Use this path for the normal staging/server update with three separate repos.
+The order is: pull backend, pull frontend, pull ops, validate Compose,
+build/recreate `api` if backend changed, run the migration, build/recreate
+`frontend` if frontend changed or `VITE_API_BASE_URL` changed, then run
+preflight and smoke checks.
+
+Full staging update:
+
+```bash
+cd /usr/local/digi-tax-ops
+
+git -C ../digi-tax-backend pull
+git -C ../digi-tax-frontend pull
+git -C . pull
+
+docker-compose config
+
+docker-compose build api
+docker-compose up -d postgres redis api
+docker-compose exec api python -m alembic upgrade head
+
+docker-compose build --no-cache frontend
+docker-compose up -d --force-recreate frontend
+
+bash scripts/preflight.sh
+bash scripts/smoke_test.sh
+```
+
+Backend-only update:
+
+```bash
+docker-compose build api
+docker-compose up -d api
+docker-compose exec api python -m alembic upgrade head
+```
+
+Use this when backend source, backend dependencies, backend Dockerfile inputs,
+or migrations changed.
+
+Frontend-only update:
+
+```bash
+docker-compose build --no-cache frontend
+docker-compose up -d --force-recreate frontend
+```
+
+Use this when frontend source changes or `VITE_API_BASE_URL` changes. The
+frontend must be rebuilt because the Vite/TanStack build bakes
+`VITE_API_BASE_URL` into the frontend bundle. Restarting the existing frontend
+container is not enough after frontend source or frontend env changes. If the
+browser still calls an old API URL after deployment, rebuild the frontend image
+and hard-refresh the browser cache.
+
 ## Pull And Update Sequence
 
 Pull each repository independently. Use the deployment branch or tag chosen for
@@ -79,6 +134,9 @@ same-origin deployments behind the ops reverse proxy, `/api/v1` is usually the
 right value. For direct-access staging, set the environment-specific public API
 base URL in the server's ignored `.env`.
 
+Restarting the existing `frontend` container is not enough after frontend source
+changes or frontend build-time env changes.
+
 Runtime-only secrets, including `LOVABLE_API_KEY`, must remain runtime
 environment values. Do not pass them as Docker build args.
 
@@ -110,7 +168,8 @@ Use targeted rebuilds. Do not rebuild every image by default.
 Build frontend only:
 
 ```bash
-docker-compose build frontend
+docker-compose build --no-cache frontend
+docker-compose up -d --force-recreate frontend
 ```
 
 Build API/backend only:
@@ -143,15 +202,15 @@ change.
 
 ## Bootstrap And Migrations
 
-Run bootstrap after backend changes, migration changes, first server setup, or
-when the database may not have the expected schema:
+Run the migration after backend changes, migration changes, first server setup,
+or when the database may not have the expected schema:
 
 ```bash
-bash scripts/bootstrap.sh
+docker-compose exec api python -m alembic upgrade head
 ```
 
-Bootstrap creates the configured database if needed and runs Alembic migrations
-inside the `api` container. Run it before smoke tests.
+Run migrations inside the `api` container after `postgres`, `redis`, and `api`
+are up. Run them before smoke tests.
 
 Run preflight after services are up:
 
@@ -243,11 +302,53 @@ Run `docker-compose ps`, start `postgres`, then rerun `bash scripts/preflight.sh
 
 Frontend still on old image:
 
-Rebuild `frontend`, recreate it, then recheck `/login`, `/app`, and a deep route.
+Run `docker-compose build --no-cache frontend`, then run
+`docker-compose up -d --force-recreate frontend`. Recheck `/login`, `/app`, and
+a deep route.
 
 `VITE_API_BASE_URL` changed but frontend was not rebuilt:
 
-Rebuild `frontend`; the value is baked into frontend bundles at build time.
+Run `docker-compose build --no-cache frontend`, then run
+`docker-compose up -d --force-recreate frontend`. The value is baked into
+frontend bundles at build time.
+
+Problem: frontend still calls `http://localhost:8000/api/v1/...` on a remote
+server.
+
+Cause: the frontend image was built with an old `VITE_API_BASE_URL`, or browser
+cache is serving old JavaScript.
+
+Fix:
+
+- Set the correct `VITE_API_BASE_URL` in `.env`.
+- Run:
+
+```bash
+docker-compose build --no-cache frontend
+docker-compose up -d --force-recreate frontend
+```
+
+- Hard refresh the browser or test in an incognito window.
+- If needed, verify the baked value by grepping frontend files inside the
+  container:
+
+```bash
+docker-compose exec frontend sh -lc 'grep -R "localhost:8000" -n /app 2>/dev/null | head'
+```
+
+Problem: customers/products return 403.
+
+Cause: the authenticated token may not have an active or authorized business
+selected. Do not describe every 403 as a backend bug.
+
+Fix:
+
+- Logout and login again.
+- Select a business from the sidebar.
+- Or test the flow in Swagger:
+  `GET /api/v1/businesses`,
+  `POST /api/v1/businesses/select`,
+  `GET /api/v1/products`.
 
 Build fails due registry or network access:
 

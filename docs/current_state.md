@@ -1,6 +1,6 @@
 # Ops Current State
 
-Last updated: 2026-05-31
+Last updated: 2026-06-01
 
 ## Services
 
@@ -16,10 +16,10 @@ Last updated: 2026-05-31
 - Backend logic belongs in `../digi-tax-backend`.
 - Frontend logic belongs in `../digi-tax-frontend`.
 - The frontend stack is React/TanStack/Vite with a production SSR Node container.
-- Frontend runtime listens on container port `3000`; `VITE_API_BASE_URL` is build-time bundle configuration and frontend images must be rebuilt when it changes.
+- Frontend runtime listens on container port `3000`; `VITE_API_BASE_URL` is build-time bundle configuration and frontend images must be rebuilt when it or frontend source changes.
 
 ## Phase 0.2 Workflow
-- `scripts/bootstrap.sh` creates the configured database if needed and runs Alembic inside Docker.
+- Server updates use `docker-compose`; the single documented migration command is `docker-compose exec api python -m alembic upgrade head`.
 - `scripts/preflight.sh` validates compose/env/readiness and database-name consistency.
 - `scripts/smoke_test.sh` checks backend health, CORS, auth, dashboard, frontend availability, `/login`, `/app`, and obvious hardcoded backend IPs in fetched frontend responses.
 

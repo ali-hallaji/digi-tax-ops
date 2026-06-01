@@ -44,18 +44,18 @@ cp .env.example .env
 
 ```bash
 # Start all services
-docker compose up -d
+docker-compose up -d
 
 # Or start services individually
-# docker compose up -d postgres redis
-# docker compose up -d api
-# docker compose up -d frontend
+# docker-compose up -d postgres redis
+# docker-compose up -d api
+# docker-compose up -d frontend
 
 # View logs
-docker compose logs -f
+docker-compose logs -f
 
 # Stop all services
-docker compose down
+docker-compose down
 ```
 
 ## Local Services
@@ -87,45 +87,74 @@ digi-tax-ops/
 All services have built-in health checks:
 
 ```bash
-docker compose ps
+docker-compose ps
 ```
 
 ### Rebuild services
 
 ```bash
 # Rebuild backend services
-docker compose build api
+docker-compose build api
 
 # Rebuild frontend after dependency/build-config changes or VITE_API_BASE_URL changes
-docker compose build frontend
+docker-compose build --no-cache frontend
 ```
 
-## Staging/local deploy checklist
+## Server update quick path
 
 For server deployments, use the full runbook in
 [`docs/server_deploy_runbook.md`](docs/server_deploy_runbook.md).
 
-Run from `digi-tax-ops` after updating both sibling repos:
+Normal update order uses the three separate repos: pull backend, pull frontend,
+pull ops, validate Compose, build/recreate `api` if backend changed, run the
+single documented migration command, build/recreate `frontend` if frontend
+changed or `VITE_API_BASE_URL` changed, then run preflight and smoke checks.
+
+Full staging update:
 
 ```bash
-cd ../digi-tax-backend && git pull
-cd ../digi-tax-frontend && git pull
-cd ../digi-tax-ops
+cd /usr/local/digi-tax-ops
 
-docker-compose build --no-cache api frontend
-docker-compose up -d --force-recreate postgres redis api frontend
-bash scripts/bootstrap.sh
+git -C ../digi-tax-backend pull
+git -C ../digi-tax-frontend pull
+git -C . pull
+
+docker-compose config
+
+docker-compose build api
+docker-compose up -d postgres redis api
+docker-compose exec api python -m alembic upgrade head
+
+docker-compose build --no-cache frontend
+docker-compose up -d --force-recreate frontend
+
 bash scripts/preflight.sh
 bash scripts/smoke_test.sh
 ```
 
+Backend-only update:
+
+```bash
+docker-compose build api
+docker-compose up -d api
+docker-compose exec api python -m alembic upgrade head
+```
+
+Frontend-only update:
+
+```bash
+docker-compose build --no-cache frontend
+docker-compose up -d --force-recreate frontend
+```
+
 Notes:
-- `scripts/bootstrap.sh` creates `POSTGRES_DB` if it does not exist, then runs `alembic upgrade head` inside the `api` container.
 - `scripts/preflight.sh` checks compose validity, required services, `.env` requirements, DB-name consistency, Postgres readiness, and `DATABASE_URL` visibility in `api`.
 - `scripts/smoke_test.sh` checks backend health, CORS preflight, dev OTP auth flow, bearer-auth endpoints, dashboard endpoints, frontend availability, `/login`, `/app`, and obvious hardcoded backend IPs in frontend responses when `frontend` is enabled.
 - Ensure `.env` has a `DATABASE_URL` whose database name matches `POSTGRES_DB`.
 - The frontend image is a production SSR Node container that runs `node server.mjs` from `../digi-tax-frontend` and listens on container port `3000`.
 - `VITE_API_BASE_URL` is build-time frontend configuration. Use `/api/v1` behind the ops Nginx reverse proxy, or provide an environment-specific public API URL from ignored local/staging env before rebuilding the frontend image.
+- Use the frontend-only update when frontend source changes or `VITE_API_BASE_URL` changes. Vite/TanStack bakes `VITE_API_BASE_URL` into the frontend bundle, so restarting the existing frontend container is not enough after frontend source or frontend env changes.
+- If the browser still calls an old API URL, rebuild the frontend image and hard-refresh the browser cache.
 - Runtime frontend secrets, such as `LOVABLE_API_KEY` if needed, must be passed only at runtime through ignored environment configuration.
 
 ## Environment Variables
