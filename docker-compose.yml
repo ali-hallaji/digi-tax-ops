@@ -80,6 +80,7 @@ services:
     depends_on:
       - api
 
+
 networks:
   digi-tax-network:
     driver: bridge

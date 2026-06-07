@@ -2,6 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Skills and Subagents
+
+Use these at session start and before commit. Skills live in `.claude/skills/`; subagents in `.claude/agents/`.
+
+| When | Command / Agent |
+|---|---|
+| Session start | `/start-digi-session` — orient, surface blockers, confirm phase |
+| Deploying the stack | `/deploy-digi-test` — controlled deploy sequence with migration step |
+| After any deploy | `/smoke-check-digi` — health, auth, CORS, frontend availability |
+| Before commit | `/review-ops-diff` — Compose, env, scripts, boundary check |
+| Blocker found or resolved | `/update-blockers` — update `docs/progress.md` immediately |
+| Full deploy config audit | Agent: `ops-deploy-auditor` |
+| Blocker surface before deploy | Agent: `blocker-ledger-auditor` |
+
+**Rule:** Read `docs/progress.md` Known Risks before any deploy or config change. Never edit backend or frontend application code from this repo.
+
 ## Orientation
 
 Read `AGENTS.md`, `docs/current_phase.md`, and `docs/progress.md` before planning any task. Use `docs/architecture_decisions.md` when making structural decisions.

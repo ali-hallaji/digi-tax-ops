@@ -19,7 +19,7 @@ Create:
 ```txt
 docker-compose.yml
 .env.example
-nginx/nginx.conf
+nginx/placeholder.conf
 README.md
 docs/progress.md
 ```

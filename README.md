@@ -71,13 +71,33 @@ docker-compose down
 
 ```
 digi-tax-ops/
-├── docker-compose.yml      # Main compose configuration
-├── .env.example           # Environment template
-├── README.md              # This file
-├── docs/
-│   ├── progress.md        # Implementation progress
-│   └── ops_deployment_guide.md
-└── AGENTS.md              # Project rules
+├── docker-compose.yml          # Main compose configuration
+├── .env.example                # Environment template
+├── README.md                   # This file
+├── AGENTS.md                   # Project rules and scope
+├── CLAUDE.md                   # Claude Code guidance
+├── nginx/
+│   └── placeholder.conf        # Nginx reverse proxy configuration
+├── scripts/
+│   ├── bootstrap.sh            # DB creation and Alembic bootstrap
+│   ├── preflight.sh            # Compose/env/readiness checks
+│   └── smoke_test.sh           # API health, auth, frontend validation
+├── api-contracts/
+│   └── README.md               # OpenAPI snapshot export instructions
+└── docs/
+    ├── current_phase.md        # Active phase and task boundary
+    ├── current_state.md        # Service and ownership state
+    ├── progress.md             # Implementation progress log
+    ├── architecture_decisions.md
+    ├── api_contract_rules.md
+    ├── ops_deployment_guide.md
+    ├── phase_checklists.md
+    ├── repo_strategy.md
+    ├── server_deploy_runbook.md
+    ├── token_saving_workflow.md
+    └── shared/
+        ├── glossary_bilingual.md
+        └── transport_strategy.md
 ```
 
 ## Development
