@@ -25,8 +25,16 @@ Phase 0.2 local/staging orchestration hardening: bootstrap, preflight, smoke che
 - Do not commit secrets.
 - Do not commit proxy settings or network workarounds.
 
-## Required Reading For New Codex Sessions
-1. `AGENTS.md`
-2. `docs/current_phase.md`
-3. `docs/progress.md`
-4. `docs/architecture_decisions.md` when touching architecture or boundaries.
+## Required Reading For New Ops Sessions
+
+1. `CLAUDE.md`
+2. `AGENTS.md`
+3. `docs/current_phase.md` (this file)
+4. `docs/progress.md`
+5. `docs/phase_roadmap.md` — product-level true phase status and mandatory migration checklist
+6. `docs/product_strategy_and_phase_roadmap_v3.md` — product thesis, Moadian boundary, ops-relevant priorities
+7. `docs/architecture_decisions.md` when touching architecture or boundaries
+
+> **v3 product framing:** Digi Invoice is a simple, AI-assisted cloud accounting & tax-operations
+> product. Taxpayer Profile and Admin Review are **partial skeletons**. Moadian submission (P6)
+> must truly work — no fake. See `docs/phase_roadmap.md` for mandatory migration list.

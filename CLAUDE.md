@@ -18,9 +18,33 @@ Use these at session start and before commit. Skills live in `.claude/skills/`; 
 
 **Rule:** Read `docs/progress.md` Known Risks before any deploy or config change. Never edit backend or frontend application code from this repo.
 
+## Commit Messages
+
+Use short one-line commit messages by default. Add a body only for migrations, security changes,
+API breaking changes, or major architecture decisions.
+
+## Mandatory Reading Before Any Ops Task (strict)
+
+Before planning or editing anything, read these in order. Do not skip any that exist.
+
+1. `CLAUDE.md` (this file)
+2. `AGENTS.md`
+3. `docs/current_phase.md`
+4. `docs/progress.md` — Known Risks and Active Blockers
+5. `docs/phase_roadmap.md` — product-level roadmap and true phase status
+6. `docs/product_strategy_and_phase_roadmap_v3.md` — product thesis, Moadian boundary, ops-relevant priorities
+
+**Product framing (v3):** Digi Invoice is a simple, AI-assisted cloud accounting & tax-operations
+product. Moadian submission is a required edge capability but must never be faked. Taxpayer
+Profile and Admin Review are partial skeletons — not product-complete. See `docs/phase_roadmap.md`.
+
+**Ops role:** This repo is a coordination and deploy repo only. It does not own backend or
+frontend application code. Every deploy must include `alembic upgrade head` inside the API container.
+
 ## Orientation
 
-Read `AGENTS.md`, `docs/current_phase.md`, and `docs/progress.md` before planning any task. Use `docs/architecture_decisions.md` when making structural decisions.
+Read `AGENTS.md`, `docs/current_phase.md`, `docs/progress.md`, and `docs/phase_roadmap.md`
+before planning any task. Use `docs/architecture_decisions.md` when making structural decisions.
 
 This is `digi-tax-ops`: the canonical operations repo for DigiTax. It owns Docker Compose, Nginx, scripts, API contract snapshots, environment templates, and local/staging orchestration only. It does not own backend or frontend application logic.
 

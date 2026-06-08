@@ -6,6 +6,7 @@ Last updated: 2026-06-05
 Phase 0.2 local/staging orchestration hardening.
 
 ## Completed
+- Added v3 product strategy alignment: `docs/phase_roadmap.md` created with product-level phase status table, mandatory migration deploy checklist (migrations `a1c4e7f20b91`, `b2d5f8e30c14`, `c4e8b2d5f9a3`), and important corrections (Taxpayer Profile/Admin Review are `partial`, onboarding wizard/admin console/partner role are `future` high-priority, Moadian no-fake rule). `docs/product_strategy_and_phase_roadmap_v3.md` created as ops-repo concise copy/reference of the product strategy. CLAUDE.md mandatory reading updated to include `phase_roadmap.md` and `product_strategy_and_phase_roadmap_v3.md`. Commit message rule added. Ops coordination role clarified (not an app source repo; every deploy includes `alembic upgrade head`).
 - Added Claude Code skills and subagents foundation: 5 project skills (`start-digi-session`, `deploy-digi-test`, `smoke-check-digi`, `review-ops-diff`, `update-blockers`) and 2 subagents (`ops-deploy-auditor`, `blocker-ledger-auditor`) under `.claude/`; CLAUDE.md updated with Skills and Subagents section.
 - Docker Compose local stack for Postgres, Redis, backend API, and frontend.
 - Backend build context points to `../digi-tax-backend`.
