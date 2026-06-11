@@ -1,6 +1,6 @@
 # Ops Progress
 
-Last updated: 2026-06-05
+Last updated: 2026-06-11
 
 ## Current Phase
 Phase 0.2 local/staging orchestration hardening.
@@ -24,6 +24,8 @@ Phase 0.2 local/staging orchestration hardening.
 - Updated `phase_checklists.md` to reflect completed Phase 0 and Phase 0.2 state.
 - Expanded `api-contracts/README.md` with OpenAPI snapshot export instructions.
 - Updated `docs/current_state.md` to include nginx service.
+
+- **P2.7 WeasyPrint migration (2026-06-11):** Backend `Dockerfile` now installs 7 WeasyPrint system packages (`libpango-1.0-0`, `libpangoft2-1.0-0`, `libharfbuzz0b`, `libfontconfig1`, `libcairo2`, `libgdk-pixbuf-2.0-0`, `shared-mime-info`) in a dedicated `apt-get` RUN layer before `COPY requirements.txt`. The `api` image **must be rebuilt** (`docker-compose build api`) before deploying this version. `fpdf2` and `uharfbuzz` removed from requirements.txt; `weasyprint>=62.3` added. No Compose, Nginx, or script changes required.
 
 ## Active Next
 - Re-validate Phase 0.2 scripts against the current staging `.env`.
