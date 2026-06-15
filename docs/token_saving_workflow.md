@@ -1,12 +1,12 @@
-# Codex-First Workflow
+# Claude Code Workflow
 
 ## Golden Rules
 1. Keep backend, frontend, and ops in separate repos.
-2. Start each Codex session by reading `AGENTS.md`, `docs/current_phase.md`, and `docs/progress.md`.
+2. Start each Claude Code session by reading `AGENTS.md`, `docs/current_phase.md`, and `docs/progress.md`.
 3. Read `docs/architecture_decisions.md` only when the task touches architecture or boundaries.
 4. Work on one task per session unless the user explicitly broadens scope.
 5. Read the smallest relevant docs/code slice; do not scan the whole repo by default.
-6. Ask Codex to list planned files before editing unless the task already approved implementation.
+6. List planned files before editing unless the task already approved implementation.
 7. Review `git diff`, not the whole repo.
 8. Update `docs/progress.md` after meaningful changes.
 9. Keep active docs concise; do not add long architecture dumps.

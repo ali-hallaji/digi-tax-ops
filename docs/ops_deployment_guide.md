@@ -75,8 +75,7 @@ Restarting the existing frontend container is not enough after frontend source
 changes or frontend build-time env changes, because Vite/TanStack bakes
 `VITE_API_BASE_URL` into the frontend bundle.
 
-Runtime-only frontend secrets, such as `LOVABLE_API_KEY` if needed, stay in
-runtime environment configuration and must not be passed as Docker build args.
+Runtime-only secrets stay in runtime environment configuration and must not be passed as Docker build args.
 
 ## Phase 0 acceptance
 - `docker-compose config` passes.

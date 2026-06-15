@@ -126,7 +126,7 @@ Check at least these values before building or restarting:
 - `POSTGRES_DB`
 - `VITE_API_BASE_URL`
 - `FRONTEND_PORT`
-- runtime-only secrets such as `LOVABLE_API_KEY`, if required
+- any other runtime-only secrets required by the deployment
 
 `VITE_API_BASE_URL` is build-time frontend configuration baked into the SSR
 frontend bundle. Changing it requires rebuilding the `frontend` image. For
@@ -137,8 +137,7 @@ base URL in the server's ignored `.env`.
 Restarting the existing `frontend` container is not enough after frontend source
 changes or frontend build-time env changes.
 
-Runtime-only secrets, including `LOVABLE_API_KEY`, must remain runtime
-environment values. Do not pass them as Docker build args.
+Runtime-only secrets must remain runtime environment values. Do not pass them as Docker build args.
 
 ## Compose Config Validation
 

@@ -1,6 +1,6 @@
 # Ops Progress
 
-Last updated: 2026-06-11
+Last updated: 2026-06-16
 
 ## Current Phase
 Phase 0.2 local/staging orchestration hardening.
@@ -27,13 +27,43 @@ Phase 0.2 local/staging orchestration hardening.
 
 - **P2.7 WeasyPrint migration (2026-06-11):** Backend `Dockerfile` now installs 7 WeasyPrint system packages (`libpango-1.0-0`, `libpangoft2-1.0-0`, `libharfbuzz0b`, `libfontconfig1`, `libcairo2`, `libgdk-pixbuf-2.0-0`, `shared-mime-info`) in a dedicated `apt-get` RUN layer before `COPY requirements.txt`. The `api` image **must be rebuilt** (`docker-compose build api`) before deploying this version. `fpdf2` and `uharfbuzz` removed from requirements.txt; `weasyprint>=62.3` added. No Compose, Nginx, or script changes required.
 
+- **P3.0B–P3.5 Moadian foundation (2026-06-12/13):** Backend Moadian module complete with
+  moadian_submissions table (`e5f9a2c1d7b3`), packet_uid column (`f3a8b2c1d5e7`), and
+  moadian_tenant_profiles table. **All three migrations must be applied before any deploy.**
+  Frontend: /app/moadian onboarding page, /admin/moadian-profiles admin approval page.
+  Real submission blocked: 4 crypto methods raise `ProtocolNotConfirmedError` (pending
+  RC_TICS.IS_v1.6 §7 algorithm confirmation). No fake taxid/referenceNumber at any point.
+
+- **P3.5.8.x feature gating (2026-06-16):** Frontend-only changes (no deploy action, no
+  new migrations). `useFeatureAccess` hook, `FeatureLockScreen`, `AccessLoadingCard`,
+  RouteAccessGate (P3.5.8.1), in-component self-gates on payroll/employees/payslips/accounting,
+  progressive sidebar by stage (P3.5.8.2). Redeploy frontend to activate on staging.
+
+- **Docs sync pass (2026-06-16):** `docs/business_scope_freeze_v1.md` created as canonical
+  scope document. `docs/phase_roadmap.md` updated with P2.7 done, P3.0B–P3.5 done, full
+  migration checklist, and Release 1A/1B/1C structure. `docs/current_phase.md` updated
+  to reflect June 2026 actual state. `docs/product_strategy_and_phase_roadmap_v3.md` open
+  questions updated (WeasyPrint provisioning is done). Stale "Codex-driven" wording replaced
+  with "Claude Code-driven" in active docs.
+
 ## Active Next
+
+- Add migration-state verification to `smoke_test.sh` (check no pending migrations on `alembic
+  current` vs `alembic heads`).
 - Re-validate Phase 0.2 scripts against the current staging `.env`.
-- Keep API contract snapshots aligned with backend OpenAPI.
-- Keep Nginx reverse proxy routing aligned with API and frontend SSR service ports when requested.
+- Keep API contract snapshots aligned with backend OpenAPI (R1A new endpoints will be added).
+- Wire Nginx for production TLS termination when ready (currently `nginx/placeholder.conf`).
 
 ## Known Risks
-- Staging `.env` can drift from `.env.example`.
+
+- **OTP in-memory storage** — launch blocker. Any container restart loses pending OTPs.
+  Must be moved to Redis or DB before real users.
+- **Migration-state smoke missing** — staging deploys can silently miss migrations. Must add
+  `alembic current` check to `smoke_test.sh`.
+- **Nginx is a placeholder** — `nginx/nginx.conf` is `placeholder.conf`, not in compose.
+  Production TLS/proxy not wired.
+- **CORS is wildcard** — must be restricted to known origins before production.
+- Staging `.env` can drift from `.env.example` — review before each release.
 - Optional services should remain out of the default Compose stack.
 - Ops changes can accidentally cross repo boundaries if not kept scoped.
 

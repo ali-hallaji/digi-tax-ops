@@ -1,13 +1,13 @@
 # Digi Invoice / DigiTax — Product Strategy & Phase Roadmap (v3)
 
-Last updated: 2026-06-09
+Last updated: 2026-06-16
 
 This is the ops-repo copy of the product strategy reference.
-**Canonical source:** `../digi-tax-frontend/docs/product_strategy_and_phase_roadmap_v3.md`
+**Canonical scope document:** `docs/business_scope_freeze_v1.md` (this repo) — defines Release 1A/1B/1C, launch blockers, build-now table.
+**Canonical frontend version:** `../digi-tax-frontend/docs/product_strategy_and_phase_roadmap_v3.md`
 
-Read the canonical frontend version for the full product thesis, revenue model, personas,
-onboarding/admin/partner model, record separation, shared-catalog privacy, and Moadian boundary.
-This file is a concise summary for ops sessions.
+Read `docs/business_scope_freeze_v1.md` for the definitive scope and release structure.
+This file is a concise product thesis summary for ops sessions.
 
 ---
 
@@ -58,15 +58,24 @@ submission endpoint exists. Ops must not provision fake submission infrastructur
 
 ## Current Priorities (ops-relevant)
 
-1. Keep deploy scripts aligned with backend migration requirements.
-2. Maintain API contract snapshots in `api-contracts/` when backend OpenAPI changes.
-3. Provision PDF renderer (WeasyPrint system packages) when P2.7 is approved.
-4. Prepare smoke-test scripts for legacy submission path (P2.8) before P6 full submission.
+1. Add migration-state check to `smoke_test.sh` (`alembic current` vs `alembic heads`).
+2. Keep deploy scripts aligned with new Moadian migrations (e5f9a2c1d7b3, f3a8b2c1d5e7,
+   moadian_tenant_profiles) — see `docs/phase_roadmap.md` deploy checklist.
+3. Maintain API contract snapshots in `api-contracts/` when backend OpenAPI changes (R1A will add
+   purchases, expenses, reports, subscription endpoints).
+4. Wire Nginx for production TLS termination (currently a placeholder only).
 5. Ensure staging `.env` stays aligned with `.env.example` after each phase.
+6. Move OTP storage to Redis before any real users.
+
+## Resolved Questions
+
+- **PDF engine provisioning (resolved 2026-06-11):** WeasyPrint system packages now installed in
+  backend `Dockerfile`. `api` image must be rebuilt for any P2.7+ deploy. See `docs/phase_roadmap.md`
+  WeasyPrint build note.
 
 ## Open Questions (ops-relevant)
 
-- PDF engine provisioning: WeasyPrint requires `libpango`, `libcairo`, `libgdk-pixbuf2.0` on
-  Debian/Ubuntu. Needs explicit ops approval before adding to Dockerfile.
 - Legacy submission smoke path (P2.8): what backend endpoint + what ops smoke script change?
+  (After R1B crypto is confirmed.)
 - Staging CORS: currently wildcard; must be restricted before production go-live.
+- Nginx production configuration: TLS termination, rate-limiting, reverse-proxy for api + frontend.

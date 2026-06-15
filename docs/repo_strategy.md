@@ -10,8 +10,8 @@ digi-tax-ops           # canonical ops
 digi-tax-Front-source  # historical Lovable/design reference
 ```
 
-`digi-tax-frontend` is canonical for future Codex-driven frontend development. `digi-tax-Front-source` is historical Lovable/design reference only. Lovable sync is deprecated and manual-emergency-only.
-digi-tax-frontend is canonical for future Codex-driven frontend development.
+`digi-tax-frontend` is canonical for future Claude Code-driven frontend development. `digi-tax-Front-source` is historical Lovable/design reference only. Lovable sync is deprecated and manual-emergency-only.
+digi-tax-frontend is canonical for future Claude Code-driven frontend development.
 digi-tax-Front-source is historical Lovable/design reference only.
 
 ## Ownership
