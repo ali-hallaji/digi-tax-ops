@@ -50,7 +50,7 @@ Run after any deploy to confirm the stack is healthy. Use the documented smoke s
 ## Known Blockers to Note
 
 - If `tax_items` migration (`c4e8b2d5f9a3`) has not run, `GET /api/v1/tax-items/search` will fail — this is a known `[DEPLOY]` blocker in frontend `docs/progress.md`.
-- CORS is currently temporary wildcard for dev/staging; confirm it is not restricted before running against production.
+- CORS is env-driven via `BACKEND_CORS_ORIGINS`. The `.env.example` default is `*` (wildcard) — this is an OPEN BLOCKER for production. Confirm staging/prod `.env` sets `BACKEND_CORS_ORIGINS` to comma-separated explicit origins (e.g. `https://app.example.com`) before any production deploy. Dev wildcard is acceptable; staging/prod must not use `*`.
 
 ## Output
 
