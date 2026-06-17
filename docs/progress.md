@@ -55,11 +55,22 @@ Phase 0.2 local/staging orchestration hardening.
   `fakeredis==2.26.2` added to requirements.txt (test dependency only). 459 tests pass;
   ruff clean; black clean. No new Alembic migrations (OTP in Redis needs no DB schema change).
 
+- **R1A-P0.5 Docs cleanup (2026-06-17):** Three canonical docs added to ops:
+  `product_master_blueprint_v4_2.md`, `engineering_execution_blueprint_v1.md`,
+  `reality_audit.md`. Seven stale v1.3-era archive files removed. `token_saving_workflow.md`
+  deleted. `product_strategy_and_phase_roadmap_v3.md` moved to `docs/archive/`.
+  `api_contract_rules.md` (stale v1.3 copy) replaced with pointer. v3 references in
+  required-reading sections updated to v4.2. CORS prod risk (env default=`*`) flagged
+  as OPEN BLOCKER in `progress.md`.
+
+- **R1A-P0.6 Tooling alignment (2026-06-17):** CORS note in `smoke-check-digi` skill
+  fixed to reflect env-driven origins. `docs/tooling_inventory.md` added cataloguing
+  all active skills, agents, and their phase alignment.
+
 ## Active Next
 
 - Add migration-state verification to `smoke_test.sh` (check no pending migrations on `alembic
   current` vs `alembic heads`).
-- R1A-P0.5 docs cleanup: merge 3-way duplicate glossary/transport-strategy; archive v3 strategy doc.
 - R1A-P1 onboarding wizard (next feature phase).
 - Wire Nginx for production TLS termination when ready (currently `nginx/placeholder.conf`).
 
