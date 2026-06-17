@@ -196,6 +196,42 @@ for endpoint in me businesses dashboard/summary dashboard/tax-status; do
   fi
 done
 
+# ── OTP persistence across api restart (verifies Redis-backed OTP) ────────────
+SMOKE_TEST_RESTART_OTP="${SMOKE_TEST_RESTART_OTP:-}"
+if [ "${SMOKE_TEST_RESTART_OTP:-0}" = "1" ]; then
+  RESTART_MOBILE="${RESTART_MOBILE:-09120000098}"
+  otp_restart_body="$(curl -sS -X POST "${API_V1_URL}/auth/otp/request" \
+    -H 'Content-Type: application/json' \
+    -d "{\"mobile\":\"${RESTART_MOBILE}\"}")" || fail "OTP restart: POST /auth/otp/request failed"
+  restart_otp="$(json_value "$otp_restart_body" '.dev_otp')"
+  [ -n "$restart_otp" ] && [ "$restart_otp" != "null" ] \
+    || fail "OTP restart: did not get dev_otp before restart"
+  pass "OTP restart: dev_otp obtained before api restart"
+
+  docker-compose restart api >/dev/null 2>&1 || fail "OTP restart: docker-compose restart api failed"
+  info "OTP restart: api restarted, waiting for health..."
+  for i in $(seq 1 15); do
+    if curl -sS -o /dev/null -w '%{http_code}' "${API_BASE_URL}/health/check" 2>/dev/null | grep -q '^200$'; then
+      break
+    fi
+    sleep 2
+  done
+  curl -sS -o /dev/null -w '%{http_code}' "${API_BASE_URL}/health/check" | grep -q '^200$' \
+    || fail "OTP restart: api did not recover after restart"
+  pass "OTP restart: api healthy after restart"
+
+  otp_verify_after_restart="$(curl -sS -X POST "${API_V1_URL}/auth/otp/verify" \
+    -H 'Content-Type: application/json' \
+    -d "{\"mobile\":\"${RESTART_MOBILE}\",\"otp\":\"${restart_otp}\"}")" \
+    || fail "OTP restart: POST /auth/otp/verify failed after restart"
+  restart_token="$(json_value "$otp_verify_after_restart" '.access_token')"
+  [ -n "$restart_token" ] && [ "$restart_token" != "null" ] \
+    || fail "OTP restart: OTP was lost after api restart — Redis may not be in use"
+  pass "OTP restart: OTP survived api restart (Redis-backed confirmed)"
+else
+  info "OTP restart test skipped (set SMOKE_TEST_RESTART_OTP=1 to enable)"
+fi
+
 if docker-compose config --services | grep -Fx frontend >/dev/null 2>&1; then
   frontend_root_body="/tmp/digitax_frontend_root.$$"
   frontend_login_body="/tmp/digitax_frontend_login.$$"

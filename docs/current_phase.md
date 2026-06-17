@@ -1,6 +1,6 @@
 # Current Phase - Ops
 
-Last updated: 2026-06-16
+Last updated: 2026-06-17
 
 ## Active Focus
 
@@ -36,10 +36,10 @@ service wiring aligned with the backend's Release 1A / 1B / 1C priorities.
 
 ## Launch Blockers (ops-relevant)
 
-- OTP is in-memory/dev-only — must be moved to Redis before any real user
+- ~~OTP in-memory~~ — **DONE (R1A-P0):** `RedisOTPService` replaces `DevOTPService`; OTPs survive api restart. `SMOKE_TEST_RESTART_OTP=1` verifies.
+- ~~CORS wildcard~~ — **DONE (R1A-P0):** CORS origins now env-driven (`BACKEND_CORS_ORIGINS`); set comma-separated list for staging/prod.
 - Ops migration-state smoke test does not verify Alembic migration state — must be added to `smoke_test.sh`
 - Nginx is a placeholder (`nginx/placeholder.conf`); not in `docker-compose.yml` — must be wired for production TLS
-- CORS is currently wildcard staging — must be restricted before production
 - Staging `.env` can drift from `.env.example` — manual review before each release
 
 ## Do Not
@@ -58,9 +58,9 @@ service wiring aligned with the backend's Release 1A / 1B / 1C priorities.
 4. `docs/progress.md`
 5. `docs/phase_roadmap.md` — product-level true phase status and mandatory migration checklist
 6. `docs/business_scope_freeze_v1.md` — canonical scope: Release 1A/1B/1C, launch blockers, build-now table
-7. `docs/product_strategy_and_phase_roadmap_v3.md` — product thesis, Moadian boundary, ops-relevant priorities
+7. `docs/product_master_blueprint_v4_2.md` — product intent v4.2 (supersedes v3 strategy doc)
 8. `docs/architecture_decisions.md` when touching architecture or boundaries
 
-> **v3 product framing:** Digi Invoice is a simple, cloud-based accounting & tax-readiness SaaS.
+> **Product framing (v4.2):** Digi Invoice is a simple, cloud-based accounting & tax-readiness SaaS.
 > Revenue = subscriptions. Moadian = required edge capability, not revenue core.
 > Taxpayer Profile and Admin Review are **partial skeletons**. See `docs/phase_roadmap.md` for migration checklist.

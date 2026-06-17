@@ -1,6 +1,6 @@
 # Ops Progress
 
-Last updated: 2026-06-16
+Last updated: 2026-06-17
 
 ## Current Phase
 Phase 0.2 local/staging orchestration hardening.
@@ -46,23 +46,34 @@ Phase 0.2 local/staging orchestration hardening.
   questions updated (WeasyPrint provisioning is done). Stale "Codex-driven" wording replaced
   with "Claude Code-driven" in active docs.
 
+- **R1A-P0 Production hardening (2026-06-17):** OTP → Redis (`RedisOTPService`; OTPs survive
+  api restarts; `fakeredis` used in tests; `DevOTPService` kept for test injection);
+  CORS origins env-driven via `BACKEND_CORS_ORIGINS` (comma-separated for staging/prod, `*`
+  only in dev); dead routes removed from OpenAPI (`/identity/login`, `/identity/me`,
+  `/tenants/*`, `/taxpayers/*` (410), `/fiscal-memories/{id}` stub → 404); `smoke_test.sh`
+  extended with `SMOKE_TEST_RESTART_OTP=1` OTP-across-restart verification.
+  `fakeredis==2.26.2` added to requirements.txt (test dependency only). 459 tests pass;
+  ruff clean; black clean. No new Alembic migrations (OTP in Redis needs no DB schema change).
+
 ## Active Next
 
 - Add migration-state verification to `smoke_test.sh` (check no pending migrations on `alembic
   current` vs `alembic heads`).
-- Re-validate Phase 0.2 scripts against the current staging `.env`.
-- Keep API contract snapshots aligned with backend OpenAPI (R1A new endpoints will be added).
+- R1A-P0.5 docs cleanup: merge 3-way duplicate glossary/transport-strategy; archive v3 strategy doc.
+- R1A-P1 onboarding wizard (next feature phase).
 - Wire Nginx for production TLS termination when ready (currently `nginx/placeholder.conf`).
 
 ## Known Risks
 
-- **OTP in-memory storage** — launch blocker. Any container restart loses pending OTPs.
-  Must be moved to Redis or DB before real users.
 - **Migration-state smoke missing** — staging deploys can silently miss migrations. Must add
   `alembic current` check to `smoke_test.sh`.
 - **Nginx is a placeholder** — `nginx/nginx.conf` is `placeholder.conf`, not in compose.
   Production TLS/proxy not wired.
-- **CORS is wildcard** — must be restricted to known origins before production.
+- **CORS production risk (OPEN BLOCKER — config only, no code change needed):** `.env.example`
+  defaults `BACKEND_CORS_ORIGINS=*` (wildcard). The backend code correctly reads the env var;
+  no code forces `*`. Any staging/prod `.env` **must** set this to comma-separated real origins
+  (e.g. `https://app.example.com`). Dev wildcard is acceptable; staging/prod must not use `*`.
+  No automated enforcement exists — this is a deploy-time checklist item.
 - Staging `.env` can drift from `.env.example` — review before each release.
 - Optional services should remain out of the default Compose stack.
 - Ops changes can accidentally cross repo boundaries if not kept scoped.

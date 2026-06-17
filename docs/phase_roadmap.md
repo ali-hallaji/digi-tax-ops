@@ -1,13 +1,13 @@
-# Digi Invoice — Operational Phase Roadmap (v3)
+# Digi Invoice — Operational Phase Roadmap
 
 Last updated: 2026-06-16
 
 This is the **product-level** roadmap — the true status of each phase from a user/business
 standpoint. For the full product thesis, revenue model, personas, onboarding/admin/partner model,
 and Moadian boundary, read `docs/business_scope_freeze_v1.md` (canonical) and
-`docs/product_strategy_and_phase_roadmap_v3.md` (this repo).
+`docs/product_master_blueprint_v4_2.md` (product intent v4.2).
 
-**Product framing (v3):** Digi Invoice is a simple, cloud-based accounting & tax-readiness SaaS
+**Product framing (v4.2):** Digi Invoice is a simple, cloud-based accounting & tax-readiness SaaS
 for Iranian merchants/companies/accountant-partners — competing with Holoo/Sepidar on simplicity,
 price, mobile-first, and smarts. Revenue = subscriptions. Moadian = required edge capability,
 **not** the revenue core.
