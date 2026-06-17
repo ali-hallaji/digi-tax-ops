@@ -67,6 +67,11 @@ Phase 0.2 local/staging orchestration hardening.
   fixed to reflect env-driven origins. `docs/tooling_inventory.md` added cataloguing
   all active skills, agents, and their phase alignment.
 
+- **R1A-P0.7 Tooling clarity (2026-06-17):** All three CLAUDE.md files updated —
+  skills framed as Claude-Code-invoked (not terminal commands); "What runs where"
+  note added per repo; `up_local_test.sh` confirmed in `scripts/` and listed in ops
+  CLAUDE.md Services section. Docs only; no app code changed.
+
 ## Active Next
 
 - Add migration-state verification to `smoke_test.sh` (check no pending migrations on `alembic

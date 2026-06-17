@@ -19,10 +19,20 @@ repo only** — it does not own backend or frontend application code, and is the
 backend/frontend logic; it deploys and coordinates.**
 
 ## Skills / subagents
-Session start `/start-digi-session` · deploy `/deploy-digi-test` · post-deploy
-`/smoke-check-digi` · pre-commit `/review-ops-diff` · blockers `/update-blockers`.
-Audit agents `ops-deploy-auditor`, `blocker-ledger-auditor`. Default model
-Sonnet/low (blueprint PART 8.3).
+Invoked inside a Claude Code session (`/skill-name` in the chat — **not** terminal
+commands): `/start-digi-session` (session start) · `/deploy-digi-test` (deploy) ·
+`/smoke-check-digi` (post-deploy smoke) · `/review-ops-diff` (pre-commit review) ·
+`/update-blockers` (blocker ledger). Audit subagents (Claude spawns these):
+`ops-deploy-auditor`, `blocker-ledger-auditor`. Default model Sonnet/low (PART 8.3).
+
+## What runs where
+**Founder in terminal:** `scripts/bootstrap.sh` (DB + migrations), `scripts/preflight.sh`
+(compose/env/readiness), `scripts/smoke_test.sh` (health/CORS/OTP/bearer/frontend),
+`scripts/up_local_test.sh` (local bring-up shortcut); Docker Compose commands in
+the Deploy rhythm section; `git push` (only after manual verification per blueprint
+1.9/1.10).
+**Inside Claude Code (Sonnet):** skills and subagents listed above; all deploy
+coordination, doc updates, and audit work.
 
 ## Repos & roles
 ```
@@ -51,9 +61,10 @@ the api container.
 
 ## Services & scripts
 `postgres` 5432, `redis` 6379, `api` 8000, `frontend` 3000 (`FRONTEND_PORT`).
-Compose builds app images from sibling repo paths. Scripts: `bootstrap.sh`
-(DB+migrations), `preflight.sh` (compose/env/DB/readiness), `smoke_test.sh`
-(health/CORS/OTP/bearer/frontend).
+Compose builds app images from sibling repo paths. All scripts live in `scripts/`
+and are run manually by the founder in a terminal: `bootstrap.sh` (DB+migrations),
+`preflight.sh` (compose/env/DB/readiness), `smoke_test.sh`
+(health/CORS/OTP/bearer/frontend), `up_local_test.sh` (local bring-up shortcut).
 
 ## Hard constraints
 - Do not edit backend/frontend application logic from this repo.
