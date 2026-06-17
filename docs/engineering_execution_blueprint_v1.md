@@ -1,6 +1,6 @@
 # Digi Invoice / DigiTax — Engineering Execution Blueprint
 
-**Version:** 1.2 (engineering companion to Product Master Blueprint v4.2)
+**Version:** 1.5 (engineering companion to Product Master Blueprint v4.2)
 **Language:** English skeleton · Persian UI/UX content
 **Audience:** Founder (PO), Claude Code, backend / frontend / ops sessions
 **Status:** Canonical execution plan. Sits *below* the product master doc (v4.2,
@@ -112,6 +112,29 @@ inside the api container.
 - Never commit the test server IP, SSH details, keys, proxy URLs, or secrets.
 - Secrets never returned to frontend or printed in logs (redact in tickets/logs).
 - These apply in every phase regardless of what the phase is about.
+
+### 1.8 Where phases run (workspace-root, not per-repo)
+**Open Claude Code from the workspace root, not from inside one repo.** Most phases
+are cross-repo (a single phase touches backend + frontend + ops). Launch from root
+so all repos are reachable; use `--add-dir` for read-only cross-repo context.
+Pattern: **one phase = one Claude Code session from workspace root**, which builds
+backend first, then frontend, then ops verifies — not three separate sessions.
+This keeps shared context (cheaper tokens) and keeps the repos converging.
+
+### 1.9 Commit automatically, push AFTER the founder's manual check
+At phase end, Claude Code **commits** each changed repo (one commit per repo, short
+message; migration noted in body). It does **not push immediately**. Push happens
+**only after the founder has manually verified the feature** (see 1.10) — because a
+push finalizes changes on GitHub and the project snapshot. Sequence: Claude builds →
+audits → tests on server → commits → **founder checks** → then push (Claude or
+founder). Pushing before the manual check is not allowed.
+
+### 1.10 Founder manual check after every feature (not just sprint end)
+A phase is not "done" on green tests alone. After Claude Code delivers a feature,
+**the founder manually verifies it on the test server** (pull → build → compose up
+→ migrate if needed → open and use it) before moving to the next feature. The DoD
+"PASS" is only final after this manual check, and **push happens only after this
+check passes**. This is a hard gate, every feature.
 
 ---
 
@@ -631,6 +654,28 @@ route patterns) in each CLAUDE.md. Repoint the v3 → v4.2 reference everywhere.
 - [ ] One commit per repo; migration noted in commit body.
 - [ ] Fresh chat opened for the next phase, referencing this blueprint.
 
+### 8.1.1 Phase Closing Ritual (mandatory — never skip)
+A phase is NOT closed, and push is NOT allowed, until BOTH status files reflect it.
+This is a hard, repeatable ritual so live-project state is never left stale:
+
+1. **State update FIRST, before push.** In every changed repo, update:
+   - `docs/progress.md` — mark this phase done; move it out of "active"; record any
+     new open blocker discovered.
+   - `docs/phase_roadmap.md` — set this phase's true status (done/partial); never
+     mark a skeleton as done.
+2. **Self-check question (Claude Code asks the founder, out loud):** before any
+   push, Claude Code must state: *"Closing phase <ID — name>. progress.md and
+   phase_roadmap.md updated in <repos>. Confirm this is the phase being closed and
+   that it's ready to push?"* — and wait for the founder's yes.
+3. **Founder confirms phase ID + name.** The founder restates the phase being
+   closed (catches mismatches).
+4. **Then push.** Push only after status files are updated AND the founder
+   confirmed in step 2/3.
+
+If the founder pushed manually (not via Claude Code), the same rule still applies:
+the status files must already be updated. If they aren't, that's a gap to fix
+before starting the next phase — see the kickoff check in 8.4.
+
 ### 8.2 Frontend journey DoD (the soul — extra gate)
 Beyond functional correctness, `browser-qa-auditor` explicitly verifies:
 - [ ] RTL correct, mobile-first responsive at narrow width.
@@ -638,6 +683,20 @@ Beyond functional correctness, `browser-qa-auditor` explicitly verifies:
 - [ ] Welcoming, beautiful, calm — does it feel *simple and smart to explore?*
 - [ ] No raw error leakage; all copy Persian and friendly.
 - [ ] Persian digits on all user-facing numbers.
+
+**Mandatory UX/journey report (every frontend phase):** at the end of a frontend
+phase, Claude Code outputs a short **UX & Flow report** to the founder — not just
+PASS/FAIL. It states, in plain language: does the journey feel welcoming and
+simple? Is the next action always obvious? Any friction, ugliness, confusing
+copy, or broken flow? Screens/states checked. This is the qualitative read the
+founder uses to decide the feature is genuinely good, not merely functional.
+
+**Seed/sample data is required for browser QA.** Testing a journey on empty
+screens is meaningless. Always run with real sample data before QA:
+- Backend: `python -m app.cli.seed_dev_data` (in the api container).
+- Frontend run locally on the laptop via `pnpm`: use the project's sample/seed
+  scripts to populate data first. browser-qa walks the flow on populated state,
+  at mobile width, with Persian sample content.
 
 ### 8.3 Which model audits what (token control)
 | Audit type | Subagent | Model | Effort |
@@ -655,10 +714,15 @@ the deliberate token-saving posture.
 
 ### 8.4 Per-phase chat kickoff (copy-paste starter)
 When opening a fresh chat for any phase, start with:
-> "Phase <ID> from the engineering blueprint. Read blueprint PART 2 + PART 5 entry
-> for <ID> + reality_audit. Confirm scope, contract, and file list before coding.
-> Builder Sonnet/<effort>. Then run the named auditor. Test on the test server
-> with seeded data."
+> "Phase <ID> from the engineering blueprint. **First, confirm the previous phase
+> is fully closed: check that `progress.md` + `phase_roadmap.md` reflect it as done
+> and list any open blockers.** Then read blueprint PART 2 + PART 5 entry for <ID>
+> + reality_audit. Confirm scope, contract, and file list before coding. Builder
+> Sonnet/<effort>. Then run the named auditor. Test on the test server with seeded
+> data. Close with the Phase Closing Ritual (8.1.1)."
+
+This kickoff check is the safety net: even if a prior phase's status update was
+missed (e.g. a manual push), the next phase catches and fixes it before building.
 
 ---
 
