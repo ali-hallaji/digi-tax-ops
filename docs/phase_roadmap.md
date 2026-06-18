@@ -73,6 +73,8 @@ are `partial`.
 
 - Taxpayer Profile and Admin Review are **partial** skeletons — not product-complete.
 - ~~Merchant onboarding wizard is **missing**~~ — **DONE (R1A-P1, 2026-06-18):** Activation dashboard + business create wizard live; migration `a2b3c4d5e6f7` required on deploy.
+- **Bug B fixed (2026-06-18):** `ensure_default_tenant_membership` auto-created a business for every new login — removed from `get_or_create_auth_user`. New users now correctly land on wizard (stage_0).
+- **E2E harness shipped (2026-06-18):** Playwright 6-spec harness in `digi-tax-frontend/e2e/`. Run with `pnpm e2e`. All 6 specs green against local Docker backend + pnpm dev frontend.
 - Admin operations console is **partial** (Tier-1 and Tier-2 done; console not complete).
 - Subscription / paywall / entitlement is **missing** — launch blocker.
 - Purchases, expenses, real P&L, and balances are **missing** — launch blockers.
