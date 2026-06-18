@@ -8,3 +8,9 @@
 .zed/
 
 *.log
+
+# Claude Code QA artifacts
+*.png
+claude_partial_*.txt
+claude_partial_*.diff
+.claude/settings.local.json
