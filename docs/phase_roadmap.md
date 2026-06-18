@@ -40,7 +40,7 @@ are `partial`.
 | P1 | Customers / Products | done | `c4e8b2d5f9a3` (tax_items) must run |
 | P1-A | Taxpayer Profile Skeleton | partial | Existing migrations |
 | P1-B | Admin Review Skeleton | partial | Existing migrations |
-| P1-C | Merchant Onboarding Wizard | future_high (R1A) | New migrations when built |
+| P1-C / R1A-P1 | Merchant Onboarding Wizard + Activation Dashboard | **done** (2026-06-18) | `a2b3c4d5e6f7` must be applied |
 | P1-D | Admin Operations Console | future_high | New migrations when built |
 | P1-E | Accountant/Sales Partner Role | future (R1C) | New migrations when built |
 | P2 | Invoice Draft MVP | done | `a1c4e7f20b91` must be applied |
@@ -72,7 +72,7 @@ are `partial`.
 ## Important Corrections (v3, updated 2026-06-16)
 
 - Taxpayer Profile and Admin Review are **partial** skeletons — not product-complete.
-- Merchant onboarding wizard is **missing** — critical before market (R1A).
+- ~~Merchant onboarding wizard is **missing**~~ — **DONE (R1A-P1, 2026-06-18):** Activation dashboard + business create wizard live; migration `a2b3c4d5e6f7` required on deploy.
 - Admin operations console is **partial** (Tier-1 and Tier-2 done; console not complete).
 - Subscription / paywall / entitlement is **missing** — launch blocker.
 - Purchases, expenses, real P&L, and balances are **missing** — launch blockers.
@@ -89,6 +89,7 @@ Before any staging or production deploy, confirm **all** of these Alembic migrat
 
 | Migration | Phase | What it adds |
 |---|---|---|
+| `a2b3c4d5e6f7` | R1A-P1 Onboarding | `onboarding` fields on `tenants` table |
 | `a1c4e7f20b91` | P2 Invoice Draft | `invoice_drafts` + `invoice_draft_lines` tables |
 | `b2d5f8e30c14` | P2.5 Lifecycle | `document_number`, `archived_at`, `converted_to_tax_reportable_at`, line snapshot columns |
 | `c4e8b2d5f9a3` | P2.5.1 Tax Items | `tax_items` table (required for tax-item search) |

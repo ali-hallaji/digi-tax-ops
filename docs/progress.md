@@ -72,11 +72,19 @@ Phase 0.2 local/staging orchestration hardening.
   note added per repo; `up_local_test.sh` confirmed in `scripts/` and listed in ops
   CLAUDE.md Services section. Docs only; no app code changed.
 
+- **R1A-P1 — Onboarding wizard + activation dashboard (2026-06-18):**
+  Backend commit `906d01d` (R1A-P1 in digi-tax-backend); migration `a2b3c4d5e6f7`
+  (`add_onboarding_fields_to_tenants`) must be applied. Frontend: auth stabilization (SSR
+  hydration blank-page, auth-clear on login, login token-exchange, OTP double-submit guard),
+  activation dashboard, identity-field validation skill, UX fixes. Browser QA PASS locally
+  (localhost:8000 backend, localhost:8080 frontend). **Deploy action: run `alembic upgrade head`
+  in api container before deploying this frontend.**
+
 ## Active Next
 
 - Add migration-state verification to `smoke_test.sh` (check no pending migrations on `alembic
   current` vs `alembic heads`).
-- R1A-P1 onboarding wizard (next feature phase).
+- R1A-P2 subscription / plan foundation (next feature phase).
 - Wire Nginx for production TLS termination when ready (currently `nginx/placeholder.conf`).
 
 ## Known Risks
