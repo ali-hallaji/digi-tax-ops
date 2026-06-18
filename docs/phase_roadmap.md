@@ -72,6 +72,15 @@ are `partial`.
 ## Important Corrections (v3, updated 2026-06-16)
 
 - Taxpayer Profile and Admin Review are **partial** skeletons — not product-complete.
+  **Known items that MUST be resolved before taxpayer-profile ships (logged 2026-06-19):**
+  (a) No person_type selector → national_id always validates 10 digits; legal entities
+  need 11-digit شناسه ملی with type-switched Zod rule.
+  (b) Backend economic_id is max_length=20/digits-only; frontend enforces 12 digits exactly
+  — must be aligned symmetrically.
+  (c) Identity validation must be ALGORITHMIC, not just length: کد ملی needs control-digit
+  checksum, شناسه ملی needs its own algorithm, mobile needs real operator-prefix list.
+  Centralize in the identity-validation skill as canonical source for both frontend and
+  backend. References: github.com/majidh1/regex-list + imrostami.github.io/regexha.
 - ~~Merchant onboarding wizard is **missing**~~ — **DONE (R1A-P1, 2026-06-18):** Activation dashboard + business create wizard live; migration `a2b3c4d5e6f7` required on deploy.
 - **Bug B fixed (2026-06-18):** `ensure_default_tenant_membership` auto-created a business for every new login — removed from `get_or_create_auth_user`. New users now correctly land on wizard (stage_0). ⚠️ Requires `docker-compose build --no-cache api` + `alembic upgrade head` + re-seed on any running instance.
 - **E2E harness shipped, stabilized + spec 07 full journey (2026-06-18–19):** Playwright 7-spec harness in `digi-tax-frontend/e2e/`. `pnpm e2e` (headless) · `pnpm e2e:watch` (interactive picker → headed, 1 worker, slowMo 3500 ms, Persian caption cards 7 s, `pauseForWatch` live toasts at every checkpoint) · `pnpm e2e:headed` (headed all workers). 7/7 green, 1 skipped (spec 03 idempotent). White-screen flash fixed: stage_0 redirect in `beforeLoad`. Spec 07: full journey stage_0 → wizard S1–S6 → activation dashboard → customer + product (UI) → invoice finalize (API) → stage_2 invite banner in one continuous test.

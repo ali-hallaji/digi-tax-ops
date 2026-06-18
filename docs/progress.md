@@ -72,13 +72,18 @@ Phase 0.2 local/staging orchestration hardening.
   note added per repo; `up_local_test.sh` confirmed in `scripts/` and listed in ops
   CLAUDE.md Services section. Docs only; no app code changed.
 
-- **R1A-P1 — Onboarding wizard + activation dashboard (2026-06-18):**
+- **R1A-P1 — Onboarding wizard + activation dashboard + E2E close-out (2026-06-18–19):**
   Backend commit `906d01d` (R1A-P1 in digi-tax-backend); migration `a2b3c4d5e6f7`
   (`add_onboarding_fields_to_tenants`) must be applied. Frontend: auth stabilization (SSR
   hydration blank-page, auth-clear on login, login token-exchange, OTP double-submit guard),
-  activation dashboard, identity-field validation skill, UX fixes. Browser QA PASS locally
-  (localhost:8000 backend, localhost:8080 frontend). **Deploy action: run `alembic upgrade head`
-  in api container before deploying this frontend.**
+  activation dashboard, identity-field validation skill, UX fixes. Browser QA PASS locally.
+  Playwright 7-spec E2E harness: headless 7/7 green (12 s); spec 07 full journey confirmed
+  2.2 min in watch mode (stage_0 → wizard S1–S6 → customer → product → invoice finalize →
+  stage_2). Watch-mode pacing: 2 s nav pauses, 7 s content pauses, 0.5 s field settle,
+  1 s pre-submit beat, 600 s per-test timeout.
+  Identity-validation audit: skill IS wired into taxpayer-profile via Zod refine; customer
+  and product identity fields correctly optional per R1A-P1 scope.
+  **Deploy action: `alembic upgrade head` in api container + rebuild api image.**
 
 ## Active Next
 
@@ -86,6 +91,36 @@ Phase 0.2 local/staging orchestration hardening.
   current` vs `alembic heads`).
 - R1A-P2 subscription / plan foundation (next feature phase).
 - Wire Nginx for production TLS termination when ready (currently `nginx/placeholder.conf`).
+
+## Known Items — Deferred to Taxpayer-Profile Phase
+
+Identified during R1A-P1 identity-validation audit. Not bugs in shipped code — deferred scope.
+Must be addressed before taxpayer-profile form ships.
+
+1. **No person_type selector in taxpayer profile** — `national_id` in `taxpayer-profile-form.tsx`
+   always validates as 10 digits (individual کد ملی). Legal entities (حقوقی) need 11-digit
+   شناسه ملی. Fix: add a person_type (حقیقی/حقوقی) selector to the form; switch the Zod
+   refine rule based on selection.
+
+2. **economic_id length alignment (backend vs frontend)** — Backend `TaxpayerProfileSchema`
+   uses `max_length=20` with no digit-count constraint; the identity-validation skill and
+   taxpayer-profile Zod schema enforce exactly 12 digits. Before taxpayer-profile ships,
+   decide the canonical rule (12 digits for Iranian کد اقتصادی is correct) and enforce it
+   symmetrically: add `@validator` or `@field_validator` on the backend schema.
+
+3. **Algorithmic identity validation — dedicated task for taxpayer-profile phase**
+   Length/shape checks are insufficient for real Iranian tax identifiers:
+   - **کد ملی (10 digits):** must run the control-digit checksum algorithm — `1234567890`
+     passes a length check but fails the official algorithm and would be rejected by
+     the Tax Organization.
+   - **شناسه ملی (11 digits):** has its own validation algorithm.
+   - **Mobile:** operator-prefix check (`^09[0-9]{9}$`) is too broad — should validate
+     against real IRANCELL/MCI/Rightel/etc. prefix lists.
+   - Reference implementations: github.com/majidh1/regex-list and
+     imrostami.github.io/regexha (do not import as runtime deps — extract and own the logic).
+   - **Plan:** centralize checksum functions + exact regexes in the identity-validation
+     skill (`.claude/skills/validate-identity-fields/SKILL.md`) so frontend AND backend
+     share one canonical source of truth, applied everywhere these fields appear.
 
 ## Known Risks
 
