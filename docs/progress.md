@@ -85,42 +85,31 @@ Phase 0.2 local/staging orchestration hardening.
   and product identity fields correctly optional per R1A-P1 scope.
   **Deploy action: `alembic upgrade head` in api container + rebuild api image.**
 
+  **R1A-P2 — Taxpayer Profile full implementation (2026-06-19):**
+  Backend: `taxpayer_type` enum column + Alembic migration `d7e8f9a0b1c2` (head after
+  P1's `a2b3c4d5e6f7`); `app/core/identity_validation.py` with algorithmic checksums for
+  کد ملی (10-digit control-digit), شناسه ملی شرکت (11-digit weights), کد اقتصادی (exactly
+  12 ASCII digits); Persian digit normalization via existing `normalize_identifier`; Persian
+  error messages on validation failure; invoice-readiness gate (`taxpayer_profile_approved`
+  param in `evaluate_invoice_readiness` — only tax_reportable invoices blocked, draft/proforma
+  free); 22 unit tests (all pass); ruff + black clean. Bug fixed: `taxpayer_type=None` on PUT
+  now defers national_id validation to submit time (uses `elif` branch, not catch-all else).
+  Frontend: `taxpayer_type` selector (first field), dynamic national_id label (کد ملی /
+  شناسه ملی شرکت), `mode: "onBlur"` Zod `superRefine`, `identityValidation.ts` mirroring
+  backend algorithms, 5 honest states (no-profile/draft/submitted/approved/rejected),
+  confirmation dialog before submit, form locked for submitted/approved. E2E harness:
+  `scripts/e2e-taxpayer-profile.sh` + `e2e/specs/08-taxpayer-profile.spec.ts` (4 flows).
+  `api_contracts_v2_2.md` updated: stale field names corrected (id/name/economic_id replacing
+  old taxpayer_id/legal_name/economic_code), `taxpayer_type` + `TaxpayerType` added.
+  **Deploy action: `alembic upgrade head` in api container + rebuild api image.**
+  22 identity tests pass; 487 total pass (3 pre-existing auth-route failures unchanged).
+
 ## Active Next
 
 - Add migration-state verification to `smoke_test.sh` (check no pending migrations on `alembic
   current` vs `alembic heads`).
-- R1A-P2 subscription / plan foundation (next feature phase).
+- R1A-P3 next feature phase (TBD by founder).
 - Wire Nginx for production TLS termination when ready (currently `nginx/placeholder.conf`).
-
-## Known Items — Deferred to Taxpayer-Profile Phase
-
-Identified during R1A-P1 identity-validation audit. Not bugs in shipped code — deferred scope.
-Must be addressed before taxpayer-profile form ships.
-
-1. **No person_type selector in taxpayer profile** — `national_id` in `taxpayer-profile-form.tsx`
-   always validates as 10 digits (individual کد ملی). Legal entities (حقوقی) need 11-digit
-   شناسه ملی. Fix: add a person_type (حقیقی/حقوقی) selector to the form; switch the Zod
-   refine rule based on selection.
-
-2. **economic_id length alignment (backend vs frontend)** — Backend `TaxpayerProfileSchema`
-   uses `max_length=20` with no digit-count constraint; the identity-validation skill and
-   taxpayer-profile Zod schema enforce exactly 12 digits. Before taxpayer-profile ships,
-   decide the canonical rule (12 digits for Iranian کد اقتصادی is correct) and enforce it
-   symmetrically: add `@validator` or `@field_validator` on the backend schema.
-
-3. **Algorithmic identity validation — dedicated task for taxpayer-profile phase**
-   Length/shape checks are insufficient for real Iranian tax identifiers:
-   - **کد ملی (10 digits):** must run the control-digit checksum algorithm — `1234567890`
-     passes a length check but fails the official algorithm and would be rejected by
-     the Tax Organization.
-   - **شناسه ملی (11 digits):** has its own validation algorithm.
-   - **Mobile:** operator-prefix check (`^09[0-9]{9}$`) is too broad — should validate
-     against real IRANCELL/MCI/Rightel/etc. prefix lists.
-   - Reference implementations: github.com/majidh1/regex-list and
-     imrostami.github.io/regexha (do not import as runtime deps — extract and own the logic).
-   - **Plan:** centralize checksum functions + exact regexes in the identity-validation
-     skill (`.claude/skills/validate-identity-fields/SKILL.md`) so frontend AND backend
-     share one canonical source of truth, applied everywhere these fields appear.
 
 ## Known Risks
 

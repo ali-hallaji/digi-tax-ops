@@ -38,8 +38,8 @@ are `partial`.
 |---|---|---|---|
 | P0 | Auth / Business / Session | done | No new migrations |
 | P1 | Customers / Products | done | `c4e8b2d5f9a3` (tax_items) must run |
-| P1-A | Taxpayer Profile Skeleton | partial | Existing migrations |
-| P1-B | Admin Review Skeleton | partial | Existing migrations |
+| P1-A / R1A-P2 | Taxpayer Profile Full Implementation | **done** (2026-06-19) | `d7e8f9a0b1c2` must be applied + rebuild `api` image |
+| P1-B | Admin Review Skeleton | done | No new migrations |
 | P1-C / R1A-P1 | Merchant Onboarding Wizard + Activation Dashboard | **done** (2026-06-18) | `a2b3c4d5e6f7` must be applied |
 | P1-D | Admin Operations Console | future_high | New migrations when built |
 | P1-E | Accountant/Sales Partner Role | future (R1C) | New migrations when built |
@@ -71,16 +71,15 @@ are `partial`.
 
 ## Important Corrections (v3, updated 2026-06-16)
 
-- Taxpayer Profile and Admin Review are **partial** skeletons — not product-complete.
-  **Known items that MUST be resolved before taxpayer-profile ships (logged 2026-06-19):**
-  (a) No person_type selector → national_id always validates 10 digits; legal entities
-  need 11-digit شناسه ملی with type-switched Zod rule.
-  (b) Backend economic_id is max_length=20/digits-only; frontend enforces 12 digits exactly
-  — must be aligned symmetrically.
-  (c) Identity validation must be ALGORITHMIC, not just length: کد ملی needs control-digit
-  checksum, شناسه ملی needs its own algorithm, mobile needs real operator-prefix list.
-  Centralize in the identity-validation skill as canonical source for both frontend and
-  backend. References: github.com/majidh1/regex-list + imrostami.github.io/regexha.
+- **Taxpayer Profile DONE (R1A-P2, 2026-06-19):** All three deferred P1-A items resolved:
+  (a) `taxpayer_type` selector (حقیقی/حقوقی) added to form + backend column — national_id
+  validated as کد ملی (10 digits) or شناسه ملی شرکت (11 digits) based on type.
+  (b) `economic_id` aligned to exactly 12 ASCII digits both sides. `national_id` expanded
+  to String(11) in backend. (c) Full algorithmic validation: کد ملی control-digit checksum,
+  شناسه ملی weights [29,27,23,19,17,...], Persian digit normalization. 22 unit tests.
+  Migration `d7e8f9a0b1c2` required. Admin Review skeleton is complete (approve/reject with
+  Persian reason). Invoice-readiness gate added: tax_reportable requires approved profile;
+  draft/proforma unblocked.
 - ~~Merchant onboarding wizard is **missing**~~ — **DONE (R1A-P1, 2026-06-18):** Activation dashboard + business create wizard live; migration `a2b3c4d5e6f7` required on deploy.
 - **Bug B fixed (2026-06-18):** `ensure_default_tenant_membership` auto-created a business for every new login — removed from `get_or_create_auth_user`. New users now correctly land on wizard (stage_0). ⚠️ Requires `docker-compose build --no-cache api` + `alembic upgrade head` + re-seed on any running instance.
 - **E2E harness shipped, stabilized + spec 07 full journey (2026-06-18–19):** Playwright 7-spec harness in `digi-tax-frontend/e2e/`. `pnpm e2e` (headless) · `pnpm e2e:watch` (interactive picker → headed, 1 worker, slowMo 3500 ms, Persian caption cards 7 s, `pauseForWatch` live toasts at every checkpoint) · `pnpm e2e:headed` (headed all workers). 7/7 green, 1 skipped (spec 03 idempotent). White-screen flash fixed: stage_0 redirect in `beforeLoad`. Spec 07: full journey stage_0 → wizard S1–S6 → activation dashboard → customer + product (UI) → invoice finalize (API) → stage_2 invite banner in one continuous test.
@@ -100,6 +99,7 @@ Before any staging or production deploy, confirm **all** of these Alembic migrat
 
 | Migration | Phase | What it adds |
 |---|---|---|
+| `d7e8f9a0b1c2` | R1A-P2 Taxpayer Profile | `taxpayer_type` column + `national_id` String(11) on `taxpayers` |
 | `a2b3c4d5e6f7` | R1A-P1 Onboarding | `onboarding` fields on `tenants` table |
 | `a1c4e7f20b91` | P2 Invoice Draft | `invoice_drafts` + `invoice_draft_lines` tables |
 | `b2d5f8e30c14` | P2.5 Lifecycle | `document_number`, `archived_at`, `converted_to_tax_reportable_at`, line snapshot columns |
