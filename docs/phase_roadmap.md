@@ -59,6 +59,7 @@ are `partial`.
 | P3.5.8 | Frontend feature access gates (`useFeatureAccess`) | **done** | No deploy impact |
 | P3.5.8.1 | Route-level access gate (`RouteAccessGate`) | **done** (staging deployment not confirmed) | No deploy impact; redeploy frontend if not live |
 | P3.5.8.2 | In-component self-gates + progressive sidebar | **done** (2026-06-16) | No deploy impact |
+| R1A-P2.5 | Navigation & User-Journey Integration — soft locks, صدور فاکتور reachable, wizard handoff, E2E spec 09 | **done** (2026-06-19) | Frontend image rebuild |
 | P4 (R1A) | Purchases / Expenses / Balances | future_revenue | New migrations when built |
 | P4.5 (R1A) | Simple Real Reports (P/L, VAT) | future_revenue | New migrations when built |
 | P4.6 (R1A) | Subscription / Plan / Entitlement | future_revenue | New migrations when built |

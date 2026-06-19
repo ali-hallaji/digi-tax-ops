@@ -357,6 +357,36 @@ the **start of 1C**, not now — writing them six phases early would only produc
 detail that drifts before use. Principle locked: all channels (Excel/OCR/Voice)
 feed a **staging** area; no AI/OCR output ever becomes an official document
 without explicit user confirmation (Master §9.16).
+
+### 4.6 Soft-lock + wizard-handoff standard (R1A-P2.5)
+
+Established in P2.5 as a **mandatory pattern** for all nav items and action screens:
+
+**Soft-lock rule:**
+Every destination is VISIBLE in the sidebar regardless of gate status. A locked
+destination is shown with a lock icon and reduced opacity — it is NEVER hidden.
+Clicking a locked destination opens a friendly Persian dialog that:
+1. States WHY it's locked in one plain sentence (no jargon).
+2. Offers ONE direct CTA button to the unlock path (e.g. "تکمیل پروفایل مالیاتی").
+3. For "coming soon" features: shows "به زودی" title with no CTA — just dismiss.
+
+**Sidebar gate layers:**
+- `activeBusiness` items: always a real link (کالا، مشتریان، فاکتورها، صدور فاکتور، پروفایل مالیاتی).
+- `businessApproved` items: shown with soft-lock in pre-approval state; CTA → /app/taxpayer-profile.
+- `accountingApproved` items: always "coming soon" locked (module is R2 future).
+
+**Wizard-handoff rule:**
+After every key action that advances the user's state, ONE forward CTA must be
+visible with no dead ends:
+- Wizard submit → `/app` → ActivationDashboard with active-step CTA button.
+- ActivationDashboard stage_2 → "تکمیل پروفایل مؤدی" banner → `/app/taxpayer-profile`.
+- Taxpayer profile approved → "قابلیت جدید باز شد" banner.
+- صدور فاکتور always reachable from the sidebar (stage_1 through post-approval).
+
+**Validation gate:** `frontend-ux-auditor` + `browser-qa-auditor` verify these
+properties at the end of every frontend phase. E2E spec 09 (`09-nav-journey.spec.ts`)
+asserts: sidebar links, soft-lock dialog content, CTA routing, mobile 390px drawer,
+and wizard handoff CTA presence.
 ---
 
 ## PART 5 — Phased Execution Roadmap

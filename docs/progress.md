@@ -115,6 +115,24 @@ Phase 0.2 local/staging orchestration hardening.
   pass). E2E gate flow updated with corrected assertions. No schema migration (logic change only).
   Blueprint DECISION 2 and product master §8.6 updated with 3-layer clarification.
 
+  **R1A-P2.5 — Navigation & User-Journey Integration (2026-06-19):**
+  Fixed the "system feels confusing" problem — pages existed but were unreachable
+  except by typing URLs manually.
+  Sidebar (`app-sidebar.tsx`) fully restructured:
+  - Pre-approval state (stage_1/2): adds صدور فاکتور, فاکتورها و اسناد, پروفایل مالیاتی to راه‌اندازی
+    group. All approval-gated destinations (تراکنش‌ها, خرید, گزارش‌ها, اتصال مودیان) now shown
+    with soft-lock (lock icon + reduced opacity) instead of hidden. Coming-soon items
+    (حسابداری) visible with "به زودی" badge.
+  - Soft-lock click opens a Dialog (not a dead end): Persian explanation + CTA button to
+    the unlock path (/app/taxpayer-profile). Coming-soon items show "به زودی" title, no CTA.
+  - Post-approval state: صدور فاکتور added to "فروش و درآمد" group. Accounting module
+    shown as "به زودی" locked item.
+  No backend changes. No gate logic changed.
+  E2E: `09-nav-journey.spec.ts` — 3 flows (A+B+C+D sidebar+locks, E mobile 390px, F wizard
+  handoff). 15/15 full suite green (1 skipped idempotent).
+  Blueprint PART 4 §4.6: soft-lock + wizard-handoff standard documented.
+  **Deploy action: frontend image rebuild only.**
+
 ## Active Next (R1A-P3)
 
 - R1A-P3 next feature phase (TBD by founder).
