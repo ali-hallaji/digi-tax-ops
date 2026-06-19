@@ -4,6 +4,29 @@
 **Auditor:** Claude Code (read-only, no files modified except this report)  
 **Workspace root:** `/home/hitman47/Public/projects/digitax-workspace`
 
+> **Needs re-audit (flagged 2026-06-19):** The following phases completed *after*
+> this audit's capture date. Sections listed below are stale; the rest of this
+> document reflects code state as of 2026-06-17 and remains authoritative until
+> a fresh audit is run.
+>
+> - **R1A-P0 (2026-06-17):** OTP moved to Redis (`RedisOTPService`); CORS now
+>   env-driven (`BACKEND_CORS_ORIGINS`); dead routes removed from OpenAPI
+>   (`/identity/login`, `/identity/me`, `/tenants/*`, `/taxpayers/*` 410 kept
+>   but unregistered, `/fiscal-memories/{id}` stub → 404). **Stale sections:**
+>   §1 (OTP bullet), §2.1 `/identity/` and `/tenants/` rows, §2.6 (OTP storage),
+>   §4.4 (key ops blockers table). These blockers are now resolved.
+>
+> - **R1A-P1 (2026-06-18/19):** Onboarding wizard implemented (short create-
+>   business flow + activation dashboard); migration `a2b3c4d5e6f7`
+>   (`add_onboarding_fields_to_tenants`) applied; identity-field validation skill
+>   wired into taxpayer-profile; E2E Playwright harness (7 specs, 12 s headless).
+>   **Stale sections:** §2.7 Onboarding row (was PARTIAL → now REAL), §3.1
+>   `/app/taxpayer-profile` row (person_type deferred items noted in progress.md
+>   Known Items — still PARTIAL pending R1A-P2 completion).
+>
+> These changes are confirmed by `docs/progress.md`. Exact code state for any
+> section requires a fresh audit pass before asserting as fact.
+
 ---
 
 ## 1. Summary

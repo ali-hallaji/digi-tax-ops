@@ -1,6 +1,11 @@
 # Digi Invoice / DigiTax — Engineering Execution Blueprint
 
-**Version:** 1.5 (engineering companion to Product Master Blueprint v4.2)
+**Version:** 1.6 (engineering companion to Product Master Blueprint v4.2)
+**Changelog (1.6):** Taxpayer Profile added as R1A-P2 (new dedicated phase);
+subscription moved to R1A-P6 (value-first principle); every phase P2–P7 now
+paired with its own admin slice; demand-engine framing updated (UX/journey +
+AI background jobs + modular pricing); UX/journey gate strengthened as first-
+class recurring requirement; causal order locked in PART 5 rationale.
 **Language:** English skeleton · Persian UI/UX content
 **Audience:** Founder (PO), Claude Code, backend / frontend / ops sessions
 **Status:** Canonical execution plan. Sits *below* the product master doc (v4.2,
@@ -197,8 +202,8 @@ Owner = repo(s) that own the work. Release = when it becomes product-complete.
 | 10 | Reports (sales/purchase/expense/profit) | NONE | backend, frontend | 1A-P6 |
 | 11 | Tax Readiness | REAL (invoice readiness) | backend, frontend | done (extend per module) |
 | 12 | Moadian / Submission | PARTIAL — real submit **BLOCKED** (crypto unconfirmed, returns 503; no fake status) | backend, frontend | 1B |
-| 13 | Subscriptions / Billing / Paywall | NONE | backend, frontend | 1A-P7 |
-| 14 | Admin Operations | PARTIAL (review real; ops console incomplete) | backend, frontend | 1A-P8 → 1B |
+| 13 | Subscriptions / Billing / Paywall | NONE | backend, frontend | 1A-P6 |
+| 14 | Admin Operations | PARTIAL (review real; ops console incomplete) | backend, frontend | per-phase: profile review (P2), tenant volume (P3), balance view (P4), system KPIs (P5), plan mgmt (P6), final console (P7) |
 | 15 | Accountant / Partner | NONE | backend, frontend | 1C |
 | 16 | Smart Input (Excel/OCR/Voice) | NONE | backend, frontend | 1C (Excel) → 2 |
 | 17 | Accounting Automation | NONE (reports only in 1A) | backend | 2 |
@@ -371,183 +376,225 @@ per-repo work, model/effort, DoD, contract, exit). One phase = one chat.
 Goal: the first version you can actually sell to a merchant/small company. Real
 profit needs sales + purchases + expenses. Keep purchases/expenses *simple*.
 
----
-
-#### R1A-P0 — Production hardening & skeleton cleanup
-**Why:** Audit found 3 launch blockers + skeletons polluting OpenAPI. Fix the
-cheap, high-risk items before building features on top.
-**Scope (in):** OTP → Redis (audit: in-memory, lost on restart); CORS lockdown
-for staging/prod (audit: wildcard); remove/mark dead routes (`/identity/*`,
-`/tenants/*`, `/taxpayers/*`, `/fiscal-memories/{id}` stub); confirm Alembic
-applies cleanly on test server.
-**Scope (out):** Nginx/TLS (separate ops task when domain is ready).
-- **Backend:** Redis-backed OTP service replacing `DevOTPService`; env-driven CORS
-  origins; delete/deprecate dead routers. Builder **Sonnet/medium**; Auditor
-  `backend-contract-auditor` **Sonnet/low**.
-- **Ops:** confirm Redis wired + used; smoke test covers OTP across restart.
-  Builder **Sonnet/low**; Auditor `ops-deploy-auditor` **Sonnet/low**.
-**DoD:** OTP survives api restart (Redis); CORS not wildcard in staging; dead
-routes gone from OpenAPI; migrations clean on test server; smoke passes.
+**Key principles (locked):**
+- **Admin paired per phase (P2–P7):** every merchant feature closes its own admin
+  slice in the same phase. No deferred "admin phase" — that would force re-learning
+  each feature's logic 6 phases later.
+- **Causal order:** profit/dashboard/reports come only *after* purchases+expenses+
+  payments (v4.2 §13.3). This is non-negotiable.
+- **Demand engine:** the product sells on simplicity+beauty+journey, AI background
+  automation, and modular cloud pricing — not on Moadian submission alone.
 
 ---
 
-#### R1A-P1 — Onboarding wizard (contract + UI)
-**Why:** Audit: onboarding PARTIAL, no real wizard. This is the welcoming first
-impression — the journey that wins the user (v4.2 §8, §9.3).
-**Scope (in):** short create-business flow (name, activity, person type, city);
-post-create activation dashboard with "one clear next action"; progressive unlock
-copy. **Scope (out):** heavy legal/tax fields (those are Stage 3 / taxpayer
-profile, already PARTIAL).
-- **Backend:** lightweight onboarding/activation-state read (derive from existing
-  business + profile data; no fake numbers). Contract entry first. Builder
+#### R1A-P0 — Production hardening & skeleton cleanup ✓ DONE
+**Why:** Audit found 3 launch blockers + skeletons polluting OpenAPI.
+**Status:** Completed 2026-06-17. OTP → Redis (`RedisOTPService`), CORS env-driven
+(`BACKEND_CORS_ORIGINS`), dead routes removed from OpenAPI (`/identity/login`,
+`/identity/me`, `/tenants/*`, `/taxpayers/*`, `/fiscal-memories/{id}` stub).
+459 tests pass; ruff + black clean. See progress.md for detail.
+
+---
+
+#### R1A-P1 — Onboarding wizard + activation dashboard ✓ DONE
+**Why:** Audit: onboarding PARTIAL, no real wizard. The welcoming first impression
+— the journey that wins the user (v4.2 §8, §9.3).
+**Status:** Completed 2026-06-18/19. Short create-business flow, activation
+dashboard, identity-field validation skill wired, E2E Playwright harness 7-spec
+green (12 s headless; 2.2 min full journey in watch mode). Migration
+`a2b3c4d5e6f7` (`add_onboarding_fields_to_tenants`) applied. See progress.md.
+
+---
+
+#### R1A-P2 — Taxpayer Profile + invoice-readiness gate + admin review
+**Why:** The taxpayer profile exists as a partial skeleton (Stage 3/4 in the
+user journey) but has never had a dedicated implementation phase. This is a real
+gap: the profile cannot be completed correctly without a person-type selector,
+algorithmic identity validation is missing, and the invoice-readiness gate (an
+approved profile unlocks tax-reportable invoices) is the link that makes the
+whole official path meaningful. The admin review queue must close in this same
+phase — not later. Deferred admin means re-learning the whole profile logic in a
+future phase.
+**Scope (in):**
+- `taxpayer_type` selector (حقیقی / حقوقی) in the profile form.
+- Algorithmic identity validation (not just length checks):
+  - individual `national_id` (کد ملی): exactly 10 digits + control-digit checksum
+  - legal `national_id` (شناسه ملی): exactly 11 digits + checksum
+  - `economic_id` (کد اقتصادی): exactly 12 digits — enforce symmetrically on
+    backend (currently only `max_length=20`, no digit-count check) and frontend
+- Persian/Arabic digit normalization → ASCII before persist (validate-identity-
+  fields skill; wire into profile form).
+- State machine: draft → submitted → approved | rejected (with Persian reason).
+  Full profile form UI, inline Persian validation errors, welcoming flow.
+- Invoice-readiness gate: `POST /invoice-drafts` with `type=tax_reportable`
+  must require `approved` taxpayer profile. **Basic bookkeeping (customers,
+  products, internal/draft invoices) is never blocked by profile state** — PART 2
+  rule 5 is absolute.
+- **Admin slice (closes in this phase):**
+  - Full profile review queue with correct pagination (`total` = all matching
+    rows, not just current page — audit §7.7: fix this bug now).
+  - Detail view, approve/reject with Persian reason, audit log, pending badge.
+**Scope (out):** Moadian profile (separate module), subscription (P6), purchases (P3).
+- **Backend:** add `taxpayer_type` field + Alembic migration if schema change
+  needed; enforce identity validation algorithmically (Pydantic validator);
+  fix admin profile-list pagination bug. Contract first. Builder
   **Sonnet/medium**; Auditor `backend-contract-auditor` **Sonnet/low**.
-- **Frontend:** the wizard + activation UI; welcoming, RTL, mobile-first, one
-  action per step. Builder **Sonnet/medium**; Auditors `frontend-ux-auditor`
-  **Sonnet/low** + `browser-qa-auditor` **Sonnet/medium**.
-**DoD:** new user reaches "first business created" in < 1 min, < 1 screen of
-fields; next action always obvious; RTL+mobile verified in browser; no fake data;
-**journey feels welcoming/simple (browser-qa explicit check).**
+- **Frontend:** person-type selector → switch Zod refine rules by type; wire
+  validate-identity-fields skill checksum logic; profile state machine UI
+  (draft/submitted/approved/rejected with clear Persian copy); admin review
+  queue (approve/reject, correct pagination, pending badge). Builder
+  **Sonnet/medium**; Auditors `frontend-ux-auditor` **Sonnet/low** +
+  `browser-qa-auditor` **Sonnet/medium**.
+**DoD:** profile form has person_type selector; national_id and economic_id
+validated algorithmically (not just length); digit normalization active; state
+machine transitions work (draft→submit→approve/reject); admin review queue shows
+real data with correct pagination totals; approved profile unlocks tax-reportable
+invoices; internal/draft invoices never blocked; RTL+mobile verified; friendly
+Persian errors; typecheck+build+pytest+ruff+black pass.
+**Contract table:**
+| Backend provides | Frontend consumes |
+|---|---|
+| `PUT/PATCH /taxpayer-profile` with `taxpayer_type` + validated ids | person-type selector + Zod refine per type |
+| Fixed `GET /admin/taxpayer-profiles` (correct total count) | Pagination + pending badge |
+| `POST /admin/taxpayer-profiles/{id}/approve` | Approve CTA |
+| `POST /admin/taxpayer-profiles/{id}/reject` (with Persian reason) | Reject form + reason display |
 
 ---
 
-#### R1A-P2 — Subscription / plan foundation (contract)
-**Why:** v4.2 §9.13 + §11.3: product must have plan/paywall before launch. Audit:
-NONE. Build the *foundation* (data + read), not full billing yet.
-**Scope (in):** plan model (Free Trial, Starter, Professional, Accountant),
-tenant→plan link, feature-gate read API, friendly paywall data (value, what
-unlocks). **Scope (out):** real payment gateway, commission engine (1C).
-- **Backend:** plans + subscription tables (migration); `GET /subscription`,
-  feature-gate resolver. Decimal for prices. Contract first. Builder
-  **Sonnet/medium**; Auditor `backend-contract-auditor` **Sonnet/low**.
-- **Frontend:** paywall component (non-annoying, explains value + which plan +
-  what's lost), upgrade CTA. Builder **Sonnet/medium**; Auditor
-  `frontend-ux-auditor` **Sonnet/low**.
-**DoD:** plans seeded; feature-gate read works; paywall explains value clearly in
-Persian; no payment claims that aren't real.
-
----
-
-#### R1A-P3 — Plan enforcement (backend gates)
-**Why:** A plan foundation without enforcement is decorative. Audit: none.
-**Scope (in):** enforce limits (invoice count, customers/products caps, feature
-access) at the API layer; return structured, translatable limit errors.
-- **Backend:** enforcement middleware/guards; structured `402/403`-style payloads
-  the frontend can translate. Builder **Sonnet/medium**; Auditor
-  `api-contract-guardian` **Sonnet/low**.
-- **Frontend:** map limit errors to friendly Persian paywall prompts. Builder
-  **Sonnet/low**; Auditor `frontend-ux-auditor` **Sonnet/low**.
-**DoD:** hitting a limit shows a clear Persian upgrade prompt, never a raw error;
-enforcement is server-side (not bypassable from frontend).
-
----
-
-#### R1A-P4 — Purchases & Expenses baseline
+#### R1A-P3 — Purchases & Expenses baseline (+admin)
 **Why:** Real profit = sales − purchases − expenses. Audit: both NONE; mock
 pages exist. v4.2 §10.1 requires these for a sellable core. Keep simple (no
-inventory).
+inventory). Admin slice: tenant transaction volume — operational visibility for
+the admin without building a full reporting engine yet.
 **Scope (in):** simple purchase (supplier, lines|lump-sum, total, payment status,
 date, simple purchase VAT); simple expense (category, amount, payment method,
 date); effects on supplier balance + reports + real profit. Internal by default,
-never readiness-blocked. **Scope (out):** multi-warehouse, formal inventory,
-landed cost, OCR, recurring (later).
+never readiness-blocked. **Admin slice:** operational view of tenant transaction
+volume (purchase/expense counts + totals per tenant in admin tenant detail).
+**Scope (out):** multi-warehouse, formal inventory, landed cost, OCR, recurring.
 - **Backend:** `purchases`/`purchase_lines` + `expenses` tables (tenant_id FK +
-  index); CRUD mirroring proven `invoice_drafts` patterns; balances via service.
-  Migration. Contract first. Builder **Sonnet/medium**; Auditor
-  `backend-contract-auditor` **Sonnet/low**.
+  index); CRUD mirroring proven `invoice_drafts` patterns; balances via service;
+  admin tenant detail endpoint updated with purchase/expense summary. Migration.
+  Contract first. Builder **Sonnet/medium**; Auditor `backend-contract-auditor`
+  **Sonnet/low**.
 - **Frontend:** replace `mock/purchases.ts` + expense mocks with real API
   modules; inline supplier quick-create; category picker (no accounting jargon);
-  progressive tax-field disclosure. Builder **Sonnet/medium**; Auditors
-  `frontend-ux-auditor` **Sonnet/low** + `browser-qa-auditor` **Sonnet/medium**.
+  progressive tax-field disclosure; admin tenant detail updated. Builder
+  **Sonnet/medium**; Auditors `frontend-ux-auditor` **Sonnet/low** +
+  `browser-qa-auditor` **Sonnet/medium**.
 - **Ops:** run migration on test server; smoke covers purchases+expenses.
   **Sonnet/low**.
 **DoD:** no mock on live path; tenant-safe; Decimal everywhere; supplier balance
-correct in seeded test; RTL+mobile flow verified; friendly Persian errors;
-typecheck+build+pytest+ruff+black pass.
+correct in seeded test; RTL+mobile flow verified; friendly Persian errors; admin
+can see tenant transaction volume (real numbers); typecheck+build+pytest+ruff+black pass.
 
 ---
 
-#### R1A-P5 — Receipts & Payments baseline
+#### R1A-P4 — Receipts & Payments baseline (+admin)
 **Why:** v4.2 §9.9 — money is separate from the document; a sale may be paid
-later. Needed for accurate balances & cash flow. Audit: NONE.
+later. Needed for accurate balances & cash flow. Audit: NONE. Admin slice:
+balance + data-health view per tenant — confirms data integrity before dashboard.
 **Scope (in):** record receipt (from customer) / payment (to supplier/expense),
 full or partial; link to invoice/purchase; update balances; simple cash flow.
+**Admin slice:** balance + data-health view per tenant in admin (outstanding
+receivables, outstanding payables, cash-in/out total — real DB numbers, no fakes).
 **Scope (out):** bank integration, reconciliation, POS.
 - **Backend:** `receipts`/`payments` (or unified `cash_movements`) tenant-scoped;
-  partial settlement logic; balance updates via service. Migration. Contract
-  first. Builder **Sonnet/medium**; Auditor `backend-contract-auditor`
-  **Sonnet/low**.
+  partial settlement logic; balance updates via service; admin balance endpoints
+  per tenant. Migration. Contract first. Builder **Sonnet/medium**; Auditor
+  `backend-contract-auditor` **Sonnet/low**.
 - **Frontend:** record receipt/payment from a document with balance; partial
-  amounts; clear "who still owes" view. Replace `transactions` mock. Builder
-  **Sonnet/medium**; Auditors `frontend-ux-auditor` **Sonnet/low** +
-  `browser-qa-auditor` **Sonnet/medium**.
+  amounts; clear "who still owes" view. Replace `transactions` mock. Admin view:
+  balance + data-health panel. Builder **Sonnet/medium**; Auditors
+  `frontend-ux-auditor` **Sonnet/low** + `browser-qa-auditor` **Sonnet/medium**.
 **DoD:** partial payment reduces balance correctly (seeded test); cash-flow view
-real (no fakes); RTL+mobile verified; friendly errors.
+real (no fakes); admin sees real tenant balances; RTL+mobile verified; friendly
+Persian errors.
 
 ---
 
-#### R1A-P6 — Real dashboard & reports
+#### R1A-P5 — Real Dashboard & Reports (+admin)
 **Why:** Audit: dashboard returns hash-seeded **fake** numbers while the frontend
-shows them as if real — a trust risk. Reports module NONE. Only now (after
-purchases/expenses/payments) can profit be real (v4.2 §13.3).
+shows them as real — a trust risk. Reports module NONE. Only now (after
+purchases/expenses/payments are wired) can profit be real (v4.2 §13.3). Admin
+slice: real system-wide dashboard replaces any remaining fake/hash-seeded admin
+KPIs.
 **Scope (in):** replace fake dashboard service with live DB aggregates; reports —
 sales today/month, purchase month, expense month, simple real profit, customer/
-supplier debts, unpaid invoices. **Scope (out):** P&L deep, VAT draft (1C),
-legal ledgers (R2).
+supplier debts, unpaid invoices. **Admin slice:** real system-wide dashboard
+(active businesses count, profile completion rate, system health KPIs — no fake
+numbers, ever). **Scope (out):** P&L deep, VAT draft (1C), legal ledgers (R2).
 - **Backend:** real aggregation queries (Decimal); replace `build_dashboard_
-  summary` stubs; reports endpoints. Contract first. Builder **Sonnet/medium**;
-  Auditor `backend-contract-auditor` **Sonnet/low**.
+  summary` stubs (hash-seeded → real); reports endpoints; system-wide admin
+  aggregates (no fakes). Contract first. Builder **Sonnet/medium**; Auditor
+  `backend-contract-auditor` **Sonnet/low**.
 - **Frontend:** wire dashboard + reports to real data; replace `reports`/
-  `summary`/`tasks`/`activity` mocks; `toPersianDigits` on all figures. Builder
-  **Sonnet/medium**; Auditors `frontend-ux-auditor` **Sonnet/low** +
-  `browser-qa-auditor` **Sonnet/medium**.
+  `summary`/`tasks`/`activity` mocks; `toPersianDigits` on all figures; wire
+  admin dashboard to real system counts. Builder **Sonnet/medium**; Auditors
+  `frontend-ux-auditor` **Sonnet/low** + `browser-qa-auditor` **Sonnet/medium**.
 **DoD:** **no fake numbers anywhere**; dashboard ties to real records; profit =
-sales − purchases − expenses on seeded data; figures in Persian digits.
+sales − purchases − expenses on seeded data; admin dashboard shows real system
+KPIs (not hash-seeded); figures in Persian digits.
 
 ---
 
-#### R1A-P7 — Subscription paywall UX completion
-**Why:** Tie P2/P3 together into the real upgrade journey before launch.
-**Scope (in):** plan comparison, trial limits visible, upgrade flow UX (payment
-may still be manual/placeholder if no gateway yet — but never fake "paid"
-status). **Scope (out):** automated gateway (1C if needed).
-- **Frontend:** plan/paywall journey, clear value framing. Builder
-  **Sonnet/medium**; Auditor `frontend-ux-auditor` **Sonnet/low**.
-- **Backend:** subscription status transitions (honest states only). Builder
-  **Sonnet/low**; Auditor `backend-contract-auditor` **Sonnet/low**.
-**DoD:** user understands what unlocks before paying; no fake paid status; trial
-limits clear.
+#### R1A-P6 — Subscription & Paywall — modular/dynamic (+admin)
+**Why:** v4.2 §9.13 + §11.3: product must have plan/paywall before launch. Audit:
+NONE. Subscription moves here — not P2 as previously planned — because a paywall
+on a product that doesn't yet show real profit is meaningless. Value first, then
+paywall. This phase merges foundation + enforcement + paywall UX into one
+complete subscription implementation. Admin slice: plan/subscription management
+per tenant.
+**Scope (in):**
+- Plan model (Free Trial, Starter, Professional, Accountant/Partner),
+  tenant→plan link, feature-gate read API, friendly paywall data (value, what
+  unlocks).
+- Plan enforcement: enforce limits (invoice count, customers/products caps,
+  feature access) at the API layer; structured `402/403`-style payloads the
+  frontend translates to friendly Persian prompts.
+- Paywall UX: plan comparison, trial limits visible, upgrade flow (payment may
+  be manual/placeholder if no gateway yet — never fake "paid" status). Non-
+  annoying; explains value + which plan + what's lost.
+- **Subscription structure is modular:** monthly / 3-month / 12-month / per-
+  module, optional bundles. The data model must support this from the start.
+- **Admin slice:** plan/subscription management per tenant — which plan, trial
+  status, upgrade history, manual plan assignment by admin.
+**Scope (out):** automated payment gateway (1C if needed), commission engine (1C).
+- **Backend:** plans + subscription tables (migration); `GET /subscription`,
+  feature-gate resolver, enforcement middleware/guards; admin plan-management
+  endpoints. Decimal for prices. Contract first. Builder **Sonnet/medium**;
+  Auditor `backend-contract-auditor` **Sonnet/low**.
+- **Frontend:** paywall component, upgrade CTA, limit-error→paywall translation,
+  plan comparison; admin subscription management panel. Builder **Sonnet/medium**;
+  Auditors `frontend-ux-auditor` **Sonnet/low** + `browser-qa-auditor`
+  **Sonnet/medium**.
+**DoD:** plans seeded; feature-gate read works; enforcement server-side (not
+bypassable); paywall explains value clearly in Persian; no payment claims that
+aren't real; admin can manage tenant plans; trial limits clear; modular pricing
+structure supported in the data model.
 
 ---
 
-#### R1A-P8 — Admin operations minimum
-**Why:** Audit: admin PARTIAL — many placeholder pages (invoices, submissions,
-plans, tickets, audit logs). Bring the *minimum* real admin for launch.
-**Scope (in):** real admin views for users, businesses/tenants, taxpayer profiles
-(exists), plans/subscriptions (from P2), basic audit log read. Fix pagination bug
-(audit §7.7: admin profile `total` counts page, not all rows). **Scope (out):**
-submission health/retry (1B), partner mgmt, tickets (1C).
-- **Backend:** real admin list endpoints + correct pagination totals; audit log
-  read. Builder **Sonnet/medium**; Auditor `backend-contract-auditor`
-  **Sonnet/low**.
-- **Frontend:** replace placeholder admin pages with real ones (or lock the
-  not-yet-real ones honestly). Builder **Sonnet/medium**; Auditor
-  `frontend-ux-auditor` **Sonnet/low**.
-**DoD:** admin can manage users/businesses/profiles/plans with real data;
-pagination totals correct; placeholders either real or honestly locked.
-
----
-
-#### R1A-P9 — Hide/lock mock pages & launch gate
+#### R1A-P7 — Hide/lock mock pages + final admin console + launch gate
 **Why:** v4.2 DoD: no mock page ships as a real feature. Audit lists ~15 mock
-pages. Ensure none are reachable as if real.
-**Scope (in):** verify `RouteAccessGate` (P3.5.8.1) hides/locks every not-yet-real
-page (sales-as-mock, vendors, receipt-inbox, assistant, accounting, payroll,
-employees, payslips, tax sub-routes); honest "coming soon"/locked states.
-- **Frontend:** gate audit + lock states. Builder **Sonnet/medium**; Auditor
-  `browser-qa-auditor` **Sonnet/medium** (walk every route, confirm no fake
-  feature reachable). 
+pages. The final admin console consolidates all remaining placeholder admin pages
+into honest locked states. This is the launch gate.
+**Scope (in):**
+- Verify `RouteAccessGate` hides/locks every not-yet-real page (sales-as-mock,
+  vendors, receipt-inbox, assistant, accounting, payroll, employees, payslips,
+  tax sub-routes); honest "coming soon"/locked states.
+- **Final admin console:** consolidate all admin placeholder pages — replace or
+  honestly lock: `/admin/invoices`, `/admin/submissions`, `/admin/failed-
+  submissions`, `/admin/retry-queue`, `/admin/support-tickets`,
+  `/admin/announcements`, `/admin/audit-logs`. Pages with real backends (from
+  P2–P6) are live; the rest show honest "coming in 1B/1C" states.
+- Launch gate: final E2E check, all DoDs across all 1A phases verified.
+- **Frontend:** gate audit + lock states + final admin cleanup. Builder
+  **Sonnet/medium**; Auditor `browser-qa-auditor` **Sonnet/medium** (walk every
+  route, confirm no fake feature reachable).
 **DoD:** every route is REAL or clearly locked; no mock data visible to a user;
-verified route-by-route in browser.
+verified route-by-route in browser; all launch blockers from Known Risks closed
+or documented with an explicit decision.
 
 ---
 
@@ -581,16 +628,14 @@ starts; the pattern:
 
 | Phase | Backend provides | Frontend consumes | Ops | Gate |
 |-------|-----------------|-------------------|-----|------|
-| 1A-P0 | Redis OTP, env CORS, clean OpenAPI | (no UI change) | Redis verified, smoke | ops-deploy-auditor |
-| 1A-P1 | onboarding-state read | wizard + activation UI | — | api-contract-guardian + browser-qa |
-| 1A-P2 | plans + `GET /subscription` | paywall component | migration | api-contract-guardian |
-| 1A-P3 | enforcement + limit errors | translate to paywall | — | api-contract-guardian |
-| 1A-P4 | `/purchases`, `/expenses` | replace mocks, inline create | migration | api-contract-guardian + browser-qa |
-| 1A-P5 | `/receipts`, `/payments` | record + balances UI | migration | api-contract-guardian + browser-qa |
-| 1A-P6 | real aggregates + reports | real dashboard/reports | — | api-contract-guardian + browser-qa |
-| 1A-P7 | honest sub-status | upgrade journey | — | frontend-ux-auditor |
-| 1A-P8 | admin lists + audit log | real admin pages | — | backend-contract-auditor |
-| 1A-P9 | (none) | gate/lock all mocks | — | browser-qa-auditor |
+| 1A-P0 ✓ | Redis OTP, env CORS, clean OpenAPI | (no UI change) | Redis verified, smoke | ops-deploy-auditor |
+| 1A-P1 ✓ | onboarding-state read | wizard + activation UI | migration `a2b3c4d5e6f7` | api-contract-guardian + browser-qa |
+| 1A-P2 | taxpayer_type + algo id validation + fixed admin pagination | person-type selector, checksum validation, profile state machine, admin review queue | migration if schema change | api-contract-guardian + browser-qa |
+| 1A-P3 | `/purchases`, `/expenses`, admin tenant summary | replace mocks, inline supplier create, admin tenant view | migration | api-contract-guardian + browser-qa |
+| 1A-P4 | `/receipts`, `/payments`, admin balance view | record + balances UI, admin balance panel | migration | api-contract-guardian + browser-qa |
+| 1A-P5 | real aggregates + reports + admin system KPIs (no fakes) | real dashboard/reports + admin dashboard | — | api-contract-guardian + browser-qa |
+| 1A-P6 | plans + enforcement + sub-status + admin plan mgmt | paywall, upgrade journey, admin subscription panel | migration | api-contract-guardian + frontend-ux-auditor |
+| 1A-P7 | (none) | gate/lock all mocks + final admin cleanup | — | browser-qa-auditor |
 
 **Contract-first rule:** the backend contract entry (in
 `docs/api_contracts_v2_2.md`) must be merged *before* frontend consumes it. The
@@ -697,6 +742,25 @@ screens is meaningless. Always run with real sample data before QA:
 - Frontend run locally on the laptop via `pnpm`: use the project's sample/seed
   scripts to populate data first. browser-qa walks the flow on populated state,
   at mobile width, with Persian sample content.
+
+**UX/journey gate is a first-class recurring gate (not optional, not one-time):**
+Every merchant-facing frontend phase requires a full UX & flow evaluation,
+repeated per phase as a standing requirement:
+- **Journey questions (all must pass):** Is this journey welcoming? Is there one
+  clear next action per screen? Are all states honest and not scary? Are Persian
+  errors friendly and inline? Does the user feel progress after each action?
+- **E2E harness requirements:**
+  - Must run with an **interactive flow menu** so the founder can trigger
+    individual flows by name without running the full suite.
+  - **Inter-action delays are mandatory:** ≥0.5 s field settle, ≥2 s navigation
+    pauses, ≥7 s content settle on heavy pages (so the founder sees what a real
+    user sees, not a blur of transitions).
+  - Must output a **Persian UX report** to the founder: flow quality, any
+    friction / confusing copy / broken state / visual ugliness, screens checked,
+    verdict (PASS / NEEDS FIXES).
+- "Tests pass" and "typecheck clean" are necessary but not sufficient — the
+  qualitative journey read is mandatory before the phase is closed. This gate
+  is evaluated after every merchant-facing frontend phase, every time.
 
 ### 8.3 Which model audits what (token control)
 | Audit type | Subagent | Model | Effort |
