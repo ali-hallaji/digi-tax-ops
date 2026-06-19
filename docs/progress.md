@@ -104,11 +104,22 @@ Phase 0.2 local/staging orchestration hardening.
   **Deploy action: `alembic upgrade head` in api container + rebuild api image.**
   22 identity tests pass; 487 total pass (3 pre-existing auth-route failures unchanged).
 
-## Active Next
+  **R1A-P2 gate correction (2026-06-19 — DECISION 2):**
+  The tax_reportable conversion gate was incorrectly tied to Moadian profile (R1B concept).
+  Fixed: `POST /invoice-drafts` with `invoice_type=tax_reportable` and `POST /{id}/convert-to-tax-reportable`
+  now require an approved **taxpayer profile** (not Moadian profile). Error code changed from
+  `moadian_profile_not_approved` → `taxpayer_profile_not_approved`. Frontend updated: new-invoice
+  page and invoice detail page now key off taxpayer profile status; approved profile status card
+  shows "قابلیت جدید باز شد" message. Moadian profile gate remains exclusively on the real-submit
+  path (R1B). Basic bookkeeping unchanged and ungated. 3 new backend tests added (134 total
+  pass). E2E gate flow updated with corrected assertions. No schema migration (logic change only).
+  Blueprint DECISION 2 and product master §8.6 updated with 3-layer clarification.
 
+## Active Next (R1A-P3)
+
+- R1A-P3 next feature phase (TBD by founder).
 - Add migration-state verification to `smoke_test.sh` (check no pending migrations on `alembic
   current` vs `alembic heads`).
-- R1A-P3 next feature phase (TBD by founder).
 - Wire Nginx for production TLS termination when ready (currently `nginx/placeholder.conf`).
 
 ## Known Risks

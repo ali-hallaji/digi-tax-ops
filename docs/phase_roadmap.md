@@ -38,7 +38,7 @@ are `partial`.
 |---|---|---|---|
 | P0 | Auth / Business / Session | done | No new migrations |
 | P1 | Customers / Products | done | `c4e8b2d5f9a3` (tax_items) must run |
-| P1-A / R1A-P2 | Taxpayer Profile Full Implementation | **done** (2026-06-19) | `d7e8f9a0b1c2` must be applied + rebuild `api` image |
+| P1-A / R1A-P2 | Taxpayer Profile Full Implementation + gate correction (DECISION 2) | **done** (2026-06-19) | `d7e8f9a0b1c2` must be applied + rebuild `api` image |
 | P1-B | Admin Review Skeleton | done | No new migrations |
 | P1-C / R1A-P1 | Merchant Onboarding Wizard + Activation Dashboard | **done** (2026-06-18) | `a2b3c4d5e6f7` must be applied |
 | P1-D | Admin Operations Console | future_high | New migrations when built |

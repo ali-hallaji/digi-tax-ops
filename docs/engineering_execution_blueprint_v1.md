@@ -435,6 +435,12 @@ future phase.
     rows, not just current page — audit §7.7: fix this bug now).
   - Detail view, approve/reject with Persian reason, audit log, pending badge.
 **Scope (out):** Moadian profile (separate module), subscription (P6), purchases (P3).
+**DECISION 2 — Three-layer split (tax-reportable gate):**
+The gate for `tax_reportable` documents has three distinct layers that must never be merged:
+- Layer 1 — **Approved taxpayer profile** (this phase): national_id/economic_id/address admin-reviewed. Approval unlocks `tax_reportable` conversion AND is the accounting/documentation foundation. This is implemented in R1A-P2.
+- Layer 2 — **Karpoosheh keys** (private/public key pair): optional, only needed to actually sign and send to Moadian via the legacy path. NOT a prerequisite for conversion. Belongs to R1B.
+- Layer 3 — **Real Moadian submission** (legacy / CSR middleware): R1B. Untouched in R1A.
+Rule: approved taxpayer profile → may convert to `tax_reportable`. Karpoosheh keys / Moadian profile → only gate real submission (R1B). Basic bookkeeping always ungated.
 - **Backend:** add `taxpayer_type` field + Alembic migration if schema change
   needed; enforce identity validation algorithmically (Pydantic validator);
   fix admin profile-list pagination bug. Contract first. Builder
