@@ -1,11 +1,14 @@
 # Ops Progress
 
-Last updated: 2026-06-17
+Last updated: 2026-06-20
 
 ## Current Phase
 Phase 0.2 local/staging orchestration hardening.
 
 ## Completed
+
+- **2026-06-20 — DB name single source of truth (`digitax`):** Root cause: two Postgres databases existed on the same server — `digitax` (canonical, 20+ tables at head `e1f2a3b4c5d6`) and `digi_tax` (orphan, 8 tables at stale rev `8b7a7fdc2f8d`). All defaults and examples now use `digitax`. Files changed: `digi-tax-backend/app/core/config.py` (default DATABASE_URL), `digi-tax-backend/alembic.ini` (sqlalchemy.url), `digi-tax-ops/.env.example` (POSTGRES_DB + DATABASE_URL), `digi-tax-ops/docker-compose.yml` (pg_isready default), `digi-tax-ops/scripts/bootstrap.sh` (POSTGRES_DB default). Guardrail: preflight.sh already checks DATABASE_URL db name matches POSTGRES_DB; canonical name `digitax` documented in AGENTS.md. Orphan `digi_tax` database left in place (safe to `DROP DATABASE digi_tax` after founder confirms no data there).
+
 - Added v3 product strategy alignment: `docs/phase_roadmap.md` created with product-level phase status table, mandatory migration deploy checklist (migrations `a1c4e7f20b91`, `b2d5f8e30c14`, `c4e8b2d5f9a3`), and important corrections (Taxpayer Profile/Admin Review are `partial`, onboarding wizard/admin console/partner role are `future` high-priority, Moadian no-fake rule). `docs/product_strategy_and_phase_roadmap_v3.md` created as ops-repo concise copy/reference of the product strategy. CLAUDE.md mandatory reading updated to include `phase_roadmap.md` and `product_strategy_and_phase_roadmap_v3.md`. Commit message rule added. Ops coordination role clarified (not an app source repo; every deploy includes `alembic upgrade head`).
 - Added Claude Code skills and subagents foundation: 5 project skills (`start-digi-session`, `deploy-digi-test`, `smoke-check-digi`, `review-ops-diff`, `update-blockers`) and 2 subagents (`ops-deploy-auditor`, `blocker-ledger-auditor`) under `.claude/`; CLAUDE.md updated with Skills and Subagents section.
 - Docker Compose local stack for Postgres, Redis, backend API, and frontend.
@@ -19,7 +22,7 @@ Phase 0.2 local/staging orchestration hardening.
 - Frontend orchestration updated for the production SSR Node container on port `3000` with build-time `VITE_API_BASE_URL`.
 - Added a server deployment runbook for separate repo updates, targeted rebuilds, migrations, restarts, and validation.
 - Cleaned up deployment documentation around the current `docker-compose` workflow, single Alembic migration command, targeted backend/frontend updates, and frontend rebuild requirements for `VITE_API_BASE_URL`.
-- Fixed `.env.example` DATABASE_URL db name to match `POSTGRES_DB=digi_tax` (was `digitax`).
+- ~~Fixed `.env.example` DATABASE_URL db name to match `POSTGRES_DB=digi_tax` (was `digitax`).~~ **REVERTED** — this was wrong; canonical name is `digitax` (no underscore). All defaults and examples now use `digitax`. See 2026-06-20 entry below.
 - Updated README project structure to reflect actual directory layout.
 - Updated `phase_checklists.md` to reflect completed Phase 0 and Phase 0.2 state.
 - Expanded `api-contracts/README.md` with OpenAPI snapshot export instructions.
