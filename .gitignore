@@ -2,6 +2,9 @@
 .env.*
 !.env.example
 
+# Design reference — local only, never commit
+_design_reference/
+
 .DS_Store
 .idea/
 .vscode/

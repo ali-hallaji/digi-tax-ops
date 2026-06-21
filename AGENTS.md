@@ -32,9 +32,9 @@ The Postgres database name is `digitax`. Every file that references a database n
 - `sqlalchemy.url = ...@postgres:5432/digitax` in `alembic.ini`
 - Default in `app/core/config.py`
 
-**Guardrail:** `scripts/preflight.sh` already asserts that the database name extracted from `DATABASE_URL` matches `POSTGRES_DB`. Run it before every deploy. If a future change introduces a mismatch, preflight fails loud.
+**Guardrail:** `scripts/preflight.sh` asserts (1) the database name in `DATABASE_URL` matches `POSTGRES_DB`, and (2) no unexpected databases exist on the server beyond the system DBs and the canonical `digitax`. If either check fails, preflight exits non-zero. Run it before every deploy.
 
-**Orphan:** A stale database named `digi_tax` (8 tables, rev `8b7a7fdc2f8d`) exists on the local dev server from an earlier misconfiguration. It holds no real data. It can be dropped with `DROP DATABASE digi_tax` after confirming the target is the right server.
+**Orphan (resolved 2026-06-21):** A stale database `digi_tax` (8 tables) from an earlier misconfiguration has been permanently dropped. The preflight orphan-DB check now prevents any similar database from silently persisting.
 
 ## Do Not
 - Do not edit backend or frontend application logic from this repo.

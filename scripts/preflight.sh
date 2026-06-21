@@ -154,6 +154,19 @@ else
   fail "Postgres did not respond to pg_isready"
 fi
 
+# Canonical DB is "digitax" (no underscore). Detect any lingering orphan — in
+# particular "digi_tax" — that would indicate a prior misconfiguration survived.
+orphan_dbs="$(docker-compose exec -T postgres \
+  env PGPASSWORD="$POSTGRES_PASSWORD" \
+  psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \
+  "SELECT datname FROM pg_database
+   WHERE datname NOT IN ('postgres','template0','template1','$POSTGRES_DB');" 2>/dev/null)"
+if [ -z "$orphan_dbs" ]; then
+  pass "No orphan databases found (canonical DB is '$POSTGRES_DB')"
+else
+  fail "Orphan database(s) detected: $orphan_dbs — drop them before deploying (canonical DB is 'digitax')"
+fi
+
 if container_running api; then
   pass "API container is running"
 else
