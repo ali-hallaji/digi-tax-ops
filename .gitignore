@@ -17,3 +17,4 @@ _design_reference/
 claude_partial_*.txt
 claude_partial_*.diff
 .claude/settings.local.json
+.serena/

@@ -80,3 +80,9 @@ Short one-line; body only for migrations/security/API-breaking/major decisions.
 `cp .env.example .env`; `DATABASE_URL` db name must match `POSTGRES_DB`. Required:
 `DATABASE_URL`, `POSTGRES_*`, `REDIS_URL`, `VITE_API_BASE_URL`, `FRONTEND_PORT`.
 Proxy values belong in shell/ignored local env only — never committed.
+
+
+## Token Discipline — Serena MCP
+At the start of every session, activate the Serena project for this repo:
+- Call mcp__serena__activate_project with projectPath: /home/hitman47/Public/projects/digitax-workspace/digi-tax-ops
+- Use Serena's symbol-level tools instead of reading full files.
