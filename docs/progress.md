@@ -165,12 +165,23 @@ Phase 0.2 local/staging orchestration hardening.
   Admin profiles index: pending badge, status filter tabs, full list.
   Admin sidebar cleanup. Admin API module extended. Frontend only.
 
-## Active Next (R1A — UI Redesign Phase 5)
+  **UI Redesign Phase 5 — Purchases/Expenses Polish + Operational Dashboard (2026-06-24, committed):**
+  Purchases page: RTL dialogs, design-token `StatusPill` component (uses `--success/warning/danger`
+  tint tokens), vendor picker (select existing OR free-type new name with clear button), inline
+  Persian error display, progressive partial-payment amount disclosure, `fmtDate`/`fmtRial` helpers.
+  Expenses page: RTL dialog, inline Persian errors, correct `DialogFooter` button order (DOM
+  `[انصراف, ذخیره]` + `flex-row-reverse`). Operational dashboard (stage_2): removed all fake
+  hash-seeded KPI/cash/activity sections (`getDashboardSummary`/`getDashboardActivity` API calls
+  deleted); replaced with honest "گزارش مالی واقعی — P6" placeholder card. Zero fabricated figures
+  shown to users. E2E specs 08–10 already cover admin review, taxpayer profile, purchases/expenses
+  flows. Frontend commit: `914e45b`. No backend changes. No new migrations.
 
-- **Phase 5: Purchases/Expenses polish + Operational Dashboard + E2E close-out**
-  - Purchases and expenses list/form UI: align with Phase 3-4 design system, RTL, status tokens
-  - Operational dashboard: real metrics wired (customers count, products count, invoice totals, P/L)
-  - E2E harness: extend specs to cover Phase 4 taxpayer profile flows and Phase 5 dashboard
+## Active Next (R1A — Phase 6 / Receipts+Payments)
+
+- **Phase 6: Real financial data + Receipts/Payments**
+  - Operational dashboard: wire real customers/products/invoice counts from backend (replace placeholder)
+  - Receipts and payments module (P4 from original roadmap)
+  - Real P&L and cashflow from actual transactions
 - Add migration-state verification to `smoke_test.sh` (check no pending migrations on `alembic
   current` vs `alembic heads`).
 - Wire Nginx for production TLS termination when ready (currently `nginx/placeholder.conf`).

@@ -4,11 +4,11 @@ Last updated: 2026-06-24
 
 ## Active Focus
 
-**UI Redesign Phase 5 — Purchases/Expenses polish + Operational Dashboard + E2E close-out.**
+**UI Redesign Phase 5 — complete (committed 2026-06-24). Next: Phase 6 / Receipts+Payments.**
 
-Phases 1–4 of the UI redesign are complete and pushed to `digi-tax-frontend`. No pending backend
-migrations from the UI redesign work. Next: polish purchases/expenses UI, wire real operational
-dashboard metrics, and extend E2E specs to cover the new flows.
+Phases 1–5 of the UI redesign are complete. Phase 5 commit: `914e45b` (frontend). No pending
+backend migrations from UI redesign work. Next: receipts/payments module, real operational
+dashboard data, and Phase 6 E2E coverage.
 
 ## Completed UI Redesign Phases (all frontend-only, no new migrations)
 
@@ -18,6 +18,7 @@ dashboard metrics, and extend E2E specs to cover the new flows.
 | Phase 2 | Wizard + Dashboard + Sidebars (soft-lock dialog, 409 inline errors) | ✓ pushed |
 | Phase 3 | Customers + Products + Invoice builder + `useIdentityField` validation | ✓ pushed |
 | Phase 4 | Taxpayer Profile 5-states + Admin Panel polish | ✓ pushed |
+| Phase 5 | Purchases/Expenses RTL polish + honest operational dashboard | ✓ committed |
 
 **Key cross-cutting features landed in Phases 1–4:**
 - `useIdentityField` hook: single source of truth for کد ملی / شناسه ملی / کد اقتصادی / موبایل
@@ -47,11 +48,11 @@ dashboard metrics, and extend E2E specs to cover the new flows.
 - **Release 1B** — Moadian real submit + inquiry (crypto blocked pending spec confirmation)
 - **Release 1C** — accountant-ready reports, Excel import, partner role
 
-## Current Task Boundary (Phase 5)
+## Current Task Boundary (Phase 6 — Receipts + Real Dashboard)
 
-- Purchases/expenses UI: align list/form with Phase 3-4 design system, RTL, status tokens.
-- Operational dashboard: wire real metrics (customers count, products count, invoice totals, P/L).
-- E2E harness: extend specs to cover taxpayer profile 5-state flows and operational dashboard.
+- Receipts and payments module: record cash received / paid out against invoices and purchases.
+- Operational dashboard: wire real backend metrics (replace P6 placeholder card with actual counts).
+- Real P&L and cashflow derived from purchases + expenses + receipts.
 - Keep orchestration and integration docs aligned with canonical sibling repos.
 - Validate service wiring without changing backend/frontend application logic.
 - Keep optional infrastructure out of the default stack.
