@@ -4,11 +4,21 @@ Last updated: 2026-06-24
 
 ## Active Focus
 
-**UI Redesign Phase 5 — complete (committed 2026-06-24). Next: Phase 6 / Receipts+Payments.**
+**UI Redesign Phase 5 — COMPLETE (2026-06-24, full scope). Next: Phase 6 / Receipts+Payments.**
 
-Phases 1–5 of the UI redesign are complete. Phase 5 commit: `914e45b` (frontend). No pending
-backend migrations from UI redesign work. Next: receipts/payments module, real operational
-dashboard data, and Phase 6 E2E coverage.
+Phases 1–5 of the UI redesign are complete. Phase 5 full scope delivered:
+- JalaliDateField on all purchase/expense forms (Gregorian date picker was a BUG — now fixed)
+- Amount input blur-formatting (thousands separator + Persian digits, ASCII on persist)
+- Edit/delete row actions on purchases AND expenses with Persian confirm dialogs
+- Purchase line-item mode: smart product search + free-title + qty×unit price total
+- Vendor balance recompute verified on edit/delete
+- Honest operational dashboard: fake KPI cards removed, "P6" internal string purged
+- Admin approve/reject flow audited and confirmed correct
+- Gate verified: unapproved user (09120000099) reaches purchases/expenses without any block
+- Backend CRUD fully verified via curl (PATCH, DELETE, line-item create)
+- pnpm typecheck → zero errors; pnpm build → clean
+- CLAUDE.md updated with canonical UI rules (JalaliDateField, amount input pattern)
+No backend code changes. No new migrations.
 
 ## Completed UI Redesign Phases (all frontend-only, no new migrations)
 

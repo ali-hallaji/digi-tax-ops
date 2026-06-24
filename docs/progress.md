@@ -165,16 +165,31 @@ Phase 0.2 local/staging orchestration hardening.
   Admin profiles index: pending badge, status filter tabs, full list.
   Admin sidebar cleanup. Admin API module extended. Frontend only.
 
-  **UI Redesign Phase 5 — Purchases/Expenses Polish + Operational Dashboard (2026-06-24, committed):**
-  Purchases page: RTL dialogs, design-token `StatusPill` component (uses `--success/warning/danger`
-  tint tokens), vendor picker (select existing OR free-type new name with clear button), inline
-  Persian error display, progressive partial-payment amount disclosure, `fmtDate`/`fmtRial` helpers.
-  Expenses page: RTL dialog, inline Persian errors, correct `DialogFooter` button order (DOM
-  `[انصراف, ذخیره]` + `flex-row-reverse`). Operational dashboard (stage_2): removed all fake
-  hash-seeded KPI/cash/activity sections (`getDashboardSummary`/`getDashboardActivity` API calls
-  deleted); replaced with honest "گزارش مالی واقعی — P6" placeholder card. Zero fabricated figures
-  shown to users. E2E specs 08–10 already cover admin review, taxpayer profile, purchases/expenses
-  flows. Frontend commit: `914e45b`. No backend changes. No new migrations.
+  **UI Redesign Phase 5 — Purchases/Expenses Full Polish + Operational Dashboard (2026-06-24):**
+  Complete rewrite of `_app.app.purchases.tsx`:
+  - **JalaliDateField**: replaced native `<input type="date">` on all forms with the Shamsi picker
+    (Gregorian shown as sub-hint, never as primary). CLAUDE.md updated with canonical rule.
+  - **Amount inputs**: on-blur formatting via `formatDecimalForInputDisplay` (thousands separator +
+    Persian digits); on-focus strips to raw; on-submit `normalizeDecimalInput` → ASCII decimal.
+    Placeholders show separator-formatted examples (مثال: ۲,۵۰۰,۰۰۰).
+  - **StatusPill**: design-token CSS vars (`--success/warning/danger`-tint).
+  - **Edit dialogs**: EditPurchaseDialog (payment status, paid amount, note); EditExpenseDialog
+    (all fields); both pre-populated and wired to PATCH endpoints.
+  - **Delete confirm**: shared `DeleteConfirmDialog` with friendly Persian description; purchase
+    delete triggers vendor-balance recompute (backend already handles this).
+  - **Line-item mode**: toggle "افزودن اقلام خرید" reveals line entry with product smart-search
+    (filters tenant product list); free-text description allowed when product not found; qty ×
+    unit_price totals displayed; backend `purchase_lines` table already existed.
+  - **Vendor picker**: select existing OR type new name with clear button.
+  - **Operational dashboard**: removed all fake hash-seeded KPI sections; "P6" internal code
+    removed from user-visible text; replaced with calm Persian honest placeholder.
+  - **Admin pages**: audited — no changes needed (design tokens correct, approve/reject flow solid).
+  - **Gate check verified**: unapproved user (09120000099) can create purchases and expenses.
+  - **Backend CRUD verified via curl**: PATCH (payment update + outstanding recompute), DELETE
+    (vendor balance recompute), line-item create (total = sum of lines), expenses PATCH/DELETE.
+  - **Backend tests**: 513 pass, 6 pre-existing failures (3 auth-route, 3 moadian-profile) —
+    unchanged from before this phase. Ruff + black clean.
+  - Frontend commit: see git log. No backend code changes. No new migrations.
 
 ## Active Next (R1A — Phase 6 / Receipts+Payments)
 
