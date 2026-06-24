@@ -191,6 +191,67 @@ Phase 0.2 local/staging orchestration hardening.
     unchanged from before this phase. Ruff + black clean.
   - Frontend commit: see git log. No backend code changes. No new migrations.
 
+  **Phase 5 AUDIT CORRECTION (2026-06-25) — Phase 5 is NOT closed.**
+  A re-audit ran the full E2E suite and the runtime stack for the first time. The
+  original Phase 5 close-out above was premature and partly inaccurate. True state:
+  - **Backend ownership traced.** The purchases/expenses/vendors backend
+    (modules, `purchase_lines` table, migration `e1f2a3b4c5d6`, PATCH/DELETE
+    endpoints, vendor-balance recompute) was committed earlier in
+    **`digi-tax-backend@08243d4` "Implement vendors, purchases, and expenses modules"** —
+    a pre-Phase-5 commit. It was never missing or uncommitted; the docs simply
+    never traced it. Migrations confirmed at head; `purchase_lines` present.
+  - **Two backend DELETE bugs FOUND and FIXED** (both unhandled FK-violation 500s,
+    surfaced only at runtime; the original "verified via curl" never exercised them):
+    1. *Delete a purchase that has line items → 500* (`purchase_lines_purchase_id_fkey`):
+       children were not flushed before the parent delete. Fixed with an explicit
+       `DELETE FROM purchase_lines … ` + flush. Retest: 200, child rows gone.
+    2. *Delete a vendor still referenced by purchases → 500* (`purchases_vendor_id_fkey`):
+       the delete path lacked the IntegrityError guard the create/update paths had.
+       Fixed → 409 with Persian message. Retest: 409.
+    Backend tests after fixes: 513 pass / same 6 pre-existing failures. Ruff+black clean.
+  - **E2E was never actually run during Phase 5 (only typechecked).** First real run:
+    **15 failed / 11 passed / 1 skipped** (exit 1). Root causes:
+    - Specs 10/11 (Phase 5's own) failed on a toast-copy mismatch: app uses the
+      app-wide convention `"خرید/هزینه با موفقیت ثبت شد"`; specs asserted the shorter
+      form. **Fixed (specs aligned).** Spec 11's line-item sub-step was a soft-warn
+      that hid two spec bugs (`افزودن سطر` vs real `افزودن قلم`; product created with
+      invalid `product_type:"product"` instead of `"goods"`). **Fixed → hard assertions,
+      now green:** product search + free-title line + save sends `lines[]` (verified).
+    - Specs 01/02/05/07/08/09 (11 failures) are **pre-existing drift from UI Redesign
+      Phases 1–4** — they assert headings/labels/structure that the redesign renamed
+      (e.g. `حوزه فعالیت` no longer exists in the wizard). The suite has been red since
+      the redesign; Phase 5 never ran it so it stayed hidden. **DEFERRED** to a
+      dedicated "E2E spec refresh" follow-up (out of Phase 5 scope).
+  - **Fake-success path KILLED (worst finding).** The dashboard quick-action bar
+    (`quick-action-bar.tsx`) opened orphan mockup sheets whose submit fired a success
+    toast with **no API call** — both `NewPurchaseSheet` (mislabelled "ثبت هزینه") and
+    the `TransactionDialog` "ثبت فروش". Rewired: expense → the real wired
+    `NewExpenseDialog` (persists via `createExpense`); sale/receipt/invoice → real-page
+    links. **Deleted the entire orphan `components/digitax/purchases/` mockup dir
+    (15 files)** after confirming nothing real imports it.
+  - **Vendor duplicate-409 was dead code.** Vendors have no `(tenant_id,name)` unique
+    constraint, so the `IntegrityError→409` branch in vendor create/update could never
+    fire (duplicate names silently succeed). Per decision, **NOT** adding a hard
+    constraint (same risk class as the شناسه‌ملی checksum that rejected valid data) —
+    removed the dead branch so the code stops lying. Duplicate-vendor detection is a
+    future SOFT warning (see Known Risks).
+  - **Seed reset.** `09120000099` had drifted to 4 businesses w/ data. DB volume was
+    wiped + re-migrated + re-seeded; the user is back to one empty stage_1 business.
+  - **Still open / out of scope:** `accounting.tsx` also uses the fake `TransactionDialog`
+    (separate page, not a quick-action — logged); E2E spec refresh for the 11 drifted
+    specs; integration tests for the two delete paths (the FakeDBSession harness
+    bypasses them, which is why the bugs shipped).
+
+## Active Next (R1A — Phase 5 close-out remainder, then Phase 6)
+
+- **E2E spec refresh** (specs 01/02/05/07/08/09 + spec 08 taxpayer + 09 nav) to match
+  the redesigned UI — restore an honest-green full suite.
+- **Accounting page fake `TransactionDialog`** — wire to a real flow or remove (same
+  class as the quick-action fix).
+- **Integration tests for delete-with-lines and delete-vendor-with-purchases** so the
+  fixed 500s cannot regress (FakeDBSession unit harness does not cover them).
+- **Vendor duplicate** soft-warning (non-blocking) instead of the removed dead 409.
+
 ## Active Next (R1A — Phase 6 / Receipts+Payments)
 
 - **Phase 6: Real financial data + Receipts/Payments**
@@ -203,6 +264,18 @@ Phase 0.2 local/staging orchestration hardening.
 
 ## Known Risks
 
+- **E2E suite drifted (R1A) — 11 specs red against the redesigned UI.** Specs
+  01/02/05/07/08/09 assert pre-redesign headings/labels (e.g. `حوزه فعالیت`). Phase 5
+  specs 10/11 are fixed and green; the rest need a dedicated refresh before the suite
+  can gate releases. Until then, "E2E green" must name which specs ran.
+- **Accounting page fake transaction dialog** — `accounting.tsx` uses `TransactionDialog`,
+  which shows a success toast with no API call (silent data loss). Out of Phase 5 scope
+  but must be wired/removed before that page is considered real.
+- **Vendor duplicate names allowed** — no `(tenant_id,name)` unique constraint; the dead
+  409 branch was removed. Intentional (avoid false rejects); add a SOFT warning later.
+- **Delete-path integrity tests missing** — the two fixed DELETE 500s (line-item purchase,
+  vendor-with-purchases) have no automated coverage; the FakeDBSession unit harness skips
+  the real service path. Add integration tests.
 - **Migration-state smoke missing** — staging deploys can silently miss migrations. Must add
   `alembic current` check to `smoke_test.sh`.
 - **Nginx is a placeholder** — `nginx/nginx.conf` is `placeholder.conf`, not in compose.

@@ -84,9 +84,15 @@ are `partial`.
 - ~~Merchant onboarding wizard is **missing**~~ — **DONE (R1A-P1, 2026-06-18):** Activation dashboard + business create wizard live; migration `a2b3c4d5e6f7` required on deploy.
 - **Bug B fixed (2026-06-18):** `ensure_default_tenant_membership` auto-created a business for every new login — removed from `get_or_create_auth_user`. New users now correctly land on wizard (stage_0). ⚠️ Requires `docker-compose build --no-cache api` + `alembic upgrade head` + re-seed on any running instance.
 - **E2E harness shipped, stabilized + spec 07 full journey (2026-06-18–19):** Playwright 7-spec harness in `digi-tax-frontend/e2e/`. `pnpm e2e` (headless) · `pnpm e2e:watch` (interactive picker → headed, 1 worker, slowMo 3500 ms, Persian caption cards 7 s, `pauseForWatch` live toasts at every checkpoint) · `pnpm e2e:headed` (headed all workers). 7/7 green, 1 skipped (spec 03 idempotent). White-screen flash fixed: stage_0 redirect in `beforeLoad`. Spec 07: full journey stage_0 → wizard S1–S6 → activation dashboard → customer + product (UI) → invoice finalize (API) → stage_2 invite banner in one continuous test.
+- **E2E status correction (2026-06-25):** the suite now has 11 specs (01–11), not 7, and
+  is **NOT** all-green. First full run: 15 failed / 11 passed / 1 skipped. Phase-5 specs
+  10/11 are fixed and green; specs 01/02/05/07/08/09 are red from UI-Redesign Phase 1–4
+  drift and await a dedicated refresh. Do not cite "E2E green" without naming the specs.
 - Admin operations console is **partial** (Tier-1 and Tier-2 done; console not complete).
 - Subscription / paywall / entitlement is **missing** — launch blocker.
-- Purchases, expenses, real P&L, and balances are **missing** — launch blockers.
+- Purchases & expenses are **implemented** (backend `08243d4`; UI redesign Phase 5). Real
+  P&L and balances still **missing** — launch blockers. UI-Redesign Phase 5 close-out has
+  open items (see `progress.md` Phase 5 AUDIT CORRECTION 2026-06-25).
 - Moadian submission (P6) must **truly work** — no fake. Foundation done (P3.0B–P3.5).
 - P2.7 real PDF via **WeasyPrint** — done 2026-06-11. `fpdf2`/`uharfbuzz` removed. Dockerfile changed.
 - Frontend has 12+ routes that still use mock data — must be hidden or wired before user demos.
