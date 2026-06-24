@@ -1,6 +1,6 @@
 # Ops Progress
 
-Last updated: 2026-06-20
+Last updated: 2026-06-24
 
 ## Current Phase
 Phase 0.2 local/staging orchestration hardening.
@@ -136,9 +136,41 @@ Phase 0.2 local/staging orchestration hardening.
   Blueprint PART 4 §4.6: soft-lock + wizard-handoff standard documented.
   **Deploy action: frontend image rebuild only.**
 
-## Active Next (R1A-P3)
+  **R1A-P2.5 — Navigation & User-Journey Integration — see entry above.**
 
-- R1A-P3 next feature phase (TBD by founder).
+  **UI Redesign Phase 1 — Design System + Rebrand (2026-06-24, pushed):**
+  Unified design tokens (`tokens.css`), dark mode, teal rebrand (`--primary: oklch(0.508 0.097 184.5)`),
+  Vazirmatn font wired, `--radius: 0.875rem`, status token system (`--success/warning/danger/info/locked`).
+  RTL login fix. No backend changes. Frontend only.
+
+  **UI Redesign Phase 2 — Wizard + Dashboard + Sidebars (2026-06-24, pushed):**
+  Onboarding wizard polish, activation dashboard, operational dashboard skeleton.
+  App-sidebar fully restructured: pre/post-approval states, soft-lock dialog with CTA,
+  "به زودی" badges, 409 conflict errors inline on customer form. Frontend only.
+
+  **UI Redesign Phase 3 — Customers + Products + Invoice Builder + Validation (2026-06-24, pushed):**
+  Customer and product CRUD forms hardened. Invoice builder (new invoice route) updated.
+  `useIdentityField` hook wired across all forms as single source of truth for
+  کد ملی / شناسه ملی / کد اقتصادی / موبایل validation (blur-triggered, count hint while typing,
+  Persian friendly errors). `identityValidation.ts` updated: improved mod-11 logic,
+  operator-prefix whitelist for mobile. 409 conflict handling: inline Persian error (never raw JSON).
+  Moadian page: placeholder UI with "در دست توسعه" state (real submission blocked — R1B).
+  Frontend only.
+
+  **UI Redesign Phase 4 — Taxpayer Profile 5-States + Admin Panel Polish (2026-06-24, pushed):**
+  Taxpayer profile route: full 5-state flow (empty → draft → pending → approved → rejected/expired)
+  with per-state Persian messaging, confirmation dialog before submit, form locked after submit/approval,
+  soft-locked gated features revealed on approval.
+  Admin taxpayer review: detailed profile view, approve/reject actions, rejection-reason form.
+  Admin profiles index: pending badge, status filter tabs, full list.
+  Admin sidebar cleanup. Admin API module extended. Frontend only.
+
+## Active Next (R1A — UI Redesign Phase 5)
+
+- **Phase 5: Purchases/Expenses polish + Operational Dashboard + E2E close-out**
+  - Purchases and expenses list/form UI: align with Phase 3-4 design system, RTL, status tokens
+  - Operational dashboard: real metrics wired (customers count, products count, invoice totals, P/L)
+  - E2E harness: extend specs to cover Phase 4 taxpayer profile flows and Phase 5 dashboard
 - Add migration-state verification to `smoke_test.sh` (check no pending migrations on `alembic
   current` vs `alembic heads`).
 - Wire Nginx for production TLS termination when ready (currently `nginx/placeholder.conf`).

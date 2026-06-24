@@ -1,11 +1,30 @@
 # Current Phase - Ops
 
-Last updated: 2026-06-17
+Last updated: 2026-06-24
 
 ## Active Focus
 
-Phase 0.2 orchestration is complete. Current focus: keep deploy docs, migration checklists, and
-service wiring aligned with the backend's Release 1A / 1B / 1C priorities.
+**UI Redesign Phase 5 — Purchases/Expenses polish + Operational Dashboard + E2E close-out.**
+
+Phases 1–4 of the UI redesign are complete and pushed to `digi-tax-frontend`. No pending backend
+migrations from the UI redesign work. Next: polish purchases/expenses UI, wire real operational
+dashboard metrics, and extend E2E specs to cover the new flows.
+
+## Completed UI Redesign Phases (all frontend-only, no new migrations)
+
+| Phase | Scope | Status |
+|-------|-------|--------|
+| Phase 1 | Design system + rebrand (tokens, dark mode, Vazirmatn, teal brand) | ✓ pushed |
+| Phase 2 | Wizard + Dashboard + Sidebars (soft-lock dialog, 409 inline errors) | ✓ pushed |
+| Phase 3 | Customers + Products + Invoice builder + `useIdentityField` validation | ✓ pushed |
+| Phase 4 | Taxpayer Profile 5-states + Admin Panel polish | ✓ pushed |
+
+**Key cross-cutting features landed in Phases 1–4:**
+- `useIdentityField` hook: single source of truth for کد ملی / شناسه ملی / کد اقتصادی / موبایل
+  (blur-triggered, count hint, mod-11 / weighted checksums, operator-prefix whitelist, Persian errors)
+- 409 conflict errors: inline Persian message, never raw JSON to user
+- Moadian page: placeholder "در دست توسعه" UI — real submission blocked at R1B (no fake IDs)
+- App sidebar: pre/post-approval states, soft-lock dialog with CTA, "به زودی" badges
 
 ## Current State
 
@@ -16,9 +35,11 @@ service wiring aligned with the backend's Release 1A / 1B / 1C priorities.
 - Bootstrap, preflight, and smoke-test scripts exist for repeatable validation.
 - WeasyPrint PDF migration complete (2026-06-11): backend Dockerfile installs 7 system packages;
   `api` image **must be rebuilt** for any deploy of P2.7+ backend.
-- Moadian foundation phases P3.0B–P3.5 complete: new migrations `e5f9a2c1d7b3`, `f3a8b2c1d5e7`,
+- Moadian foundation phases P3.0B–P3.5 complete: migrations `e5f9a2c1d7b3`, `f3a8b2c1d5e7`,
   and the Moadian tenant-profile migration must be applied on every staging/production deploy.
 - Feature gating (P3.5.8.x): frontend-only changes; no deploy action required.
+- UI Redesign Phases 1–4: frontend-only; **no new Alembic migrations**; frontend image rebuild
+  required to activate on staging.
 
 ## Release Structure (canonical in `docs/business_scope_freeze_v1.md`)
 
@@ -26,8 +47,11 @@ service wiring aligned with the backend's Release 1A / 1B / 1C priorities.
 - **Release 1B** — Moadian real submit + inquiry (crypto blocked pending spec confirmation)
 - **Release 1C** — accountant-ready reports, Excel import, partner role
 
-## Current Task Boundary
+## Current Task Boundary (Phase 5)
 
+- Purchases/expenses UI: align list/form with Phase 3-4 design system, RTL, status tokens.
+- Operational dashboard: wire real metrics (customers count, products count, invoice totals, P/L).
+- E2E harness: extend specs to cover taxpayer profile 5-state flows and operational dashboard.
 - Keep orchestration and integration docs aligned with canonical sibling repos.
 - Validate service wiring without changing backend/frontend application logic.
 - Keep optional infrastructure out of the default stack.
