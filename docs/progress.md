@@ -1,6 +1,6 @@
 # Ops Progress
 
-Last updated: 2026-06-24
+Last updated: 2026-06-25
 
 ## Current Phase
 Phase 0.2 local/staging orchestration hardening.
@@ -242,7 +242,26 @@ Phase 0.2 local/staging orchestration hardening.
     specs; integration tests for the two delete paths (the FakeDBSession harness
     bypasses them, which is why the bugs shipped).
 
-## Active Next (R1A — Phase 5 close-out remainder, then Phase 6)
+  **UI Redesign Phase 5 — FINAL CLOSE-OUT (2026-06-25, this session):**
+  Two remaining blockers fixed before the Phase 5 push:
+  - **Vazirmatn font regression fixed.** The app font was loading from
+    `fonts.googleapis.com` CDN — slow and often blocked in Iran, causing FOUT
+    (fallback flash before swap). Fixed: installed `vazirmatn` npm package, copied
+    6 woff2 files (weights 300–800) to `public/fonts/`, added `@font-face` declarations
+    with `font-display: swap` in `src/styles.css`, added `<link rel="preload" as="font">`
+    for Regular weight in `__root.tsx`, removed the Google Fonts stylesheet link.
+    Browser verified: only `localhost/fonts/Vazirmatn-*.woff2` requested (local, fast);
+    computed `body { font-family }` = Vazirmatn; no remote font requests.
+  - **Purchase detail view added (`ViewPurchaseDialog`).** Eye icon (مشاهده) added to
+    each purchase row (before edit/delete). Opens a read-only detail: supplier name,
+    Jalali date with Gregorian sub-hint, payment status pill, line items table (شرح /
+    تعداد / قیمت واحد / جمع), persisted مبلغ کل, and note. Math verified end-to-end:
+    2×15M + 5×500K = ۳۲,۵۰۰,۰۰۰ — backend total matches view exactly. RTL correct
+    at 390px and desktop, light and dark. No backend changes.
+  Frontend commits: e77f848 (Phase 5 core) + this session (font + detail view).
+  **Phase 5 is now TRULY closed. All three repos ready to push.**
+
+## Active Next (R1A — Phase 6 and Phase 5 follow-ups)
 
 - **E2E spec refresh** (specs 01/02/05/07/08/09 + spec 08 taxpayer + 09 nav) to match
   the redesigned UI — restore an honest-green full suite.

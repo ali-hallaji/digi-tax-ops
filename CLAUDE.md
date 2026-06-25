@@ -49,12 +49,17 @@ Owner's proven sequence:
 ```bash
 git pull
 docker-compose config                  # validate first
-docker-compose build api               # if backend changed
+docker-compose build api               # if backend changed  (see note ↓)
 docker-compose build --no-cache frontend   # if frontend changed
 docker-compose up -d                   # postgres+redis → api → frontend
 docker-compose exec api python -m alembic upgrade head   # if schema changed
 bash scripts/smoke_test.sh
 ```
+> **Stale-image caution:** if a backend change doesn't take effect after deploy, the
+> cached `COPY ./app` layer is the culprit — rebuild with `docker-compose build
+> --no-cache api`. This is the same stale-image trap documented in the workspace
+> CLAUDE.md §5.1; it can bite on the server too, not just locally.
+
 `VITE_API_BASE_URL` is **build-time** — frontend image must be rebuilt when it or
 frontend source changes; restart alone is not enough. Migrations always run inside
 the api container.
@@ -81,8 +86,12 @@ Short one-line; body only for migrations/security/API-breaking/major decisions.
 `DATABASE_URL`, `POSTGRES_*`, `REDIS_URL`, `VITE_API_BASE_URL`, `FRONTEND_PORT`.
 Proxy values belong in shell/ignored local env only — never committed.
 
-
 ## Token Discipline — Serena MCP
-At the start of every session, activate the Serena project for this repo:
-- Call mcp__serena__activate_project with projectPath: /home/hitman47/Public/projects/digitax-workspace/digi-tax-ops
-- Use Serena's symbol-level tools instead of reading full files.
+Serena allows **only one project active at a time**. When you start working in THIS
+repo, activate its project; switch with `activate_project` when you move to another
+repo. Do **not** pre-activate all three repos at session start (they fight and only the
+last sticks — see workspace CLAUDE.md §0).
+- Activate: `mcp__serena__activate_project` with
+  `/home/hitman47/Public/projects/digitax-workspace/digi-tax-ops`.
+- Use Serena's symbol-level tools instead of reading full files; fall back to
+  bash cat/read only for config files or non-code assets.

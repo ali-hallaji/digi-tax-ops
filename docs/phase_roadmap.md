@@ -1,6 +1,6 @@
 # Digi Invoice — Operational Phase Roadmap
 
-Last updated: 2026-06-17
+Last updated: 2026-06-25
 
 This is the **product-level** roadmap — the true status of each phase from a user/business
 standpoint. For the full product thesis, revenue model, personas, onboarding/admin/partner model,
@@ -90,9 +90,10 @@ are `partial`.
   drift and await a dedicated refresh. Do not cite "E2E green" without naming the specs.
 - Admin operations console is **partial** (Tier-1 and Tier-2 done; console not complete).
 - Subscription / paywall / entitlement is **missing** — launch blocker.
-- Purchases & expenses are **implemented** (backend `08243d4`; UI redesign Phase 5). Real
-  P&L and balances still **missing** — launch blockers. UI-Redesign Phase 5 close-out has
-  open items (see `progress.md` Phase 5 AUDIT CORRECTION 2026-06-25).
+- Purchases & expenses are **implemented** (backend `08243d4`; UI redesign Phase 5,
+  final close-out 2026-06-25). Includes purchase detail view (مشاهده) + self-hosted
+  Vazirmatn font (no Google Fonts CDN). Real P&L and balances still **missing** — launch
+  blockers. Phase 5 is CLOSED; next: Phase 6 (Receipts/Payments + real dashboard data).
 - Moadian submission (P6) must **truly work** — no fake. Foundation done (P3.0B–P3.5).
 - P2.7 real PDF via **WeasyPrint** — done 2026-06-11. `fpdf2`/`uharfbuzz` removed. Dockerfile changed.
 - Frontend has 12+ routes that still use mock data — must be hidden or wired before user demos.
