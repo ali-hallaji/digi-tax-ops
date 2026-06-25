@@ -282,7 +282,14 @@ Phase 0.2 local/staging orchestration hardening.
     `pnpm typecheck + build`: zero errors.
   - **Deploy action:** `alembic upgrade head` in api container + rebuild api image.
   - **Gate:** UNGATED — no taxpayer profile required.
-  - **Commits:** backend `d695570` · frontend `698689a`. Not pushed — awaiting founder confirm.
+  - **UX correction (2026-06-25, this session):** Settlement dialog contextual wording
+    hardened — replaced the generic "طرف حساب" label + muted "مانده پرداختنی" warning box
+    with a single prominent «بدهی شما به {نام}: {مبلغ}» / «طلب شما از {نام}: {مبلغ}» line
+    (settlement-dialog.tsx). Standalone NewPaymentDialog (/app/payments): party selection
+    now auto-fills amount from outstanding balance + shows the same context line with
+    «تسویه کامل» link; mode toggle resets amount (_app.app.payments.tsx). pnpm typecheck +
+    build: zero errors.
+  - **Commits:** backend `d695570` · frontend `698689a` + `d57a746`. Not pushed — awaiting founder confirm.
 
 ## Active Next (R1A — follow-ups)
 
