@@ -71,6 +71,12 @@ and are run manually by the founder in a terminal: `bootstrap.sh` (DB+migrations
 `preflight.sh` (compose/env/DB/readiness), `smoke_test.sh`
 (health/CORS/OTP/bearer/frontend), `up_local_test.sh` (local bring-up shortcut).
 
+## Verification is the founder's job — no Playwright-driving, curl for test data
+Claude Code must NOT use the Playwright MCP to click/log-in/screenshot/verify during a
+task. After smoke scripts + typecheck + build pass, STOP and hand off.
+Verify endpoints via `curl` with a bearer token — never browser automation.
+The Playwright E2E suite runs only at phase end, by exit code.
+
 ## Hard constraints
 - Do not edit backend/frontend application logic from this repo.
 - Do not add Kubernetes/Prometheus/Grafana/MinIO by default.
