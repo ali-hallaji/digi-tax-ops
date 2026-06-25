@@ -261,7 +261,30 @@ Phase 0.2 local/staging orchestration hardening.
   Frontend commits: e77f848 (Phase 5 core) + this session (font + detail view).
   **Phase 5 is now TRULY closed. All three repos ready to push.**
 
-## Active Next (R1A — Phase 6 and Phase 5 follow-ups)
+  **R1A-Phase 6 — Receipts & Payments (دریافت و پرداخت) (2026-06-25):**
+  Full settlements module — vendor payments (outgoing) and customer receipts (incoming).
+  - **Backend (digi-tax-backend):** New `payments` table (`g4h5i6j7k8l9` migration —
+    `payments` + `customers.total_receivable`; `down_revision = e1f2a3b4c5d6` for linear
+    chain — payments FKs vendors/customers which only exist after that migration);
+    `app/modules/payments/` CRUD module (list/create/get/patch/delete); `recompute_vendor_balance`
+    updated to subtract settlement amounts from purchase outstanding; new `recompute_customer_receivable`
+    computing from finalized invoices minus receipts; `CustomerResponse` gains
+    `total_receivable`; `alembic/env.py` updated with missing model imports
+    (expenses, vendors, purchases, payments). 10 integration tests.
+  - **Frontend (digi-tax-frontend):** `src/lib/api/payments.ts` API module;
+    `SettlementDialog` component (prefilled, "تسویه کامل" one-click, Jalali date,
+    onBlur amount formatting, inline Persian error); `/app/payments` list page with
+    tabs (همه / پرداخت‌ها / دریافت‌ها), edit/delete, direction badges; "ثبت پرداخت"
+    action on vendor rows (total_unpaid > 0) and purchase rows (outstanding > 0,
+    vendor_id set); "ثبت دریافت" action and receivable column on customer rows;
+    sidebar entry "دریافت و پرداخت"; `routeTree.gen.ts` updated;
+    `total_receivable` added to `CustomerResponse` type in `types.ts` (removed unsafe casts).
+    `pnpm typecheck + build`: zero errors.
+  - **Deploy action:** `alembic upgrade head` in api container + rebuild api image.
+  - **Gate:** UNGATED — no taxpayer profile required.
+  - **Commits:** backend `d695570` · frontend `698689a`. Not pushed — awaiting founder confirm.
+
+## Active Next (R1A — follow-ups)
 
 - **E2E spec refresh** (specs 01/02/05/07/08/09 + spec 08 taxpayer + 09 nav) to match
   the redesigned UI — restore an honest-green full suite.
@@ -270,15 +293,9 @@ Phase 0.2 local/staging orchestration hardening.
 - **Integration tests for delete-with-lines and delete-vendor-with-purchases** so the
   fixed 500s cannot regress (FakeDBSession unit harness does not cover them).
 - **Vendor duplicate** soft-warning (non-blocking) instead of the removed dead 409.
-
-## Active Next (R1A — Phase 6 / Receipts+Payments)
-
-- **Phase 6: Real financial data + Receipts/Payments**
-  - Operational dashboard: wire real customers/products/invoice counts from backend (replace placeholder)
-  - Receipts and payments module (P4 from original roadmap)
-  - Real P&L and cashflow from actual transactions
-- Add migration-state verification to `smoke_test.sh` (check no pending migrations on `alembic
-  current` vs `alembic heads`).
+- **Operational dashboard** — wire real customers/products/invoice counts from backend.
+- **Real P&L and cashflow** from actual transactions (R1A-P4 simple reports).
+- Add migration-state verification to `smoke_test.sh`.
 - Wire Nginx for production TLS termination when ready (currently `nginx/placeholder.conf`).
 
 ## Known Risks
