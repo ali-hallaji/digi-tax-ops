@@ -291,6 +291,35 @@ Phase 0.2 local/staging orchestration hardening.
     build: zero errors.
   - **Commits:** backend `d695570` · frontend `698689a` + `d57a746`. Not pushed — awaiting founder confirm.
 
+  **R1A-Phase 6 follow-up — Amount overflow guard + Settlement cockpit + Purchase form fixes (2026-06-26):**
+  Three targeted fixes without rebuilding any backend table or list.
+  - **Backend (digi-tax-backend):**
+    - P0 — Amount overflow (500 → 422): added `_MAX_AMOUNT = Decimal("9999999999999999.9999")` guard to
+      all Decimal string fields: `PurchaseLineRequest`, `PurchaseCreateRequest`, `PurchaseUpdateRequest`,
+      `PaymentCreateRequest`, `PaymentUpdateRequest`, `ExpenseCreateRequest`, `ExpenseUpdateRequest`.
+      Decimal-typed fields in `ProductCreateRequest.default_unit_price` and
+      `InvoiceLineCreateRequest.unit_price/quantity/discount_amount` get `le=` cap in Field.
+      Added `try/except DBAPIError → 422` safety catch in create+update routes for purchases, payments,
+      expenses. New test `test_amount_overflow_returns_422` in `test_purchase_routes.py` (passes).
+      Full suite: 525 pass / 7 fail (7 are all pre-existing; +1 new test). ruff + black clean.
+  - **Frontend (digi-tax-frontend):**
+    - P0 — Frontend magnitude guard: added `validateAmountMagnitude(value)` helper to `format.ts`
+      (threshold 1e15 Toman). Wired into: `SettlementDialog` (onBlur + submit), `NewExpenseDialog`
+      (submit), `EditExpenseDialog` (submit), `NewPurchaseDialog` (submit — lump_sum + paid_amount +
+      per-line unit_price), `EditPurchaseDialog` (submit).
+    - P0 — Purchase form partial payment fixes: reordered fields (lump_sum/lines box now FIRST, then
+      payment_status, then paid_amount — so total is visible before payment fields); added
+      `paid_amount ≤ total` inline validation; auto-promotes payment_status to "paid" when paid == total.
+      Applied to both `NewPurchaseDialog` (handleSubmit) and `EditPurchaseDialog` (handleSubmit).
+    - P1 — Settlement cockpit (`_app.app.transactions.tsx`): replaced mock data entirely; page now
+      fetches real `listPayments`, `getVendors`, `getCustomers`. Added «تسویه‌های باز» section above
+      the list — vendors with `total_unpaid > 0` and customers with `total_receivable > 0` each get a
+      row with name, amount (بدهی/طلب), one-click «ثبت پرداخت»/«ثبت دریافت» that opens the prefilled
+      `SettlementDialog`. Transaction history list below with vendor/customer/all filter. Page title
+      updated to «دریافت و پرداخت»; «ثبت دستی» demoted to secondary disabled button. All using
+      existing `SettlementDialog` — no new components. `pnpm typecheck + build`: zero errors.
+  - **Commits:** pending — awaiting founder manual browser test confirm before push.
+
 ## Active Next (R1A — follow-ups)
 
 - **E2E spec refresh** (specs 01/02/05/07/08/09 + spec 08 taxpayer + 09 nav) to match
