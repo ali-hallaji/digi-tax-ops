@@ -1,6 +1,6 @@
 # Digi Invoice — Operational Phase Roadmap
 
-Last updated: 2026-06-25
+Last updated: 2026-06-26
 
 This is the **product-level** roadmap — the true status of each phase from a user/business
 standpoint. For the full product thesis, revenue model, personas, onboarding/admin/partner model,
@@ -97,6 +97,10 @@ are `partial`.
 - Moadian submission (P6) must **truly work** — no fake. Foundation done (P3.0B–P3.5).
 - P2.7 real PDF via **WeasyPrint** — done 2026-06-11. `fpdf2`/`uharfbuzz` removed. Dockerfile changed.
 - Frontend has 12+ routes that still use mock data — must be hidden or wired before user demos.
+- **Demo data:** `scripts/seed_demo_business.py` (2026-06-26) fills one business with realistic
+  products/customers/vendors/purchases/expenses/credit-invoices via the API, leaving open vendor
+  debts + customer receivables so the «تسویه‌های باز» cockpit demos well. Use for QA/demos; safe
+  and re-runnable against the local stack.
 - ~~OTP is in-memory~~ — **DONE (R1A-P0):** Redis-backed (`RedisOTPService`); OTPs survive API restarts; `dev_otp` debug field intentional in `DEBUG=True` mode only — never in production.
 
 ---

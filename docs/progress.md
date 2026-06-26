@@ -1,11 +1,24 @@
 # Ops Progress
 
-Last updated: 2026-06-25
+Last updated: 2026-06-26
 
 ## Current Phase
 Phase 0.2 local/staging orchestration hardening.
 
 ## Completed
+
+- **2026-06-26 — Demo-data seeder (`scripts/seed_demo_business.py`):** New API-based,
+  stdlib-only seeder that fills ONE chosen business with realistic demo data via the
+  public API (dev OTP login → select business → seed). Generates ~10 products,
+  ~8 customers (valid کد ملی mod-11 / شناسه ملی length-only / valid mobile prefixes;
+  Enter at the prompt auto-generates valid IDs), ~4 vendors, ~10 purchases
+  (paid/unpaid/partial, some with line items), ~8 expenses (Persian category enum), and
+  several finalized credit invoices with partial receipts so OPEN customer receivables
+  exist. Deliberately leaves open vendor debts AND customer receivables so the
+  «تسویه‌های باز» settlement cockpit has rows. Re-runnable (random valid IDs each run,
+  per-record errors reported and skipped). Verified live: 4 open vendor debts +
+  3 open customer receivables; 10 purchases (7 with outstanding). Resolves request shapes
+  from the live OpenAPI; no app code touched. Run: `python3 scripts/seed_demo_business.py`.
 
 - **2026-06-20 — DB name single source of truth (`digitax`):** Root cause: two Postgres databases existed on the same server — `digitax` (canonical, 20+ tables at head `e1f2a3b4c5d6`) and `digi_tax` (orphan, 8 tables at stale rev `8b7a7fdc2f8d`). All defaults and examples now use `digitax`. Files changed: `digi-tax-backend/app/core/config.py` (default DATABASE_URL), `digi-tax-backend/alembic.ini` (sqlalchemy.url), `digi-tax-ops/.env.example` (POSTGRES_DB + DATABASE_URL), `digi-tax-ops/docker-compose.yml` (pg_isready default), `digi-tax-ops/scripts/bootstrap.sh` (POSTGRES_DB default). Guardrail: preflight.sh already checks DATABASE_URL db name matches POSTGRES_DB; canonical name `digitax` documented in AGENTS.md. Orphan `digi_tax` database left in place (safe to `DROP DATABASE digi_tax` after founder confirms no data there).
 
