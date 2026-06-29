@@ -384,6 +384,9 @@ Phase 0.2 local/staging orchestration hardening.
       with password + business grants), `POST /admin/users/{id}/reset-password`,
       `GET/POST /admin/users/{id}/business-access`, `DELETE …/business-access/{business_id}`.
       Existing list/activate/deactivate unchanged.
+      **⚠ CORRECTION (2026-06-30):** The per-business RBAC endpoints above were a
+      wrong-authority placement. They have since been removed from `/admin` and replaced
+      with owner-scoped `/businesses/{id}/members/*` endpoints (see 2026-06-30 entry below).
     - **Rate limiting (`app/core/rate_limit.py`):** Redis sliding-window (sorted sets) on
       `/auth/login` and `/auth/otp/request`, per IP **and** per username/mobile, with a
       temporary lockout and a friendly Persian 429 + `Retry-After`. Fail-open if Redis is down.
@@ -410,6 +413,8 @@ Phase 0.2 local/staging orchestration hardening.
       password + system-admin flag + per-business role grants), reset-password dialog,
       manage-business-access dialog (grant/revoke with role). Reuses `getBusinesses()` (admin
       token returns all businesses) for the business picker. Existing list/activate/deactivate kept.
+      **⚠ CORRECTION (2026-06-30):** This page and associated admin API functions have been
+      removed (wrong-authority). See 2026-06-30 entry for the owner-scoped replacement.
     - API: `loginWithPassword` + optional `captcha` on `requestOtp`; admin
       create/reset/grant/revoke/list-access functions + types. Business switcher already renders
       the backend-filtered list → shows only accessible businesses (admins see all). No change needed.
@@ -458,6 +463,53 @@ Phase 0.2 local/staging orchestration hardening.
     `AUTH_CAPTCHA_TTL_SECONDS`
   - **No backend code changed → no api rebuild needed.**
   - **Commits:** two — frontend (captcha fix), ops (manager + env + docs). Pending push.
+
+---
+
+- **Business member management — SECURITY ARCHITECTURE FIX (2026-06-30):**
+  Per-business user management moved OUT of `/admin` (staff-only) INTO `/app` (owner-scoped).
+  **Motivation:** the earlier auth-hardening session accidentally put per-business CRUD in
+  `/admin/users`, making it staff-accessible instead of owner-accessible. Fixed in this session.
+  - **Backend (`digi-tax-backend`):**
+    - **Removed from `/admin` routes:** `POST /admin/users` (create user), `POST /admin/users/{id}/reset-password`,
+      `GET/POST /admin/users/{id}/business-access`, `DELETE …/business-access/{business_id}`.
+      Admin list/activate/deactivate and all taxpayer routes remain (staff functions).
+    - **New file `app/modules/tenants/application/member_services.py`:** owner-scoped service functions —
+      `list_business_members`, `invite_member_by_mobile`, `create_member_with_password`, `update_member_role`,
+      `revoke_member`. Error classes: `BusinessNotFoundError`, `MemberNotFoundError`, `MemberConflictError`.
+      All Persian error messages. Owner-self-demotion and owner-self-revoke protected.
+    - **New file `app/modules/tenants/api/members.py`:** 5 new endpoints registered at `/businesses/*`:
+      - `GET  /businesses/{id}/members` — list active members (owner/admin)
+      - `POST /businesses/{id}/members/invite` — invite by mobile; auto-creates user if not found (201)
+      - `POST /businesses/{id}/members/create` — create username+password account (must_change_password=True, 201)
+      - `PATCH  /businesses/{id}/members/{user_id}` — update role
+      - `DELETE /businesses/{id}/members/{user_id}` — soft-revoke access
+    - **Auth guard `_require_owner_or_admin`:** verifies caller has `role in ('owner','admin')` in
+      `tenant_members` for that specific business. `tenant_id` taken from URL path, never request body.
+      Returns 403 if no qualifying membership. System admins can also own businesses and pass this check.
+    - **New schemas** added to `app/modules/tenants/schemas.py`: `BusinessMemberResponse`,
+      `BusinessMemberListResponse`, `BusinessMemberInviteRequest`, `BusinessMemberCreateRequest`,
+      `BusinessMemberUpdateRoleRequest`, `BusinessMemberErrorResponse`.
+    - **No migration needed** — `tenant_members.role` already exists; `create_business_for_user` already
+      sets `role="owner"` for the creator.
+    - ruff: clean. Tests: tenant module 18/18 pass; admin module 34/34 pass;
+      full suite 546 pass / 7 fail (7 are documented pre-existing baseline, not regressions).
+  - **Frontend (`digi-tax-frontend`):**
+    - **Removed:** `src/routes/_admin.admin.users.tsx` (the admin users page).
+    - **Removed from admin sidebar:** "کاربران" nav item removed from «مدیریت کاربران» group.
+    - **Removed from `src/lib/api/admin.ts`:** `createAdminUser`, `resetAdminUserPassword`,
+      `getAdminUserBusinessAccess`, `grantAdminUserBusinessAccess`, `revokeAdminUserBusinessAccess`.
+    - **New `src/lib/api/members.ts`:** owner-scoped member API — `listBusinessMembers`,
+      `inviteMemberByMobile`, `createMemberWithPassword`, `updateMemberRole`, `revokeMember`.
+      Types: `BusinessMember`, `BusinessMemberRole`, `BusinessMemberListResponse`.
+    - **New `src/routes/_app.app.members.tsx`:** merchant «کاربران و دسترسی‌ها» page.
+      Lists active members with masked mobile + role badge. Invite-by-mobile (primary tab, defaulted)
+      + create-username/password (secondary tab). Role-change select inline per member. Confirm-dialog
+      for revoke. Non-owner/admin callers see a polite access-denied note instead of the list.
+    - **Updated `app-sidebar.tsx`:** «کاربران و دسترسی‌ها» nav item added under «تنظیمات» group —
+      visible only when `activeBusiness.role` is "owner" or "admin".
+    - `pnpm typecheck`: 0 errors. `pnpm build`: success.
+  - **Commits:** pending — awaiting founder manual browser test confirm before push.
 
 ## Active Next (R1A — follow-ups) (R1A — follow-ups)
 
