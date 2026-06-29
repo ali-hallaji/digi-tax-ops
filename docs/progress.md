@@ -419,7 +419,47 @@ Phase 0.2 local/staging orchestration hardening.
     keep `auth_captcha_enabled`/`auth_rate_limit_enabled` ON.
   - **Commits:** pending — awaiting founder manual browser test confirm before push.
 
-## Active Next (R1A — follow-ups)
+---
+
+- **R1A-Auth-Fix + Script Manager (2026-06-29)**
+  - **Part A — CAPTCHA content-type fix (P0 blocker):**
+    - Root cause: the Altcha widget's `challengeurl` was an absolute `http://localhost:8000/…`
+      URL in dev (cross-origin, CORS-dependent) and a relative `/auth/captcha/challenge` (without
+      `/api/v1`) in some configurations — both resolved to the Vite SPA fallback, returning
+      `text/html` instead of `application/json`.
+    - Fix 1 — `vite.config.ts`: added `vite.server.proxy` for `/api → http://localhost:8000`
+      so relative API requests in dev are forwarded to the backend, not served as SPA routes.
+    - Fix 2 — `captcha-field.tsx`: `CHALLENGE_URL` now derives a **same-origin relative path**
+      from `VITE_API_BASE_URL` (strips origin if absolute: `http://localhost:8000/api/v1` →
+      `/api/v1`). Result: always `/api/v1/auth/captcha/challenge` — proxied by Vite in dev,
+      served by nginx in production. No cross-origin restriction, no SPA fallback.
+    - curl confirmed: `GET /api/v1/auth/captcha/challenge` → 200 `application/json`.
+    - `pnpm typecheck`: 0 errors. `pnpm build`: success.
+  - **Part B — Script manager + env tooling (`digi-tax-ops`):**
+    - `scripts/digi-invoice-manager.py` (stdlib only, no new deps): thin dispatcher for every
+      runnable operation. Commands: `setup:preflight/bootstrap/up`, `seed:dev/qa/demo`,
+      `db:upgrade/status/tables`, `front:dev/build/typecheck`, `test:backend/e2e`,
+      `maintenance:smoke/rebuild-api/rebuild-frontend`, `env:check`, `env:prod`.
+      `--help` lists all commands with one-line descriptions and examples.
+    - `env:check`: parses backend `config.py` (regex on Settings class) + frontend VITE_*
+      greps; diffs against `digi-tax-ops/.env`; refreshes both `.env.example` files.
+    - `env:prod`: prints production deployment checklist with secret/config guidance.
+    - Added missing vars to `digi-tax-ops/.env`: `SECRET_KEY` (dev placeholder — must
+      rotate before any deploy), `BACKEND_CORS_ORIGINS`, `AUTH_RATE_LIMIT_ENABLED/MAX_ATTEMPTS/
+      WINDOW_SECONDS/BLOCK_SECONDS`, `AUTH_CAPTCHA_ENABLED/MAX_NUMBER/TTL_SECONDS`.
+    - Refreshed `digi-tax-ops/.env.example` and `digi-tax-frontend/.env.example` — now match
+      the authoritative var list from code. New sections: Security, Auth hardening, Moadian.
+    - `docs/scripts_and_env.md`: new doc — quick-reference table, all scripts discovered,
+      E2E captcha note, full env var table, production checklist.
+  - **Exact env var names added/documented this session:**
+    `SECRET_KEY`, `BACKEND_CORS_ORIGINS`, `AUTH_RATE_LIMIT_ENABLED`,
+    `AUTH_RATE_LIMIT_MAX_ATTEMPTS`, `AUTH_RATE_LIMIT_WINDOW_SECONDS`,
+    `AUTH_RATE_LIMIT_BLOCK_SECONDS`, `AUTH_CAPTCHA_ENABLED`, `AUTH_CAPTCHA_MAX_NUMBER`,
+    `AUTH_CAPTCHA_TTL_SECONDS`
+  - **No backend code changed → no api rebuild needed.**
+  - **Commits:** two — frontend (captcha fix), ops (manager + env + docs). Pending push.
+
+## Active Next (R1A — follow-ups) (R1A — follow-ups)
 
 - **E2E suite + captcha:** with `auth_captcha_enabled` ON by default, specs that hit
   `/auth/otp/request` will get 400 until they solve/disable the captcha. The E2E backend env
