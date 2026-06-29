@@ -60,6 +60,7 @@ are `partial`.
 | P3.5.8.1 | Route-level access gate (`RouteAccessGate`) | **done** (staging deployment not confirmed) | No deploy impact; redeploy frontend if not live |
 | P3.5.8.2 | In-component self-gates + progressive sidebar | **done** (2026-06-16) | No deploy impact |
 | R1A-P2.5 | Navigation & User-Journey Integration — soft locks, صدور فاکتور reachable, wizard handoff, E2E spec 09 | **done** (2026-06-19) | Frontend image rebuild |
+| R1A-Auth | User management + per-business RBAC (reuse `tenant_members`) + password login (argon2id) alongside OTP + Redis rate-limiting + self-hosted Altcha PoW CAPTCHA | **done** (2026-06-29) | `h5i6j7k8l9m0` must be applied + **rebuild `api` image (argon2-cffi)** + frontend image rebuild. Keep `auth_captcha_enabled`/`auth_rate_limit_enabled` ON; E2E env must set them OFF |
 | P4 (R1A) | Purchases / Expenses / Balances | future_revenue | New migrations when built |
 | P4.5 (R1A) | Simple Real Reports (P/L, VAT) | future_revenue | New migrations when built |
 | P4.6 (R1A) | Subscription / Plan / Entitlement | future_revenue | New migrations when built |
@@ -119,6 +120,8 @@ Before any staging or production deploy, confirm **all** of these Alembic migrat
 | `e5f9a2c1d7b3` | P3.0B Moadian | `moadian_submissions` table |
 | `f3a8b2c1d5e7` | P3.3 Transport | `packet_uid` column on `moadian_submissions` |
 | (moadian_tenant_profiles) | P3.4 | `moadian_tenant_profiles` table |
+| `g4h5i6j7k8l9` | R1A-Phase 6 Payments | `payments` table + `customers.total_receivable` |
+| `h5i6j7k8l9m0` | R1A-Auth | `users.password_hash` + `users.must_change_password`; `users.username` → nullable. **Also rebuild `api` image for `argon2-cffi`.** |
 
 Always run: `docker-compose exec api python -m alembic upgrade head`
 

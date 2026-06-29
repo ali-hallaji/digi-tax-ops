@@ -333,7 +333,98 @@ Phase 0.2 local/staging orchestration hardening.
       existing `SettlementDialog` — no new components. `pnpm typecheck + build`: zero errors.
   - **Commits:** pending — awaiting founder manual browser test confirm before push.
 
+  **Familiar-term hints + راهنما guide page (2026-06-29):**
+  Frontend-only changes. No backend, no migrations.
+  - **Part 1 — accounting-term hints (5 sites):**
+    - `PageHeader` component: added optional `hint?: string` prop, rendered as
+      `text-xs text-muted-foreground/60` line between title and helper. Zero layout
+      change on any page that doesn't pass `hint`.
+    - `_app.app.transactions.tsx`: `hint="(در حسابداری: خزانه‌داری)"` added to PageHeader.
+    - `_app.app.invoices.new.tsx`: `hint="(فاکتور فروش)"` added to both PageHeader instances.
+    - `_app.app.taxpayer-profile.tsx`: `hint="(اطلاعات مؤدی)"` added to all 8 PageHeader instances.
+    - `_app.app.customers.tsx`: «مانده دریافتنی» TableHead column wrapped with
+      Tooltip «حساب‌های دریافتنی» (TooltipProvider local, dashed underline cursor-help).
+    - `_app.app.vendors.tsx`: «مانده بدهی» TableHead column wrapped with
+      Tooltip «حساب‌های پرداختنی» (same pattern).
+  - **Part 2 — راهنما guide page (complete rewrite):**
+    - Replaced all placeholder content (skeleton sections + image placeholders) with:
+      intro card, money-flow SVG diagram (RTL, on-brand teal), 6 guide sections
+      (چیه/چطور/چرا مهمه per section, journey order), واژه‌نامه terms table,
+      سؤال‌های رایج FAQ. No external images. Dark-mode safe. Mobile-first (390px).
+    - Old imports (Rocket, ArrowLeft, ImageIcon, LucideIcon type, Button, Link) removed;
+      new imports (Building2, HelpCircle) added. Route meta title updated.
+  - `pnpm typecheck`: 0 errors. `pnpm build`: success.
+  - Commit: pending — awaiting founder confirm after manual browser test.
+
+  **User management + per-business RBAC + auth hardening (2026-06-29):**
+  Cross-repo (backend + frontend). **Migration `h5i6j7k8l9m0` applied + psql-verified.**
+  - **Architecture decision (founder-approved):** the task proposed a NEW
+    `user_business_access` table, but `tenant_members` already exists and is the
+    wired source of truth for all per-business access/isolation. We **reuse
+    `tenant_members`** as the RBAC join table (no duplicate table, no rewrite of
+    working enforcement code). One source of truth for "who can access which business".
+  - **Backend (digi-tax-backend):**
+    - `User` model: added `password_hash` (argon2id, nullable) + `must_change_password`;
+      `username` relaxed to nullable. Migration `h5i6j7k8l9m0`
+      (`down_revision=g4h5i6j7k8l9`) — adds the two columns, drops username NOT NULL.
+      **Applied to local DB; verified via `psql \d users`.**
+    - `argon2-cffi==23.1.0` added to requirements.txt → **api image must be rebuilt**
+      (`docker-compose build --no-cache api`). Done locally.
+    - `app/core/security.py`: `hash_password` / `verify_password` / `password_needs_rehash`
+      (argon2id). The old sha256 `hash_secret_placeholder` is untouched/unused for auth.
+    - `POST /auth/login` (username+password) alongside the OTP flow. Generic failure
+      «نام کاربری یا رمز عبور نادرست است.» (never reveals which field). Token carries an
+      `is_system_admin` claim (set at issuance from the persisted user) used only to widen
+      the business listing — privileged ops still verify via `require_system_admin` (live DB).
+    - **RBAC enforcement:** system admins implicitly see ALL active businesses
+      (`get_business_context_for_auth_db` branches on the token claim → `list_all_active_businesses`);
+      every other user still sees/selects only `tenant_members` rows (404 on un-granted —
+      pre-existing behaviour preserved). Token re-issue on business create/select preserves the claim.
+    - **Admin endpoints (system_admin only, 403 otherwise):** `POST /admin/users` (create
+      with password + business grants), `POST /admin/users/{id}/reset-password`,
+      `GET/POST /admin/users/{id}/business-access`, `DELETE …/business-access/{business_id}`.
+      Existing list/activate/deactivate unchanged.
+    - **Rate limiting (`app/core/rate_limit.py`):** Redis sliding-window (sorted sets) on
+      `/auth/login` and `/auth/otp/request`, per IP **and** per username/mobile, with a
+      temporary lockout and a friendly Persian 429 + `Retry-After`. Fail-open if Redis is down.
+    - **CAPTCHA (`app/core/captcha.py`):** self-hosted Altcha proof-of-work — backend signs a
+      challenge (`GET /auth/captcha/challenge`) and verifies the solution (HMAC + expiry +
+      single-use replay guard in Redis). **No reCAPTCHA/hCaptcha/Cloudflare, no remote CDN
+      (Iran-safe).** Enforced server-side on login + OTP request.
+    - Config flags (all default ON in dev/prod): `auth_rate_limit_enabled`,
+      `auth_captcha_enabled` (+ tuning). `tests/conftest.py` disables both for the broad suite;
+      `tests/modules/identity/test_auth_hardening.py` re-enables and exercises them.
+    - **Tests:** +21 new (password login success/fail/generic, RBAC deny + admin-see-all,
+      sliding-window 429, captcha required/solved/challenge, admin create/reset/grant/revoke).
+      Full suite **546 pass / 7 fail** — the 7 are the documented pre-existing baseline
+      (3 auth-route auto-tenant, 3 moadian-profile, 1 payments). ruff + black clean on changed files.
+    - **Live curl verification:** captcha challenge issues; password login with a solved PoW
+      → 200 (token `is_system_admin=true`); wrong password → generic 401 Persian; `/me` 401 unchanged.
+  - **Frontend (digi-tax-frontend):**
+    - Login page (`routes/login.tsx`): «ورود با رمز عبور» / «ورود با کد یکبارمصرف» toggle.
+      New `PasswordStep`; self-hosted `CaptchaField` (Altcha web component, bundled via
+      `altcha` npm — client-only dynamic import for SSR safety) on phone/password/OTP-resend
+      steps; friendly inline Persian for 429 + captcha failures (single-use challenge re-solves
+      via `resetSignal`).
+    - Admin «مدیریت کاربران» (`routes/_admin.admin.users.tsx`): create-user dialog (username +
+      password + system-admin flag + per-business role grants), reset-password dialog,
+      manage-business-access dialog (grant/revoke with role). Reuses `getBusinesses()` (admin
+      token returns all businesses) for the business picker. Existing list/activate/deactivate kept.
+    - API: `loginWithPassword` + optional `captcha` on `requestOtp`; admin
+      create/reset/grant/revoke/list-access functions + types. Business switcher already renders
+      the backend-filtered list → shows only accessible businesses (admins see all). No change needed.
+    - `pnpm typecheck`: 0 errors. `pnpm build`: success.
+  - **Deploy action:** rebuild api image (argon2-cffi) + `alembic upgrade head` + rebuild
+    frontend image. Staging/prod **must** set `BACKEND_CORS_ORIGINS` (existing blocker) and
+    keep `auth_captcha_enabled`/`auth_rate_limit_enabled` ON.
+  - **Commits:** pending — awaiting founder manual browser test confirm before push.
+
 ## Active Next (R1A — follow-ups)
+
+- **E2E suite + captcha:** with `auth_captcha_enabled` ON by default, specs that hit
+  `/auth/otp/request` will get 400 until they solve/disable the captcha. The E2E backend env
+  should set `AUTH_CAPTCHA_ENABLED=false` (and `AUTH_RATE_LIMIT_ENABLED=false`) — fold into the
+  pending E2E spec refresh.
 
 - **E2E spec refresh** (specs 01/02/05/07/08/09 + spec 08 taxpayer + 09 nav) to match
   the redesigned UI — restore an honest-green full suite.
