@@ -1,11 +1,40 @@
 # Ops Progress
 
-Last updated: 2026-06-26
+Last updated: 2026-07-04
 
 ## Current Phase
 Phase 0.2 local/staging orchestration hardening.
 
 ## Completed
+
+- **2026-07-04 — Stage A2: per-business display-currency preference (rial|toman).**
+  Canonical stored/calculation unit stays **ریال** (official invoices + Moadian are
+  legally ریال); the app adds a DISPLAY-ONLY preference, default `rial`, switchable to
+  `toman`. Toman is display-only ریال ÷ 10; nothing about stored values, totals, the
+  official PDF, or the future Moadian payload changes.
+  - **Backend** (`4285c98`): `tenants.display_currency` column (Alembic
+    `j7k8l9m0n1o2`, `server_default='rial'`, verified via psql), `BusinessResponse`
+    exposes it, owner/admin-only `PATCH /businesses/{id}/settings`
+    (`BusinessSettingsUpdateRequest`, `Literal["rial","toman"]`, `extra=forbid`),
+    `update_business_display_currency` service. RBAC + default + invalid-value tests.
+  - **Backend PDF** (`81cab57`): official print view now renders «ریال», never the raw
+    ISO code «IRR» (code stays "IRR" only in the data model / API). New print test.
+  - **Frontend** (`e7878a0`, `534e48d`, `fc04580`): `formatMoneyIn`/`useMoney`
+    (unit label ALWAYS shown next to amounts); every amount **display** (dashboard-
+    ready components, customers receivable, vendors, products, invoices list/detail/
+    totals, purchases, payments, transactions) renders via `formatMoney`; every amount
+    **input** (product price, invoice line unit price/discount, settlement, payment
+    new/edit, purchase lump-sum/paid/line-price, expense) shows the unit label and
+    converts display↔ریال at the load/submit boundary only (`toInputValue` ÷10 in,
+    `fromInputValue` ×10 out; ریال is identity). Real `/app/settings` currency selector
+    replaces the «به‌زودی» stub (persists via the PATCH, updates the auth store so all
+    surfaces reflow instantly).
+  - **Intentionally ریال-only** (not preference-driven): the `features/tax` / official
+    tax-invoice surfaces (legal denomination).
+  - **Follow-up:** AI-assistant action-draft card still labels amounts «تومان» via a
+    static map — deferred (its amount semantics belong to the assistant pipeline).
+  - **Pending:** founder live proof (390 + desktop, light + dark, rial↔toman flip); not
+    pushed.
 
 - **2026-06-26 — Demo-data seeder (`scripts/seed_demo_business.py`):** New API-based,
   stdlib-only seeder that fills ONE chosen business with realistic demo data via the
@@ -526,6 +555,11 @@ Phase 0.2 local/staging orchestration hardening.
   fixed 500s cannot regress (FakeDBSession unit harness does not cover them).
 - **Vendor duplicate** soft-warning (non-blocking) instead of the removed dead 409.
 - **Operational dashboard** — wire real customers/products/invoice counts from backend.
+- **Raw status leak — `connected_placeholder`** — the operational dashboard tax-status
+  pill (وضعیت مالیاتی) renders the raw internal status code `connected_placeholder`
+  instead of friendly Persian. Status-mapping/data bug (not styling); found during the
+  UI-Redesign Calm-Bazaar pass. Map to a friendly Persian label; do not leak internal
+  codes to users. Deferred out of the styling pass on purpose.
 - **Real P&L and cashflow** from actual transactions (R1A-P4 simple reports).
 - Add migration-state verification to `smoke_test.sh`.
 - Wire Nginx for production TLS termination when ready (currently `nginx/placeholder.conf`).
@@ -559,3 +593,18 @@ Phase 0.2 local/staging orchestration hardening.
 
 ## Validation Policy
 Use Docker Compose and shell syntax checks. Do not edit backend/frontend app logic from this repo.
+## UI Restyle — Calm Bazaar (resume note, paused mid-pass)
+- Direction: A · Calm Bazaar. Single teal identity (primary #0F766E unchanged); warm mint
+  neutrals, radius 16px, warm shadows, pro-blue info, brighter mint dark-primary. Folded into
+  the single token source (digi-tax-frontend/src/styles.css).
+- Skills vendored locally: digi-tax-frontend/.claude/skills/{ui-ux-pro-max,design-system,ui-styling}.
+- DONE (committed on main, NOT pushed): token layer + DASHBOARD group.
+  Commits: 4ac036c (vendored skills), c1b182e (tokens + removed D.D/D.A initials bubble in
+  src/routes/_app.tsx + app-sidebar.tsx; bg-emerald-600 -> bg-primary). typecheck+build pass.
+  Verified via real dev-session screenshots (activation + operational, 390+desktop, light+dark).
+- NEXT GROUP: customers. Then: products, invoices, purchases&expenses, receipts&payments,
+  vendors, members, taxpayer-profile, guide, admin shell.
+- PROCESS per group: restyle (visual only) -> pnpm typecheck+build -> real dev-session
+  screenshots (390+desktop, light+dark) -> commit per group -> STOP for founder review. No push.
+- TODO (separate session, NOT during styling): dashboard tax-status pill leaks raw
+  'connected_placeholder' -> map to friendly Persian (status-mapping/data bug, not styling).
