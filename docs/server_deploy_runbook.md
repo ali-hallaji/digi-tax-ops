@@ -370,3 +370,100 @@ Dirty repo prevents safe pull:
 Stop and inspect the dirty files. Commit, stash, back up, or intentionally
 discard them only after confirming they are not deployment secrets or emergency
 server changes.
+
+## Nginx + Let's Encrypt (dev.digiinvoice.ir, set up 2026-07-08)
+
+Test server `65.109.213.75` runs nginx 1.24 (Ubuntu apt package) as a reverse
+proxy in front of the Compose stack, with a Let's Encrypt cert via certbot's
+nginx plugin.
+
+- Config: `/etc/nginx/sites-available/dev.digiinvoice.ir` (symlinked into
+  `sites-enabled/`). Routes: `/health/` and `/api/` → `127.0.0.1:8000` (api),
+  everything else → `127.0.0.1:3000` (frontend SSR). `client_max_body_size 16m`
+  for future uploads (logo, etc.).
+- Cert: `certbot --nginx -d dev.digiinvoice.ir --agree-tos --redirect`. Renews
+  automatically via certbot's systemd timer; `certbot renew --dry-run` verified
+  working. Certbot rewrites the site file in place (adds the 443 `server{}`
+  block + the 80→443 redirect) — re-run `nginx -t` after any manual edit to
+  that file, since certbot's markers are easy to disturb.
+- `VITE_API_BASE_URL` and `BACKEND_CORS_ORIGINS` in `.env` must point at the
+  final public HTTPS origin (`https://dev.digiinvoice.ir`), never the raw
+  server IP — Altcha (captcha) requires a secure context and silently fails
+  with "Secure context (HTTPS) required" over plain `http://ip:port`.
+  `VITE_API_BASE_URL` is baked in at frontend **build** time — changing it
+  requires `docker-compose build --no-cache frontend`, a restart alone does
+  nothing.
+- No HSTS header is set yet (optional hardening, deferred — hard to safely
+  reverse once browsers cache it, so it wasn't added without an explicit
+  decision to keep it permanently).
+
+### docker-compose v1.29.2 `KeyError: 'ContainerConfig'` on recreate
+
+This server's `docker-compose` is v1.29.2 (via apt/pip), which has a known
+incompatibility with newer Docker Engine image metadata: **any** `docker-compose
+up -d` that needs to *recreate* an existing container (image changed, or even
+an unrelated `up` that touches a dependency) can throw
+`KeyError: 'ContainerConfig'` inside `get_container_data_volumes` and abort,
+potentially mid-way through recreating multiple services.
+
+- It fails in the **recreate** path specifically — inspecting the *old*
+  container's image config to merge volumes. A **fresh create** (no old
+  container by that name) does not hit this code path.
+- Symptom seen live: `docker-compose up -d api frontend` (even with
+  `--no-deps`) tried to recreate `postgres` too, hit the bug, and left the old
+  postgres container *renamed* (e.g. `f5d2cdb3d5a2_digi-tax-postgres`) and
+  stopped rather than removed — Compose's rename-out-of-the-way step ran
+  before the failing create step. Data was intact throughout (named volume
+  `digi-tax-ops_postgres_data`, independent of container identity); the
+  container's compose-assigned network alias (`postgres`) survives a rename,
+  so restarting the exact same (renamed) container with `docker start
+  <name>` restores service with zero data risk and zero reconfiguration.
+- **Safe recovery pattern**, in order of preference:
+  1. If the affected container is stateful (postgres/redis) and only
+     stopped/renamed (not removed): `docker start <renamed-name>` — do
+     **not** let compose try to recreate it again until this is fixed
+     properly (upgrade compose, or migrate to the `docker compose` v2 plugin).
+  2. If the affected container is stateless (api/frontend, no volumes):
+     `docker stop <name> && docker rm <name>`, then `docker-compose up -d
+     --no-deps <service>` — a **fresh create** succeeds because there's no old
+     container to inspect.
+  3. Never `docker-compose down` as a "fix" for this — it removes containers
+     network-wide in one step and increases blast radius for no benefit.
+- Root-cause fix (not yet done, flagged for a future session): upgrade to the
+  `docker compose` v2 plugin (`docker-compose-plugin` apt package, invoked as
+  `docker compose ...` not `docker-compose ...`), which doesn't have this bug.
+  Until then, expect this failure mode on *any* server-side rebuild that
+  touches a long-running container and follow the recovery pattern above.
+
+### Known residual items on this server (as of 2026-07-08, not yet resolved)
+
+- **`SECRET_KEY` is unset in `.env`**, so the API falls back to the
+  hardcoded placeholder in `app/core/config.py`
+  (`"your-secret-key-here"`) — a value visible in the public repo. This means
+  JWTs on this server are forgeable by anyone who reads the source. Needs an
+  explicit decision before rotating (rotating invalidates all current
+  sessions for every user on the server).
+- **Orphan `digi_tax` (underscore) database** exists alongside the canonical
+  `digitax` — confirmed empty (0 rows), a dead leftover from early setup, not
+  a data risk, but exactly the "two-database disaster" pattern the workspace
+  `CLAUDE.md` documents. `preflight.sh` was evidently never run against this
+  server. Left untouched pending explicit confirmation to drop it.
+- **`digi-tax-postgres` container runs under a temporary renamed identity**
+  (see the compose bug above) instead of its compose `container_name`. Fully
+  functional (network alias `postgres` still resolves), but the next person
+  running `docker-compose ps`/`docker ps` should not be alarmed by the odd
+  name. Fixing this cosmetically requires another risky recreate of the live
+  DB container — deferred until the compose v1→v2 upgrade above is done.
+- **Frontend never surfaces `must_change_password`** on the user's *own*
+  login (only the admin panel's user-management view reads that field, for
+  managing *other* users). A seed/admin-created account with
+  `must_change_password: true` logs straight into the app with no forced
+  change prompt. This is a pre-existing frontend gap, not specific to this
+  server.
+- **D4 (split-scope settings: «حساب من» / «تنظیمات کسب‌وکار») is not deployed
+  to this server** — those commits exist only on the founder's laptop
+  (`digi-tax-backend` `1963a4f`/`7ea52cd`, `digi-tax-frontend` `4d362bb`/
+  `d4b4eaa`) and were never pushed to `origin/main` nor pulled here. `/app/
+  settings` on this server still shows the pre-D4 fake-save stub (only the
+  display-currency card is real; everything else is an honest non-persisting
+  preview). Push + pull + rebuild is a separate follow-up.
