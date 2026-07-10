@@ -641,3 +641,16 @@ All 23 commits landed per the founder-approved plan; nothing pushed.
 - **Known follow-ups (unchanged):** E2E spec refresh; duplicate-vendor soft warning;
   accounting-page TransactionDialog; bounce-after-spend (Batch B); expense party FK
   (Batch B); journal-entry engine (Batch B).
+
+## مدرسهٔ حسابداری کاسب (2026-07-10) — COMMITTED, pending push
+Learn-accounting-from-zero section in /app/guide (frontend-only, reuses the
+guide architecture — no backend). Frontend commits: `ffdedb7` scaffold (types,
+session-scoped read state, level+lesson pages, landing section with locked
+پیشرفته card) · `89f8703` مبتدی «پول و دفتر» درس ۱–۷ · `2eb2d66` متوسط
+«ابزارهای بازار» درس ۸–۱۶. One continuous story («بازرگانی نیک‌تجارت») with a
+running state table enforced across all 16 lessons; every lesson deep-links to
+the real screen + owning walkthrough ids (28 links verified). Jargon rule:
+official terms only in «اصطلاح حسابداری» vocab boxes (بدهکار/بستانکار، دفتر
+کل، تراز، اسناد دریافتنی/پرداختنی), متوسط only. Read state is deliberately
+in-memory (guide has no persistence layer) — swap point documented in
+school-read-state.ts. typecheck+build clean at each commit.

@@ -180,7 +180,18 @@ Screen registry (the ONLY phase-1 surfaces; every scenario maps onto these — a
 | S8-13 | ویرایش اطلاعات کسب‌وکار | Owner/Admin | «نشانی روی فاکتور غلط است» | SET → «اطلاعات کسب‌وکار» → ویرایش → «ذخیره تغییرات» | seller identity snapshot for future invoices | فاکتورهای بعدی با مشخصات جدید | guide walkthrough S8-13 |
 | S8-14 | اتصال به سامانه مودیان (per-business) | Owner/Admin | «وضعیت اتصال مالیاتی» | SET → کارت «اتصال به سامانه مودیان» → /app/moadian | per-business Moadian page; real submit stays a disabled placeholder until R1B | صفحه اختصاصی اتصال همین کسب‌وکار | guide walkthrough S8-14; NEVER a live submit before R1B |
 
-**Count: 64 scenarios** (Batch A 2026-07-10 additions: S2-07 advances, S3-10 خرج چک, S8-08..S8-14 settings walkthroughs). (Founder's five additions verified: mistaken-payment edit was S2-06 → broadened to both directions + cheque-row lock; issued-cheque bounce split out as S3-09; partial return already existed as S5-02; walk-in sale added as S1-13; opening balances added as S6-06/S6-07.)
+**Count: 64 scenarios** (Batch A 2026-07-10 additions: S2-07 advances, S3-10 خرج چک, S8-08..S8-14 settings walkthroughs).
+
+> **مدرسهٔ حسابداری کاسب (2026-07-10):** /app/guide now also hosts a
+> learn-accounting-from-zero school (content source:
+> `digi-tax-frontend/src/lib/guide/school-content.ts`) — 16 lessons in two live
+> levels (مبتدی «پول و دفتر» ۷ درس، متوسط «ابزارهای بازار» ۹ درس؛ پیشرفته «زبان
+> حسابدارها» locked «به‌زودی») taught through one continuous merchant story
+> («بازرگانی نیک‌تجارت», running state table in the content file header).
+> Lessons teach the WHY and LINK to these catalog scenarios for the HOW — they
+> never duplicate walkthrough steps, so this catalog stays the single source of
+> mechanics. Official accounting terms appear only inside «اصطلاح حسابداری»
+> vocabulary boxes (متوسط, sparingly); the app-copy jargon ban is untouched. (Founder's five additions verified: mistaken-payment edit was S2-06 → broadened to both directions + cheque-row lock; issued-cheque bounce split out as S3-09; partial return already existed as S5-02; walk-in sale added as S1-13; opening balances added as S6-06/S6-07.)
 
 ---
 
