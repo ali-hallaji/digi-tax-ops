@@ -4,6 +4,27 @@
 
 ---
 
+## آخرین وضعیت — Batch B «لایهٔ طلایی» (۲۰ تیر ۱۴۰۵ / 2026-07-10) — LOCAL, NOT PUSHED
+
+لایهٔ اختیاریِ «نمای حسابدار» ساخته شد: موتور دوطرفهٔ سند (درخت حساب‌ها + دفتر روزنامه)
+که سند را از همان رویدادهای کاملِ فاز ۱ به‌صورت **replay قطعی و idempotent** می‌سازد —
+بدونِ ذره‌ای کوپلینگ با مسیرهای نوشتنِ کاسب. کلیدِ per-business (`accountant_view_enabled`،
+پیش‌فرض **خاموش**)؛ **با کلیدِ خاموش هر صفحهٔ کاسب دقیقاً مثل قبل است** (pixel parity
+ساختاری است، نه با اسکرین‌شات — D10).
+
+- گزارشِ کامل: **`batchB-review.md`** (ریشهٔ workspace) · تصمیم‌ها D1–D12 در
+  `DECISIONS-batchB.md` · کاتالوگ Group 9 (S9-01..06) در `phase1_user_scenarios_v1.md`.
+- کامیت‌ها: backend ۶، frontend ۴، ops ۱ (+docs) — **هیچ‌کدام push نشده**. Alembic head
+  `a4b5c6d7e8f9`.
+- تست‌ها: backend `747 pass / 7 fail (baseline، صفر جدید)`؛ invariantها روی Postgres واقعی
+  سبز؛ backfill CLI `۷ tenant، ۶۱ سند، ۰ gap`.
+- **Mission 3 (deploy) بلاک است — درست:** گیتِ pixel-parity به اسکرین‌شاتِ founder نیاز دارد
+  (قانونِ «Claude مرورگر را نمی‌راند»). وقتی GO: rebuild api `--no-cache` → up -d →
+  `alembic upgrade head` → `python -m app.cli.backfill_journals` → smokeِ toggle-ON → خاموش.
+- Captcha: دست‌نخورده — لوکال ON، dev ON.
+
+---
+
 ## ۱. جهت‌گیریِ کلی محصول
 
 **محصول:** Digi Invoice (دیجی اینویس) — ابری، RTL فارسی، mobile-first، حسابداری/فاکتور برای کاسبانِ ایرانی. rebrand از DigiTax. **همان ریپوها ادامه پیدا می‌کنند، نه پروژه‌ی نو.**

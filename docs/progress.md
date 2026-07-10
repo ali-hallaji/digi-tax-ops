@@ -1,6 +1,6 @@
 # Ops Progress
 
-Last updated: 2026-07-04
+Last updated: 2026-07-10
 
 ## Current Phase
 Phase 0.2 local/staging orchestration hardening.
@@ -654,3 +654,33 @@ official terms only in «اصطلاح حسابداری» vocab boxes (بدهکا
 کل، تراز، اسناد دریافتنی/پرداختنی), متوسط only. Read state is deliberately
 in-memory (guide has no persistence layer) — swap point documented in
 school-read-state.ts. typecheck+build clean at each commit.
+
+## Batch B «لایهٔ طلایی» (2026-07-10) — COMMITTED LOCAL, NOT PUSHED (Mission 3 gated)
+Opt-in accountant layer: double-entry engine (chart + journal) deriving سند from the
+same complete events phase 1 records — a deterministic idempotent **replay**, zero
+merchant-write coupling (DECISIONS D1). Per-business toggle `accountant_view_enabled`
+(default OFF); with the toggle OFF **every merchant surface is unchanged** (pixel parity
+is structural — D10). Full write-up: `batchB-review.md` (workspace root); decisions
+D1–D12 in `DECISIONS-batchB.md`; catalog Group 9 (S9-01..06) in
+`phase1_user_scenarios_v1.md`.
+- **Backend** (6 commits): `b1ba18f` B1 chart of accounts (4-level Persian tree,
+  idempotent ensure) · `479e6fb` B2 journal engine (deterministic double-entry replay) ·
+  `60be099` B5 toggle + turn-on build · `6b3dcf5` B4 read APIs (chart/journal/ledger/
+  trial-balance + CSV + regenerate, owner+toggle gated) · `77720a3` B3 backfill CLI ·
+  `f6c62a4` black-format. Migration chain head **`a4b5c6d7e8f9`** (B5). No migration in
+  read-API/CLI commits.
+- **Frontend** (4 commits): `cf9f8e4` settings toggle + sidebar group + 4 read-only pages
+  (دفتر روزنامه/دفتر حساب‌ها/تراز آزمایشی/درخت حساب‌ها) · `c50b264` «دیدن سند» links
+  (toggle-gated, null when OFF) · `3db5e60` school پیشرفته L17-L22 + guide group S9-01..06 ·
+  `9c5cd98` RTL bidi standing rules. typecheck+build clean at each commit.
+- **Ops** (1 commit + docs): `4216a13` catalog Group 9; + DECISIONS-batchB.md,
+  batchB-review.md, this entry, HANDOFF.md update.
+- **Verification:** backend `747 pass / 6 skip / 7 pre-existing fail` (zero new); accounting
+  invariants pass on real Postgres (every سند balances, نیک‌تجارت trial balance correct,
+  reconciles vs compute_account_balances, regenerate idempotent); backfill CLI **7 tenants,
+  61 entries, 0 gaps**; ruff/black clean.
+- **Mission 3 BLOCKED (correct):** deploy gate needs pixel-parity screenshots (toggle OFF),
+  which require the founder's manual browser verification per the no-browser-driving rule.
+  Nothing pushed. Deploy runbook when GO: rebuild api `--no-cache` → up -d → alembic upgrade
+  head (`a4b5c6d7e8f9`) → `python -m app.cli.backfill_journals` → toggle-ON smoke → toggle OFF.
+- **Captcha:** untouched — ON locally, ON on dev.
