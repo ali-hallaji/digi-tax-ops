@@ -155,6 +155,25 @@ guide (which names exact labels), the page, and the school all agree. Ledger sta
 «دفتر حساب‌ها» (sidebar/section) with page title «دفتر حساب» (a single account's ledger) —
 an acceptable section-vs-page distinction; the guide references the sidebar label.
 
+### D13 — Accountant pages had TWO stacked legacy gates; both removed, page-level gating kept
+Post-batch QA found the accountant sidebar links didn't navigate. Root cause was two
+independent legacy gates on `/app/accounting/*`, both predating Batch B:
+1. **Parent route** `_app.app.accounting.tsx` was an unbuilt-placeholder guard whose
+   `beforeLoad` threw `redirect({to:'/app'})`; TanStack runs a parent's `beforeLoad` for
+   every nested child, so it cascaded to journal/ledger/trial-balance/chart. → Converted to
+   a pass-through `<Outlet/>` layout + added an index route redirecting bare `/app/accounting`
+   to دفتر روزنامه.
+2. **Layout `RouteAccessGate`** (`_app.app.tsx`) mapped `/app/accounting` → the
+   `accountingApproved` requirement, which is hardcoded `false` → it rendered the
+   «به‌زودی / فعال‌سازی حسابداری» lock card for every accounting path. → Lowered that prefix to
+   the `activeBusiness` baseline (like reports/customers). payroll/employees/payslips stay on
+   `accountingApproved` (still unbuilt).
+**Decision:** keep gating at the page level (each route's owner-only `beforeLoad` +
+`AccountantShell`'s toggle gate) rather than reusing the old `accountingApproved` module gate
+— the accountant layer is an owner toggle, independent of taxpayer/tax approval. Toggle-OFF
+behavior (absent sidebar group, no «دیدن سند», "turn it on" card on direct URL) is unchanged,
+so merchant pixel-parity is preserved.
+
 ### D12 — «دیدن سند» opens a dialog, not a deep-link into the paged journal
 The entry-for endpoint returns one entry_id. Rather than deep-linking into the paginated
 دفتر روزنامه (which would need scroll-to-entry + auto-expand plumbing), «دیدن سند» fetches
