@@ -179,3 +179,46 @@ The entry-for endpoint returns one entry_id. Rather than deep-linking into the p
 دفتر روزنامه (which would need scroll-to-entry + auto-expand plumbing), «دیدن سند» fetches
 the entry and shows its بدهکار/بستانکار lines in a small read-only dialog. The merchant
 never loses their place, and the feature has zero coupling to journal pagination.
+
+## Open questions
+
+### D14 (OPEN) — Customer-less finalized invoices: how should they journal?
+**Status: not decided, not implemented.** Found during the Mission-3 dev backfill: 3
+finalized invoices on dev have no `customer_id`, so the invoice سند builder
+(`journal.py:277-291`) can't resolve a receivable detail (`cust_det=None`) and the engine
+correctly routes each to suspense (9101) + a `journal_gaps` row (reason: "missing account
+mapping") instead of crashing or guessing. Every affected tenant's journal still balances —
+this is an honest gap, not a defect — but it means those 3 sales sit outside the real chart.
+**This is a genuine accounting-semantics decision, not an engineering one — founder is
+taking it to the accountant before any implementation. Do NOT implement either candidate
+without explicit follow-up instruction.** Two candidate mappings, for that discussion:
+
+- **Candidate A — Generic walk-in receivable.** Seed one system تفصیلی account under 1201
+  (حساب‌های دریافتنی), e.g. «مشتری متفرقه» (entity_type="system", no per-customer entity_id).
+  Route every customer-less finalized invoice's debit there instead of gapping.
+  - Pros: keeps double-entry complete, zero new gaps, minimal engine change (one fallback
+    branch in `_inv`).
+  - Cons: pools all walk-in sales into one balance — no per-invoice/per-transaction
+    traceability inside that bucket. That bucket only ever grows (no natural customer to
+    link a settling payment against), so it needs its own policy for how/when it's
+    considered "collected" — otherwise it just accumulates as a permanent, meaningless
+    receivable balance.
+
+- **Candidate B — Treat as an implicit same-day cash sale.** Skip the receivable entirely;
+  debit a default treasury account (e.g. صندوق) directly, credit فروش + مالیات دریافتی — i.e.
+  assume the merchant collected in full over the counter, as real walk-in/POS retail
+  bookkeeping does.
+  - Pros: matches real-world walk-in semantics if that assumption holds; no permanent
+    dangling balance.
+  - Cons: it is an ASSUMPTION about payment timing not evidenced by any Payment row — could
+    misstate cash if the merchant actually invoiced on credit and simply forgot to record
+    the customer. Also needs a decision on which treasury account is the safe default when
+    no payment record exists to infer it from, and interacts with D1 (replay must stay
+    deterministic and side-effect-free — inventing a cash line here is a bigger philosophical
+    step than A).
+
+Whichever is chosen must also decide: (1) should the merchant-facing invoice form require a
+customer for a "finalize" action going forward (preventing new gaps at the source), or (2)
+is a customer-less finalized invoice an intentional product allowance (e.g. anonymous
+walk-in receipts) that the accounting layer must simply accommodate. Added to the
+Batch-C-input list per founder (2026-07-11).
