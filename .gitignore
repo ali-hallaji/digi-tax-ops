@@ -18,3 +18,6 @@ claude_partial_*.txt
 claude_partial_*.diff
 .claude/settings.local.json
 .serena/
+
+# Local screenshot-sweep QA output (workspace-root level, not repo content)
+qa-screens/

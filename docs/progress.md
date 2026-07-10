@@ -608,3 +608,36 @@ Use Docker Compose and shell syntax checks. Do not edit backend/frontend app log
   screenshots (390+desktop, light+dark) -> commit per group -> STOP for founder review. No push.
 - TODO (separate session, NOT during styling): dashboard tax-status pill leaks raw
   'connected_placeholder' -> map to friendly Persian (status-mapping/data bug, not styling).
+## Batch A — Accounting Basement + P0/P1 UX/Safety (2026-07-10) — COMMITTED, pending push
+All 23 commits landed per the founder-approved plan; nothing pushed.
+
+- **Backend (8, digi-tax-backend)** — head migration `x1y2z3a4b5c6`; suite 743 pass /
+  4 skip / 7 pre-existing baseline; details per-commit in backend docs/progress.md:
+  B1 `fb46ac0` A1 payment source · B2 `e146d12` تنخواه · B3 `7b6b683` line VAT ·
+  B4 `19c987f` free-text categories · B8 `1c61f90` expense account · B5 `fc64d85`
+  expense breakdown · B6 `c4fa40b` خرج چک · B7 `5220cac` advances.
+- **Frontend (14, digi-tax-frontend)** — typecheck+build clean at every commit:
+  F1 `6a21747` A1 UI (settlement default face + create form, صندوق preselected, S1 guide) ·
+  F2 `9fb16a8` تنخواه UI · F3 `67b6dfd` shared VAT selector · F4 `66ddf5e` category
+  combobox · F14 `f6f01e0` expense payment source · F5 `d7cd168` expense-breakdown tab ·
+  F6 `be3a1f2` خرج چک UI + spent pill + S3-10 guide · F7 `f2b31da` advances UX + S2-07
+  guide · F8 `d5232b0` cheque-transition confirm sheets · F9 `52cadf8` sidebar RTL ·
+  F10 `d37f17e` hydration + admin theme toggle · F11 `6fd525b` DialogDescription sweep ·
+  F12 `095d35f` settings walkthroughs S8-08..14 · F13 `32eadbd` jargon/empty-state sweep
+  (report tab labels de-jargoned: «مشتریان (طلب شما)» / «تأمین‌کنندگان (بدهی شما)»).
+- **Ops (1)** — O1: HANDOFF.md committed, deploy-runbook server test-artifact cleanup
+  checklist (app/API path, not raw psql), scenario catalog +9 rows (S2-07, S3-10,
+  S8-08..14; count 55→64), qa-screens gitignored.
+- **End-of-batch curl proofs (local, captcha OFF→restored ON + 400 verified):**
+  A1 missing account → Persian 422 `ACCOUNT_REQUIRED`; B8 expense 422 + صندوق balance
+  −500,000 + cash-flow «هزینه» row; A6 spend → invoice paid + purchase +25M, treasury
+  byte-identical (diff empty); A7 advance → balances untouched until apply, then
+  `applied_at` stamped + advance_total zeroed. psql proofs: payments cheque_id/CHECK/
+  is_advance/applied_at, purchase_lines VAT cols, expenses varchar+NOT NULL account,
+  cheques.spent_at.
+- **Note:** proofs mutated `09120000000` seed data (one test expense, cheque
+  bb232ea7 spent, 5M advance applied on purchase d21b2aaf) — reseed before the next
+  browser QA round so §4.5 accounts match the table.
+- **Known follow-ups (unchanged):** E2E spec refresh; duplicate-vendor soft warning;
+  accounting-page TransactionDialog; bounce-after-spend (Batch B); expense party FK
+  (Batch B); journal-entry engine (Batch B).

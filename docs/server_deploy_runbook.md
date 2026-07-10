@@ -242,6 +242,12 @@ Dockerfile inputs, migrations, or related service configuration changed.
 
 ## Validation After Deploy
 
+Before next deploy verification — server test-artifact cleanup (one-time,
+logged 2026-07-10): delete the Phase-2 test user `d5deploystaff` and the two
+«استقرار» test invoice drafts in the demo tenant **via the app/API path (not
+raw psql)** so linked payments and derived paid state recompute correctly;
+then verify the demo-tenant dashboard numbers match expectations.
+
 Run automated checks:
 
 ```bash
