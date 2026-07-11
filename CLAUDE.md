@@ -92,12 +92,6 @@ Short one-line; body only for migrations/security/API-breaking/major decisions.
 `DATABASE_URL`, `POSTGRES_*`, `REDIS_URL`, `VITE_API_BASE_URL`, `FRONTEND_PORT`.
 Proxy values belong in shell/ignored local env only — never committed.
 
-## Token Discipline — Serena MCP
-Serena allows **only one project active at a time**. When you start working in THIS
-repo, activate its project; switch with `activate_project` when you move to another
-repo. Do **not** pre-activate all three repos at session start (they fight and only the
-last sticks — see workspace CLAUDE.md §0).
-- Activate: `mcp__serena__activate_project` with
-  `/home/hitman47/Public/projects/digitax-workspace/digi-tax-ops`.
-- Use Serena's symbol-level tools instead of reading full files; fall back to
-  bash cat/read only for config files or non-code assets.
+## Token Discipline
+Read only the file regions you need (targeted Read/Grep with offsets); avoid dumping
+whole large files into context when a section suffices.
