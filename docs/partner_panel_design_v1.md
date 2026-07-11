@@ -3,6 +3,16 @@
 **Design-only deliverable for founder approval. No code, no migrations, no pushes.**
 Cross-repo (backend + frontend + ops). Release slot per roadmap: R1C "Accountant & Retention" (module #15, currently NONE built). Moadian Stage D out of scope; D14 stays open — nothing below depends on it.
 
+> **RESOLVED + BUILT (2026-07-11):** the founder approved **all nine open decisions as
+> the recommended A options** (OD-1..OD-9 = A), with one addition baked into B4/F4:
+> every journal-entry description visible to a partner carries the source document's
+> human reference (invoice number, cheque number, expense category) so a سند is
+> auditable without leaving the accountant layer. The batch shipped as B1–B7
+> (backend), F1–F7 (frontend), O1 (ops) — commit hashes in `progress.md`
+> («پنل همکار» entry). Residual: the partner reports tab omits cash-flow (needs a
+> partner-visible treasury-account list endpoint); duplicate-partner UX and
+> commission mechanics stay deferred as designed.
+
 ---
 
 ## Context

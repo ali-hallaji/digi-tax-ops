@@ -684,3 +684,46 @@ D1–D12 in `DECISIONS-batchB.md`; catalog Group 9 (S9-01..06) in
   Nothing pushed. Deploy runbook when GO: rebuild api `--no-cache` → up -d → alembic upgrade
   head (`a4b5c6d7e8f9`) → `python -m app.cli.backfill_journals` → toggle-ON smoke → toggle OFF.
 - **Captcha:** untouched — ON locally, ON on dev.
+
+## پنل همکار — Partner Panel v1 (2026-07-11) — COMMITTED LOCAL, NOT PUSHED
+The accountant/consultant partner channel: a separate `/partner/*` shell (like
+`/admin/*`) where an approved «همکار» supervises the businesses that granted them
+access — read-only accountant layer + reports + CSV — and refers new clients with
+their «کد همکار». Merchant-in-control throughout: two-sided invite handshake
+(OD-1A), DB-live gates (revoke cuts access on the very next request), partners are
+NEVER tenant members, ungranted business ⇒ 404. All nine design decisions resolved
+as the recommended A options (see `partner_panel_design_v1.md` resolution note);
+founder addition baked into B4/F4: journal-entry descriptions carry the source
+document's human reference (invoice/cheque number, expense category).
+- **Backend** (7 commits): `67ac532` B1 contracts + member-mgmt backfill · `b7e8932`
+  B2 partner_profiles (M `b5c6d7e8f9g0`) + /partner/me + /partner/apply · `fd605c7`
+  B3 grants + events (M `c6d7e8f9g0h1`), invite-by-code, revoke-immediate ·
+  `257e066` B4 portfolio + per-business accounting reads + سند human references ·
+  `e47ce5c` B5 per-business report reads (shared serve_* bodies) · `7247843` B6
+  referral (M `d7e8f9g0h1i2`) tenants.referred_by_partner_id + wizard «کد همکار» ·
+  `af1bbc0` B7 /admin/partners. Migration chain head **`d7e8f9g0h1i2`**.
+- **Frontend** (7 commits): `f435423` F1 shell (5-state /partner/me preflight, apply
+  form, sidebar, partner guide, login whitelist, merchant footer link) · `9b676f0`
+  F2 profile/کد همکار · `ed2fe97` F3 portfolio + invites · `12272fe` F4 drill-in —
+  the four Batch B accountant pages extracted into SHARED presentational views
+  (journal/ledger/trial-balance/chart) used by both merchant and partner routes
+  (identical markup/query keys; merchant pages are now thin wrappers) + business
+  tab layout + leave-business + 4 report tabs · `fc271aa` F5 merchant settings card
+  «دسترسی حسابدار همکار» + wizard «کد همکار (اختیاری)» + S9-07 walkthrough ·
+  `1be8841` F6 admin «همکاران» review queue + detail (approve generates code /
+  reject-with-reason / suspend, pending badge) · `5702c13` F7 school L22 extension.
+  typecheck+build clean at every commit point.
+- **Ops** (this commit): catalog S9-07 + Partner actor + terminology (همکار / پنل
+  همکار / حسابدار همکار / کد همکار / دسترسی همکار), count 70→71; design-doc
+  resolution note; this entry.
+- **Verification:** backend suite **748 pass / 11 skip / 7 pre-existing fail (zero
+  new)** in Docker; partner pg-integration modules (grants lifecycle/isolation,
+  portfolio, profile, admin) skip without a DB — rerun with the stack up at QA time.
+  Frontend typecheck+build clean. Founder browser QA pending (incognito · 390px +
+  desktop · light + dark): partner shell all 5 states, portfolio→drill-in, merchant
+  grant card invite/revoke, wizard code field, admin review flow, and merchant
+  accountant pages unchanged after the shared-view extraction.
+- **Residuals logged:** partner reports tab omits cash-flow (needs a partner-visible
+  treasury-account list); duplicate-vendor-style soft warning n/a; commission/billing
+  deferred (needs Subscriptions); firm/multi-user partner deferred (OD-5A).
+- Nothing pushed — push only on founder GO.

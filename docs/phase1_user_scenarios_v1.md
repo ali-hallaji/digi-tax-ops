@@ -58,8 +58,13 @@ Parent plan: `phase1_accounting_plan_v1.md` (approved).
 | Walk-in customer | مشتری گذری | مشتری متفرقه |
 | Party opening balance (from paper books) | مانده اولیه | مانده اول دوره، افتتاحیه |
 | Settlement methods expander | روش‌های بیشتر | + روش دیگر |
+| Partner (accountant/consultant) | همکار | شریک، نماینده، پارتنر |
+| Partner shell | پنل همکار | پنل حسابدار، پنل پارتنرشیپ |
+| Partner persona | حسابدار همکار | — |
+| Partner code | کد همکار | کد معرف |
+| Partner grant | دسترسی همکار | مجوز، عضویت همکار |
 
-Actors: **Owner** (مالک), **Admin**, **Staff** (کارمند), **Viewer** (مشاهده‌گر), **SysAdmin** (پنل ادمین). Per decision 7: scenarios marked Staff+ = owner/admin/staff; Owner/Admin = those two only.
+Actors: **Owner** (مالک), **Admin**, **Staff** (کارمند), **Viewer** (مشاهده‌گر), **SysAdmin** (پنل ادمین), **Partner** (همکار — external accountant/consultant; NEVER a tenant member; sees a business only through an active, owner-revocable grant). Per decision 7: scenarios marked Staff+ = owner/admin/staff; Owner/Admin = those two only.
 
 Screen registry (the ONLY phase-1 surfaces; every scenario maps onto these — anything else is a duplicate):
 `DASH` داشبورد · `INV-L` فهرست فاکتورها · `INV-N` صدور فاکتور · `INV-D` جزئیات فاکتور · `SETL-R` دیالوگ دریافت وجه · `SETL-P` دیالوگ پرداخت وجه · `PAY` دریافت و پرداخت (merged) · `CHQ` چک‌ها · `PUR` خرید و هزینه · `ACC` حساب‌های من · `RPT` گزارش‌ها · `CUS` مشتریان · `VEN` تأمین‌کنندگان · `PRD` کالا/خدمات · `SET` تنظیمات · `MEM` کاربران و دسترسی‌ها · `BIZ` کسب‌وکارها
@@ -198,8 +203,9 @@ coupled to it.
 | S9-04 | گرفتن تراز آزمایشی | Owner/Admin | «دفترها سالم است؟» | «نمای حسابدار» → «تراز آزمایشی» → بازه/«کل دوره» | `GET /accounting/trial-balance`; balanced flag | نوار سبز «دفترها تراز است» وقتی Σبدهکار==Σبستانکار | guide S9-04 |
 | S9-05 | خروجی CSV برای حسابدار | Owner/Admin | «به حسابدارم بدهم» | دفتر روزنامه/دفتر حساب‌ها/تراز آزمایشی → «خروجی CSV» | CSV با BOM/فارسی، ستون‌های بدهکار/بستانکار | فایل CSV دانلود می‌شود | guide S9-05; بدون واگذاری دسترسی کامل |
 | S9-06 | مرور درخت حساب‌ها | Owner/Admin | «ساختار حساب‌هایم چیست؟» | «نمای حسابدار» → «درخت حساب‌ها» | `GET /accounting/chart` (read-only tree) | درخت گروه←کل←معین←تفصیلی | guide S9-06; فقط مشاهده؛ تفصیلی‌ها خودکار ساخته می‌شوند |
+| S9-07 | دادن دسترسی به حسابدار همکار | Owner/Admin | «حسابدارم خودش دفترها را زنده ببیند، نه فایل» | SET → کارت «دسترسی حسابدار همکار» → واردکردن «کد همکار» → «دعوت همکار»؛ همکار از پنل خودش می‌پذیرد | `POST /businesses/{id}/partners/invite` (two-sided handshake OD-1A); grant activation triggers journal generate; revoke = DELETE، DB-live → قطع فوری | همکار در پنل خودش دفترها/گزارش‌های فقط‌خواندنی را می‌بیند؛ کارت وضعیت «فعال» و دکمهٔ «قطع دسترسی» دارد | guide S9-07 (upgrade مسیرِ S9-05)؛ همکار عضو کسب‌وکار نمی‌شود (MEM جدا می‌ماند) |
 
-**Count: 70 scenarios** (Batch B 2026-07-10 additions: S9-01..S9-06 accountant layer, opt-in).
+**Count: 71 scenarios** (Partner panel 2026-07-11 addition: S9-07 دسترسی حسابدار همکار. Batch B 2026-07-10 additions: S9-01..S9-06 accountant layer, opt-in).
 (Prior Batch A additions: S2-07 advances, S3-10 خرج چک, S8-08..S8-14 settings walkthroughs.)
 
 > **مدرسهٔ حسابداری کاسب (2026-07-10):** /app/guide now also hosts a
