@@ -9,9 +9,9 @@ Cross-repo (backend + frontend + ops). Release slot per roadmap: R1C "Accountant
 > human reference (invoice number, cheque number, expense category) so a سند is
 > auditable without leaving the accountant layer. The batch shipped as B1–B7
 > (backend), F1–F7 (frontend), O1 (ops) — commit hashes in `progress.md`
-> («پنل همکار» entry). Residual: the partner reports tab omits cash-flow (needs a
-> partner-visible treasury-account list endpoint); duplicate-partner UX and
-> commission mechanics stay deferred as designed.
+> («پنل همکار» entry). The cash-flow residual was closed pre-push (B8 backend
+> `GET /partner/businesses/{id}/treasury-accounts` + F8 cash-flow tab);
+> duplicate-partner UX and commission mechanics stay deferred as designed.
 
 ---
 

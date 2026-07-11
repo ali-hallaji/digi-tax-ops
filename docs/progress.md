@@ -723,7 +723,14 @@ document's human reference (invoice/cheque number, expense category).
   desktop · light + dark): partner shell all 5 states, portfolio→drill-in, merchant
   grant card invite/revoke, wizard code field, admin review flow, and merchant
   accountant pages unchanged after the shared-view extraction.
-- **Residuals logged:** partner reports tab omits cash-flow (needs a partner-visible
-  treasury-account list); duplicate-vendor-style soft warning n/a; commission/billing
+- **Residuals logged:** duplicate-vendor-style soft warning n/a; commission/billing
   deferred (needs Subscriptions); firm/multi-user partner deferred (OD-5A).
-- Nothing pushed — push only on founder GO.
+- **Cash-flow residual CLOSED pre-push (2026-07-11, founder QA passed):** `1297613` B8
+  backend `GET /partner/businesses/{id}/treasury-accounts` (reuses
+  `list_accounts_for_tenant` — read-only, grant-gated, revoked⇒404; contract entry +
+  pg tests; all 7 partner pg tests green on live PG) · `08c08a0` F8 frontend
+  cash-flow tab (account picker, same params/labels/CSV as the merchant report).
+  Full apply→approve→invite→accept→treasury+cash-flow→revoke→404 loop verified via
+  curl against the locally rebuilt api (smoke partner HAM-5EBG, 09340000077; its
+  grant on the seed business was left revoked — harmless runtime data).
+- Founder GO received 2026-07-11 → all three repos pushed + dev deploy per runbook.
