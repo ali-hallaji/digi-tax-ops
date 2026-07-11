@@ -734,3 +734,21 @@ document's human reference (invoice/cheque number, expense category).
   curl against the locally rebuilt api (smoke partner HAM-5EBG, 09340000077; its
   grant on the seed business was left revoked — harmless runtime data).
 - Founder GO received 2026-07-11 → all three repos pushed + dev deploy per runbook.
+- **Dev deploy DONE (2026-07-11, compose v2 `docker compose`, --no-deps only):**
+  snapshot `backups/digitax-pre-partner-20260711-0652.sql.gz` taken first; pulls →
+  backend `1297613` / frontend `08c08a0` / ops `5648aa7`; api rebuilt+recreated;
+  `alembic upgrade head` ran `b5c6d7e8f9g0 → c6d7e8f9g0h1 → d7e8f9g0h1i2` (current
+  printed `d7e8f9g0h1i2 (head)`, three partner tables confirmed via psql `\dt`);
+  frontend rebuilt `--no-cache` + `--force-recreate --no-deps`. **Postgres container
+  ID unchanged (`21d962001ab3`)**, redis untouched. Preflight: green except the
+  documented pre-existing orphan `digi_tax` DB (still pending founder decision).
+  Smoke script: health/db/OTP/bearer green; its CORS step fails because the script
+  hardcodes `Origin: http://127.0.0.1:8080` while this server correctly allows only
+  `https://dev.digiinvoice.ir` — manual preflight with the real origin returns 200
+  (script-fix follow-up, not a regression). Partner smoke via public API: full
+  apply→approve (HAM-Q8YE, 09340000078)→invite→accept→treasury-accounts 200→
+  cash-flow 200→revoke→404 loop PASS; all five /partner/me states verified
+  (none/pending/approved via loop; 09340000079 rejected-with-reason; suspend→
+  suspended→unsuspend→approved, left clean). Captcha/rate-limit end state:
+  `AUTH_CAPTCHA_ENABLED=true` (OTP without solution ⇒ 400), `AUTH_RATE_LIMIT_ENABLED=true`
+  (rapid attempts ⇒ 429), live Altcha challenge served over HTTPS, frontend serving.
