@@ -13,6 +13,28 @@ Cross-repo (backend + frontend + ops). Release slot per roadmap: R1C "Accountant
 > `GET /partner/businesses/{id}/treasury-accounts` + F8 cash-flow tab);
 > duplicate-partner UX and commission mechanics stay deferred as designed.
 
+> **SUPERSEDED — P2 partner-flow simplification (2026-07-11):** the OD-1A
+> two-sided **accept handshake was removed**. Everything below that describes
+> invite → *partner accepts* → active is historical. Now:
+> - **Instant-active grants.** Entering a valid «کد همکار» (settings «دسترسی
+>   حسابدار همکار» → «افزودن همکار») grants access **immediately**; the grant is
+>   created `active` with a single `granted` event and the journal is built at
+>   grant time. There is no partner accept/decline step. `GET /partner/invites`
+>   is repurposed into a passive «افزوده‌های اخیر» notice (active grants ≤14d);
+>   `POST /partner/invites/{id}/accept|decline` remain as legacy no-ops. Data
+>   migration `e8f9g0h1i2j3` converts any pre-existing `invited` grants → active.
+> - **Admin one-act create.** `POST /admin/partners` (require_system_admin,
+>   «افزودن همکار» on `/admin/partners`) mints an already-approved partner +
+>   «کد همکار» by mobile in a single admin act — collapsing self-serve apply +
+>   approve.
+> - **Set-once referral from settings.** `POST /businesses/{id}/referral` lets an
+>   owner add the referring «کد معرف» later if the wizard step was skipped
+>   (set-once: 409 if already set). Settings response gains `referred_by_partner`.
+> - **Guide aligned:** merchant S9-07, partner-panel guide `accept-invite`
+>   scenario, and school L22 rewritten to instant-active wording.
+> Contract entries updated in `docs/api_contracts_v2_2.md`. Merchant control
+> (revoke, DB-live gate, no partner edits) is unchanged.
+
 ---
 
 ## Context
