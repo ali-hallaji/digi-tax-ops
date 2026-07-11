@@ -1,11 +1,24 @@
 # Ops Progress
 
-Last updated: 2026-07-10
+Last updated: 2026-07-12
 
 ## Current Phase
-Phase 0.2 local/staging orchestration hardening.
+P3 (Entitlements + Commission + Duplicate guards) — implemented + verified local,
+deploy in progress.
 
 ## Completed
+
+- **2026-07-12 — P3: entitlements + partner commission + duplicate guards.**
+  Backend `99d0d21` (entitlements plan switchboard, gates, grandfathering), `afe19f2`
+  (partner commission — percent/revenue-events/payouts), `15b2a1a` (duplicate guards +
+  invoice-number race); frontend `ac7d799` (admin plan+commission cards), `f2f4246`
+  (merchant plan card, locked surfaces, limit buttons, partner earnings, dup dialogs,
+  guide). Migrations up to head **`g0h1i2j3k4l5`** (3 entitlement tables + commission
+  tables + tenant_created indices); grandfathering backfills accountant_view +
+  expense_breakdown_report for every tenant (16 local). Suite 748/7 baseline. Three-
+  questions sweep `../digi-tax-frontend` `qa-screens/p3-20260712.zip` (28 PNGs, 0 fail,
+  all PASS). Backlog P7a (X-Forwarded-For rate-limit keying) + P7b (admin session-expired
+  state) recorded in `e68f4b3`. Deploy to dev.digiinvoice.ir in progress.
 
 - **2026-07-04 — Stage A2: per-business display-currency preference (rial|toman).**
   Canonical stored/calculation unit stays **ریال** (official invoices + Moadian are
