@@ -25,6 +25,13 @@ Run after any deploy to confirm the stack is healthy. Use the documented smoke s
    - OTP auth flow (request + verify)
    - Bearer-auth protected endpoints
    - Frontend availability on configured port
+   - **Deploy-verification (stale-image guard):** reads `GET /health/version`
+     (served backend SHA + image alembic head) and `GET /version.json` (served
+     frontend SHA). When run in a deploy context (`BACKEND_SHA` / `FRONTEND_SHA`
+     exported before the build), it **fails loudly** if the served SHA ≠ the
+     deployed SHA, or if the image's alembic head ≠ the DB's current head — the
+     exact check that catches a stale image passing an otherwise-green smoke.
+     Without those env vars (ad-hoc local smoke) it just reports the served SHAs.
 
 4. If `smoke_test.sh` is not available or fails, run manual checks:
 

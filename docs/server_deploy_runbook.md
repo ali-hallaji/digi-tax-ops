@@ -1,12 +1,13 @@
 # Server Deploy Runbook
 
 > ⛔ **COMPOSE v2 ONLY.** Every command here is `docker compose` (space, v2). The server
-> has ONLY the v2 plugin; the v1 binary is retired and shadowed by a STOP wrapper.
-> **If `docker-compose` (v1, hyphen) is ever invoked on the server — by a script, a habit,
-> or a `command not found` fallback — STOP immediately and report.** Mixing v1 and v2 once
-> deployed the OLD image while "building" the new one (v1 uses `project_service` image
-> names, v2 uses `project-service`); always verify a deploy by curling the LIVE OpenAPI for
-> the new routes, never by trusting the build log.
+> has ONLY the v2 plugin; the `docker-compose` (v1, hyphen) binary is retired and shadowed
+> by a STOP wrapper at `/usr/local/bin/docker-compose`.
+> **If `docker-compose` (v1) is ever invoked on the server — by a script, a habit, or a
+> `command not found` fallback — STOP immediately and report.** Mixing v1 and v2 once
+> deployed the OLD image while "building" the new one (v1 names images `project_service`,
+> v2 names them `project-service`). **Always verify a deploy with the version guard below
+> (§ Deploy-Verification), never by trusting the build log.**
 
 ## Purpose And Scope
 
@@ -62,25 +63,29 @@ git -C ../digi-tax-backend pull
 git -C ../digi-tax-frontend pull
 git -C . pull
 
-docker-compose config
+docker compose config
 
-docker-compose build api
-docker-compose up -d postgres redis api
-docker-compose exec api python -m alembic upgrade head
+# Bake the git SHA of EACH repo into its image (the stale-image guard reads it back).
+export BACKEND_SHA="$(git -C ../digi-tax-backend rev-parse HEAD)"
+export FRONTEND_SHA="$(git -C ../digi-tax-frontend rev-parse HEAD)"
 
-docker-compose build --no-cache frontend
-docker-compose up -d --force-recreate frontend
+docker compose build api
+docker compose up -d postgres redis api
+docker compose exec api python -m alembic upgrade head
+
+docker compose build --no-cache frontend
+docker compose up -d --force-recreate frontend
 
 bash scripts/preflight.sh
-bash scripts/smoke_test.sh
+bash scripts/smoke_test.sh          # includes the Deploy-Verification guard (below)
 ```
 
 Backend-only update:
 
 ```bash
-docker-compose build api
-docker-compose up -d api
-docker-compose exec api python -m alembic upgrade head
+docker compose build api
+docker compose up -d api
+docker compose exec api python -m alembic upgrade head
 ```
 
 Use this when backend source, backend dependencies, backend Dockerfile inputs,
@@ -89,8 +94,8 @@ or migrations changed.
 Frontend-only update:
 
 ```bash
-docker-compose build --no-cache frontend
-docker-compose up -d --force-recreate frontend
+docker compose build --no-cache frontend
+docker compose up -d --force-recreate frontend
 ```
 
 Use this when frontend source changes or `VITE_API_BASE_URL` changes. The
@@ -171,7 +176,7 @@ Validate Compose before building or restarting services:
 
 ```bash
 cd ../digi-tax-ops
-docker-compose config
+docker compose config
 ```
 
 Fix config errors before continuing. Do not deploy from an invalid Compose
@@ -193,32 +198,32 @@ Use targeted rebuilds. Do not rebuild every image by default.
 Build frontend only:
 
 ```bash
-docker-compose build --no-cache frontend
-docker-compose up -d --force-recreate frontend
+docker compose build --no-cache frontend
+docker compose up -d --force-recreate frontend
 ```
 
 Build API/backend only:
 
 ```bash
-docker-compose build api
+docker compose build api
 ```
 
 Build API and frontend:
 
 ```bash
-docker-compose build api frontend
+docker compose build api frontend
 ```
 
 Recreate changed services after a targeted build:
 
 ```bash
-docker-compose up -d --no-deps --force-recreate <service-name>
+docker compose up -d --no-deps --force-recreate <service-name>
 ```
 
 Start or refresh the default app services:
 
 ```bash
-docker-compose up -d postgres redis api frontend
+docker compose up -d postgres redis api frontend
 ```
 
 If worker services are added to this Compose project later, rebuild and recreate
@@ -231,7 +236,7 @@ Run the migration after backend changes, migration changes, first server setup,
 or when the database may not have the expected schema:
 
 ```bash
-docker-compose exec api python -m alembic upgrade head
+docker compose exec api python -m alembic upgrade head
 ```
 
 Run migrations inside the `api` container after `postgres`, `redis`, and `api`
@@ -251,20 +256,51 @@ readiness, and API database env visibility.
 Use this order for a normal deployment:
 
 ```bash
-docker-compose up -d postgres redis
-docker-compose up -d api
-docker-compose up -d frontend
+docker compose up -d postgres redis
+docker compose up -d api
+docker compose up -d frontend
 ```
 
 If an Nginx/reverse proxy service is present in the Compose project, start or
 recreate it after API and frontend are healthy:
 
 ```bash
-docker-compose up -d nginx
+docker compose up -d nginx
 ```
 
 Do not force a backend rebuild unless backend code, backend dependencies,
 Dockerfile inputs, migrations, or related service configuration changed.
+
+## Deploy-Verification (stale-image guard) — MANDATORY
+
+This is the check that would have caught the P3-image-on-new-schema regression: the
+build "succeeded" but the OLD image was running. After `up` + migrate, assert that the
+image actually SERVING is the commit you just deployed, and that the DB schema matches
+the image's migration graph. Any mismatch **FAILS the deploy loudly** — never ship past it.
+
+`scripts/smoke_test.sh` runs this automatically; to run it standalone:
+
+```bash
+cd /usr/local/digi-tax-ops
+BACKEND_SHA="$(git -C ../digi-tax-backend rev-parse HEAD)"
+FRONTEND_SHA="$(git -C ../digi-tax-frontend rev-parse HEAD)"
+
+VER="$(curl -fsS localhost:8000/health/version)"                 # {git_sha, alembic_head}
+SERVED_SHA="$(printf '%s' "$VER" | python3 -c 'import sys,json;print(json.load(sys.stdin)["git_sha"])')"
+CODE_HEAD="$(printf '%s' "$VER" | python3 -c 'import sys,json;print(json.load(sys.stdin)["alembic_head"])')"
+DB_HEAD="$(docker compose exec -T api alembic current 2>/dev/null | grep -oE '[a-z0-9]{12}\b' | head -1)"
+FE_SHA="$(curl -fsS localhost:3000/version.json | python3 -c 'import sys,json;print(json.load(sys.stdin)["sha"])')"
+
+[ "$SERVED_SHA" = "$BACKEND_SHA" ] || { echo "DEPLOY FAIL: api serves $SERVED_SHA, deployed $BACKEND_SHA (STALE IMAGE)"; exit 1; }
+[ "$CODE_HEAD" = "$DB_HEAD" ]       || { echo "DEPLOY FAIL: image alembic head $CODE_HEAD != DB head $DB_HEAD (MIGRATIONS OUT OF SYNC)"; exit 1; }
+[ "$FE_SHA" = "$FRONTEND_SHA" ]     || { echo "DEPLOY FAIL: frontend serves $FE_SHA, deployed $FRONTEND_SHA (STALE FRONTEND)"; exit 1; }
+echo "OK deploy-verification: api=$SERVED_SHA frontend=$FE_SHA alembic=$CODE_HEAD"
+```
+
+`GET /health/version` returns the git SHA baked into the api image + that image's alembic
+head. `GET /version.json` (frontend) returns the frontend build SHA. If either SHA differs
+from the just-deployed HEAD, or the image's migration graph doesn't match the DB, a stale
+image is serving — STOP and investigate (usually a v1/v2 image-name split; see §13 gotcha 14).
 
 ## Validation After Deploy
 
@@ -329,18 +365,18 @@ Rules:
 
 Postgres container stopped:
 
-Run `docker-compose ps`, start `postgres`, then rerun `bash scripts/preflight.sh`.
+Run `docker compose ps`, start `postgres`, then rerun `bash scripts/preflight.sh`.
 
 Frontend still on old image:
 
-Run `docker-compose build --no-cache frontend`, then run
-`docker-compose up -d --force-recreate frontend`. Recheck `/login`, `/app`, and
+Run `docker compose build --no-cache frontend`, then run
+`docker compose up -d --force-recreate frontend`. Recheck `/login`, `/app`, and
 a deep route.
 
 `VITE_API_BASE_URL` changed but frontend was not rebuilt:
 
-Run `docker-compose build --no-cache frontend`, then run
-`docker-compose up -d --force-recreate frontend`. The value is baked into
+Run `docker compose build --no-cache frontend`, then run
+`docker compose up -d --force-recreate frontend`. The value is baked into
 frontend bundles at build time.
 
 Problem: frontend still calls `http://localhost:8000/api/v1/...` on a remote
@@ -355,8 +391,8 @@ Fix:
 - Run:
 
 ```bash
-docker-compose build --no-cache frontend
-docker-compose up -d --force-recreate frontend
+docker compose build --no-cache frontend
+docker compose up -d --force-recreate frontend
 ```
 
 - Hard refresh the browser or test in an incognito window.
@@ -364,7 +400,7 @@ docker-compose up -d --force-recreate frontend
   container:
 
 ```bash
-docker-compose exec frontend sh -lc 'grep -R "localhost:8000" -n /app 2>/dev/null | head'
+docker compose exec frontend sh -lc 'grep -R "localhost:8000" -n /app 2>/dev/null | head'
 ```
 
 Problem: customers/products return 403.
@@ -423,16 +459,16 @@ nginx plugin.
   server IP — Altcha (captcha) requires a secure context and silently fails
   with "Secure context (HTTPS) required" over plain `http://ip:port`.
   `VITE_API_BASE_URL` is baked in at frontend **build** time — changing it
-  requires `docker-compose build --no-cache frontend`, a restart alone does
+  requires `docker compose build --no-cache frontend`, a restart alone does
   nothing.
 - No HSTS header is set yet (optional hardening, deferred — hard to safely
   reverse once browsers cache it, so it wasn't added without an explicit
   decision to keep it permanently).
 
-### docker-compose v1.29.2 `KeyError: 'ContainerConfig'` on recreate
+### docker compose v1.29.2 `KeyError: 'ContainerConfig'` on recreate
 
-This server's `docker-compose` is v1.29.2 (via apt/pip), which has a known
-incompatibility with newer Docker Engine image metadata: **any** `docker-compose
+This server's `docker compose` is v1.29.2 (via apt/pip), which has a known
+incompatibility with newer Docker Engine image metadata: **any** `docker compose
 up -d` that needs to *recreate* an existing container (image changed, or even
 an unrelated `up` that touches a dependency) can throw
 `KeyError: 'ContainerConfig'` inside `get_container_data_volumes` and abort,
@@ -441,7 +477,7 @@ potentially mid-way through recreating multiple services.
 - It fails in the **recreate** path specifically — inspecting the *old*
   container's image config to merge volumes. A **fresh create** (no old
   container by that name) does not hit this code path.
-- Symptom seen live: `docker-compose up -d api frontend` (even with
+- Symptom seen live: `docker compose up -d api frontend` (even with
   `--no-deps`) tried to recreate `postgres` too, hit the bug, and left the old
   postgres container *renamed* (e.g. `f5d2cdb3d5a2_digi-tax-postgres`) and
   stopped rather than removed — Compose's rename-out-of-the-way step ran
@@ -456,14 +492,14 @@ potentially mid-way through recreating multiple services.
      **not** let compose try to recreate it again until this is fixed
      properly (upgrade compose, or migrate to the `docker compose` v2 plugin).
   2. If the affected container is stateless (api/frontend, no volumes):
-     `docker stop <name> && docker rm <name>`, then `docker-compose up -d
+     `docker stop <name> && docker rm <name>`, then `docker compose up -d
      --no-deps <service>` — a **fresh create** succeeds because there's no old
      container to inspect.
-  3. Never `docker-compose down` as a "fix" for this — it removes containers
+  3. Never `docker compose down` as a "fix" for this — it removes containers
      network-wide in one step and increases blast radius for no benefit.
 - Root-cause fix (not yet done, flagged for a future session): upgrade to the
-  `docker compose` v2 plugin (`docker-compose-plugin` apt package, invoked as
-  `docker compose ...` not `docker-compose ...`), which doesn't have this bug.
+  `docker compose` v2 plugin (`docker compose-plugin` apt package, invoked as
+  `docker compose ...` not `docker compose ...`), which doesn't have this bug.
   Until then, expect this failure mode on *any* server-side rebuild that
   touches a long-running container and follow the recovery pattern above.
 
@@ -483,7 +519,7 @@ potentially mid-way through recreating multiple services.
 - **`digi-tax-postgres` container runs under a temporary renamed identity**
   (see the compose bug above) instead of its compose `container_name`. Fully
   functional (network alias `postgres` still resolves), but the next person
-  running `docker-compose ps`/`docker ps` should not be alarmed by the odd
+  running `docker compose ps`/`docker ps` should not be alarmed by the odd
   name. Fixing this cosmetically requires another risky recreate of the live
   DB container — deferred until the compose v1→v2 upgrade above is done.
 - **Frontend never surfaces `must_change_password`** on the user's *own*

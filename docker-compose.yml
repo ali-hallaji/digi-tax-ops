@@ -2,6 +2,10 @@ x-backend-common: &backend-common
   build:
     context: ../digi-tax-backend
     dockerfile: Dockerfile
+    args:
+      # Deploy-verification: baked into GET /health/version. The deploy exports
+      # BACKEND_SHA=$(git -C ../digi-tax-backend rev-parse HEAD) before building.
+      GIT_SHA: ${BACKEND_SHA:-unknown}
   env_file: .env
   networks:
     - digi-tax-network
@@ -63,6 +67,8 @@ services:
       network: host
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+        # Deploy-verification: baked into /version.json (eyeball what's served).
+        GIT_SHA: ${FRONTEND_SHA:-unknown}
         HTTP_PROXY: ${FRONTEND_BUILD_HTTP_PROXY:-}
         HTTPS_PROXY: ${FRONTEND_BUILD_HTTPS_PROXY:-}
         ALL_PROXY: ${FRONTEND_BUILD_ALL_PROXY:-}

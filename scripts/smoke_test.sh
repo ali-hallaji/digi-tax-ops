@@ -248,3 +248,41 @@ if docker compose config --services | grep -Fx frontend >/dev/null 2>&1; then
 else
   info "Frontend service is not defined; skipping frontend URL check"
 fi
+
+# ── Deploy-verification (stale-image guard) ──────────────────────────────────
+# Asserts the image actually SERVING is the commit just deployed + that the DB
+# schema matches the image's migration graph — the check that catches a stale
+# image slipping past a "successful" build (v1/v2 image-name split, cache reuse).
+# When BACKEND_SHA / FRONTEND_SHA are exported (server deploy), a mismatch FAILS
+# loudly; without them (ad-hoc local smoke) it just reports the served SHAs.
+version_json="$(curl -sS "${API_BASE_URL%/}/health/version" 2>/dev/null || true)"
+served_sha="$(json_value "$version_json" '.git_sha' 2>/dev/null || true)"
+code_head="$(json_value "$version_json" '.alembic_head' 2>/dev/null || true)"
+if [ -n "$served_sha" ] && [ "$served_sha" != "null" ]; then
+  info "Served backend SHA: ${served_sha} (image alembic head ${code_head})"
+  if [ -n "${BACKEND_SHA:-}" ]; then
+    [ "$served_sha" = "$BACKEND_SHA" ] \
+      && pass "Deploy-verify: api serves the deployed SHA" \
+      || fail "Deploy-verify: api serves ${served_sha} but deployed ${BACKEND_SHA} (STALE IMAGE)"
+  fi
+  db_head="$(docker compose exec -T api alembic current 2>/dev/null | grep -oE '[a-z0-9]{12}' | head -1 || true)"
+  if [ -n "$db_head" ] && [ -n "$code_head" ] && [ "$code_head" != "unknown" ]; then
+    [ "$code_head" = "$db_head" ] \
+      && pass "Deploy-verify: image alembic head matches DB (${code_head})" \
+      || fail "Deploy-verify: image head ${code_head} != DB head ${db_head} (MIGRATIONS OUT OF SYNC)"
+  fi
+else
+  info "Deploy-verify: /health/version unavailable (pre-guard image?) — skipping backend SHA check"
+fi
+fe_version="$(curl -sS "${FRONTEND_BASE_URL%/}/version.json" 2>/dev/null || true)"
+fe_sha="$(json_value "$fe_version" '.sha' 2>/dev/null || true)"
+if [ -n "$fe_sha" ] && [ "$fe_sha" != "null" ]; then
+  info "Served frontend SHA: ${fe_sha}"
+  if [ -n "${FRONTEND_SHA:-}" ]; then
+    [ "$fe_sha" = "$FRONTEND_SHA" ] \
+      && pass "Deploy-verify: frontend serves the deployed SHA" \
+      || fail "Deploy-verify: frontend serves ${fe_sha} but deployed ${FRONTEND_SHA} (STALE FRONTEND)"
+  fi
+else
+  info "Deploy-verify: /version.json unavailable — skipping frontend SHA check"
+fi
