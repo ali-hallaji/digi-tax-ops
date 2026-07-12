@@ -3,10 +3,26 @@
 Last updated: 2026-07-12
 
 ## Current Phase
-P3 (Entitlements + Commission + Duplicate guards) — implemented + verified local,
-deploy in progress.
+P4 (Accountant-layer polish «polish دفاتر») — implemented, verified local + swept,
+DEPLOYED to dev.digiinvoice.ir 2026-07-12.
 
 ## Completed
+
+- **2026-07-12 — P4 deploy to dev.digiinvoice.ir.** Runbook followed: DB snapshot
+  `digitax-pre-p4-20260712-0714.sql.gz`, ff-only pulls, api + frontend rebuilt
+  `--no-cache`, `--no-deps` recreates (compose-v1 KeyError worked around via
+  stop/rm/up), alembic head `i2j3k4l5m6n7` (columns verified via psql), postgres
+  container ID unchanged (`21d962001ab3`). **D14 backfill: journal_gaps 3 → 0**;
+  three tenants gained the system «مشتری متفرقه» تفصیلی. Golden-path smoke on live:
+  toggle ON → regenerate (8 entries, 0 gaps) → TB 8-col balanced → xlsx downloaded
+  (5,629 bytes, valid Excel 2007+, Jalali filename) → manual entry created (no ۹) +
+  deleted → TB balanced → toggle restored OFF. Captcha empirical ON (both envs,
+  Persian block without PoW); rate-limit empirical (429 on 5th rapid OTP request).
+  Deployed SHAs: backend `b332feb` · frontend `b857ad7` · ops `9c0147b`.
+  Known pre-existing drift: `smoke_test.sh` CORS check hardcodes Origin
+  `http://127.0.0.1:8080` which is not in the server's BACKEND_CORS_ORIGINS
+  (`https://dev.digiinvoice.ir`) → false FAIL; manual OPTIONS with the real origin
+  returns 200 + allow-origin. Follow-up: parametrize the smoke origin.
 
 - **2026-07-12 — P3: entitlements + partner commission + duplicate guards.**
   Backend `99d0d21` (entitlements plan switchboard, gates, grandfathering), `afe19f2`
