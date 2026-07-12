@@ -184,6 +184,7 @@ Screen registry (the ONLY phase-1 surfaces; every scenario maps onto these — a
 | S8-12 | شماره‌گذاری فاکتور | Owner/Admin | «پیشوند دلخواه شماره فاکتور» | SET → «شماره‌گذاری فاکتور» → «پیشوند شماره» + «شروع دوباره شماره‌ها» | prefix 1–8 latin/digits; reset policy affects future invoices only | فاکتورهای بعدی با الگوی جدید | guide walkthrough S8-12 |
 | S8-13 | ویرایش اطلاعات کسب‌وکار | Owner/Admin | «نشانی روی فاکتور غلط است» | SET → «اطلاعات کسب‌وکار» → ویرایش → «ذخیره تغییرات» | seller identity snapshot for future invoices | فاکتورهای بعدی با مشخصات جدید | guide walkthrough S8-13 |
 | S8-14 | اتصال به سامانه مودیان (per-business) | Owner/Admin | «وضعیت اتصال مالیاتی» | SET → کارت «اتصال به سامانه مودیان» → /app/moadian | per-business Moadian page; real submit stays a disabled placeholder until R1B | صفحه اختصاصی اتصال همین کسب‌وکار | guide walkthrough S8-14; NEVER a live submit before R1B |
+| S8-15 | تور آشنایی و راهنمای گام‌به‌گام (P6) | Any user | «تور را دوباره ببینم / خاموشش کنم» | GUIDE → «تور آشنایی را دوباره ببین»؛ یا SET → «حساب من» → «راهنمای گام‌به‌گام» toggle | client-only per-user state (localStorage); L1 first-run tour auto-once after business creation; L2 next-step nudges (client-side, ≤2/nudge, 1/session); self-fades when experienced | کنترل کامل تور + نودج‌ها؛ replay همیشه کار می‌کند حتی با toggle خاموش | guide S8-15; ActivationDashboard checklist NOT affected by the toggle |
 
 ## Group 9 — نمای حسابدار (Accountant layer — Batch B, opt-in)
 
@@ -207,7 +208,7 @@ coupled to it.
 | S9-08 | ثبت سند دستی | Owner/Admin (حسابدار) | «سند افتتاحیه/اصلاحیه لازم دارم» | «دفتر روزنامه» → «سند جدید» → فرم کلاسیک (ردیف‌های پویا، انتخاب حساب، Σ زنده) → «ثبت سند» | `POST /accounting/entries`؛ اعتبارسنجی تراز (۴۲۲ فارسی)؛ `is_manual=true`، regenerate هرگز به آن دست نمی‌زند | سند با برچسب «دستی» در دفتر روزنامه؛ از صفحهٔ خودش ویرایش/حذف می‌شود | guide S9-08; حساب‌های بایگانی‌شده در فهرست نیستند |
 | S9-09 | اصلاح سند از تراکنش مبدأ | Owner/Admin (حسابدار) | «این سند خودکار غلط است» | صفحهٔ سند → «اصلاح تراکنش مبدأ» → ویرایش خودِ تراکنش | ناوبری با source_type/source_id؛ پس از ویرایش، journal auto-refresh (middleware، toggle-ON فقط) | سند همان تراکنش خودکار به‌روز می‌شود؛ ویرایش مستقیم سند خودکار = ۴۰۳ فارسی | guide S9-09 |
 
-**Count: 73 scenarios** (P4 2026-07-12 additions: S9-08 سند دستی، S9-09 اصلاح از مبدأ. Partner panel 2026-07-11 addition: S9-07 دسترسی حسابدار همکار. Batch B 2026-07-10 additions: S9-01..S9-06 accountant layer, opt-in).
+**Count: 74 scenarios** (P6 2026-07-12 addition: S8-15 تور آشنایی و راهنمای گام‌به‌گام. P4 2026-07-12 additions: S9-08 سند دستی، S9-09 اصلاح از مبدأ. Partner panel 2026-07-11 addition: S9-07 دسترسی حسابدار همکار. Batch B 2026-07-10 additions: S9-01..S9-06 accountant layer, opt-in).
 (Prior Batch A additions: S2-07 advances, S3-10 خرج چک, S8-08..S8-14 settings walkthroughs.)
 
 > **مدرسهٔ حسابداری کاسب (2026-07-10):** /app/guide now also hosts a
