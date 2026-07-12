@@ -18,7 +18,20 @@ deploy in progress.
   expense_breakdown_report for every tenant (16 local). Suite 748/7 baseline. Three-
   questions sweep `../digi-tax-frontend` `qa-screens/p3-20260712.zip` (28 PNGs, 0 fail,
   all PASS). Backlog P7a (X-Forwarded-For rate-limit keying) + P7b (admin session-expired
-  state) recorded in `e68f4b3`. Deploy to dev.digiinvoice.ir in progress.
+  state) recorded in `e68f4b3`.
+  - **Deployed to dev.digiinvoice.ir 2026-07-12** — backend `b3e23a1` · frontend
+    `dadc1dd` · ops `0a2005d`. Snapshot `/root/db-snapshots/pre-p3-20260712-020053.sql.gz`
+    (74K). `build --no-cache api` + `--no-cache frontend`; `up --no-deps` each; postgres
+    container ID `21d96200…` unchanged across the deploy. Alembic
+    `e8f9g0h1i2j3 → f9g0h1i2j3k4 → g0h1i2j3k4l5` (head), all 5 P3 tables verified via psql
+    `\dt`. Grandfathering on live: **50 rows / 25 tenants** (accountant_view +
+    expense_breakdown_report). Live golden-path smoke: captcha **ON** (400 w/o token),
+    rate-limit **ON** (429 on burst — P7a: proxy-IP keyed, whole-site 300s block), admin
+    plan read 200, merchant plan read 200 (grandfathered + defaults), **expense-breakdown
+    gate 403 FEATURE_NOT_ENABLED** (toggle off→fire→restore), **duplicate guard 409
+    POSSIBLE_DUPLICATE + `?force=true` 201** (rows created + deleted, 0 leftover),
+    partner-earnings route protected (401). Member-limit 403 + invoice-number race proven
+    by local PG integration tests on identical deployed code.
 
 - **2026-07-04 — Stage A2: per-business display-currency preference (rial|toman).**
   Canonical stored/calculation unit stays **ریال** (official invoices + Moadian are
