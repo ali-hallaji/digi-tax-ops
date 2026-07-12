@@ -39,3 +39,31 @@ medium-priority. (Observed live 2026-07-11 during the P2 deploy smoke: an 8-requ
 admin session looks like an infinite loading state instead of a re-login prompt.
 Split the two states: 401 → a clear «نشست شما منقضی شده» card with a login button
 (no logout side-effects). Small.
+
+## PB — Self-Hosting سازمانی (enterprise on-prem)
+
+Enterprise on-premise deployment of the existing Docker Compose stack for orgs
+that require data to stay inside their own network. Open questions to resolve when
+the first enterprise lead appears: licensing/activation model (offline license key
+vs phone-home), the update channel (pinned image tags vs a managed pull), support
+SLA tiers, and data-migration in/out (import an existing cloud tenant → on-prem,
+and the reverse). No near-term bridge; this is a distinct future phase. Gate: real
+enterprise demand.
+
+## PB — حقوق و دستمزد v1 (Iranian payroll)
+
+Full Iranian payroll as its own future phase: بیمهٔ تأمین اجتماعی, مالیات پلکانی
+حقوق (salary-specific brackets, distinct from the Article-131 business brackets in
+PA-T1), عیدی/سنوات, پایهٔ حقوق و مزایا, and monthly لیست بیمه/مالیات output.
+**Near-term bridge already available (no new build):** the «حقوق» expense category
+records payroll spend today, and the PA-T2 reminders already surface the standing
+tax/insurance deadlines — merchants aren't blind to payroll obligations before v1
+ships. Gate: after the core accounting + partner loop matures.
+
+## PB — تورهای per-صفحه (per-section mini-tours)
+
+Extend the P6 onboarding-tour engine with per-section mini-tours triggered from a
+small «؟» affordance on a page/section (not just the one-time global tour). Reuses
+the existing tour anchors + step model; adds a per-section trigger + a «seen» key
+per mini-tour so it doesn't nag. Low-risk, incremental. Gate: after the current
+guide/school content stabilizes.
