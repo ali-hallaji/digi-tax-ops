@@ -3,9 +3,31 @@
 Last updated: 2026-07-12
 
 ## Current Phase
-P4.5 (Guide catch-up + «تازه‌ها» announcements) — frontend-only, verified local +
-swept, DEPLOYED to dev.digiinvoice.ir 2026-07-12. (P4 accountant-layer polish shipped
-just before it.)
+P7a (rate-limiter proxy keying) + P6 (smart onboarding tour) — verified local + swept,
+DEPLOYED to dev.digiinvoice.ir 2026-07-12. (P4.5 guide catch-up shipped just before.)
+
+## Completed
+
+- **2026-07-12 — P7a + P6 deploy to dev.digiinvoice.ir.** Backend `109b374` (P7a:
+  proxy-aware rate-limiter client-IP keying, env `TRUSTED_PROXIES`, no migration) +
+  frontend `df6c13b` (P6: native onboarding tour L1/L2/L3 + settings toggle + replay +
+  guide S8-15 + whats-new) + ops `d314452`/env/runbook. Runbook: snapshot
+  `digitax-pre-p6-20260712-0914.sql.gz`, ff-only pulls, `build --no-cache` api +
+  frontend, `--no-deps` recreate (compose-v1 KeyError → stop/rm/up), alembic head
+  UNCHANGED `i2j3k4l5m6n7` (P7a env-only), postgres container ID unchanged
+  (`21d962001ab3`). **P7a live proof** (api localhost, trusted peer, two crafted XFF
+  client IPs + distinct mobiles): clientA (203.0.113.10) bursts A1-A5→400 then A6→429,
+  clientB (203.0.113.20) right after → 400 (un-limited), control A7→429. One client's
+  burst does NOT affect another → per-client bucket separation confirmed (before the
+  fix all shared the proxy peer bucket). **Live L1 tour** rendered on dev (fresh tour
+  state, mobile 09120000099 stage_1): fires on the ActivationDashboard with the
+  checklist visible behind the overlay — spotlight + popover + dots, exactly per spec.
+  **Captcha ON** verified LAST (fresh mobile/IP, no PoW → Persian block, 400 not 429).
+  `TRUSTED_PROXIES` left unset on the server → config.py private-range default (works
+  out-of-box; nginx already sets `X-Forwarded-For $proxy_add_x_forwarded_for`). nginx
+  needed no change. Deployed SHAs: backend `109b374` · frontend `df6c13b` · ops
+  `d314452`. Note: the P7a proof/token-mint bursts tripped the `otp:09120000000` and my
+  own client-IP buckets for ~300s — expected (that IP isolation IS the fix).
 
 ## Completed
 
