@@ -139,6 +139,24 @@ changes or frontend build-time env changes.
 
 Runtime-only secrets must remain runtime environment values. Do not pass them as Docker build args.
 
+### Rate-limiter client IP behind the proxy (P7a)
+
+The auth rate limiter keys on the real client IP, not the proxy peer, so a single
+client's burst can't lock out the whole site. It trusts `X-Forwarded-For` ONLY
+when the request's TCP peer is a trusted proxy (`TRUSTED_PROXIES`, comma-separated
+IPs/CIDRs; default = localhost + the private ranges the docker/compose network and
+nginx live in), then takes the right-most untrusted hop; a spoofed XFF from an
+untrusted peer is ignored and the peer IP is used.
+
+- **nginx requirement (already satisfied):** the site config must forward the
+  client IP with `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`.
+  Verified present in `/etc/nginx/sites-available/dev.digiinvoice.ir` (and
+  `/etc/nginx/proxy_params`). No nginx change was needed for P7a.
+- To tighten keying in production, set `TRUSTED_PROXIES` to the exact nginx +
+  compose subnet instead of the broad private-range default.
+- **Live proof:** two simulated client IPs via XFF through the real nginx — one
+  bursts to `429`, the other stays `200` (see the smoke section).
+
 ## Compose Config Validation
 
 Validate Compose before building or restarting services:
