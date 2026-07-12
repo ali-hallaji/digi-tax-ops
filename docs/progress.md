@@ -3,10 +3,25 @@
 Last updated: 2026-07-12
 
 ## Current Phase
-P4 (Accountant-layer polish «polish دفاتر») — implemented, verified local + swept,
-DEPLOYED to dev.digiinvoice.ir 2026-07-12.
+P4.5 (Guide catch-up + «تازه‌ها» announcements) — frontend-only, verified local +
+swept, DEPLOYED to dev.digiinvoice.ir 2026-07-12. (P4 accountant-layer polish shipped
+just before it.)
 
 ## Completed
+
+- **2026-07-12 — P4.5 deploy (frontend-only) to dev.digiinvoice.ir.** Guide catch-up
+  in three layers: merchant + partner guide gaps/drift (frontend `7ff2c7f`), admin
+  guide rebuild (`4f33924`), «تازه‌ها» dashboard announcements (`b09ae29`). No backend
+  or migration change. Runbook: DB snapshot `digitax-pre-p45-20260712-0810.sql.gz`,
+  ff-only frontend pull, `build --no-cache frontend`, `--no-deps` recreate (compose-v1
+  KeyError → stop/rm/up fallback, same as P4), postgres container ID unchanged
+  (`21d962001ab3`). Smoke: /app, /admin, /app/guide, /admin/guide, /partner/guide all
+  200; captcha empirical ON (Persian block without PoW), rate-limit empirical (429 on
+  5th rapid OTP request). Full browser sweep on local before deploy (18 shots,
+  `qa-screens/p45-20260712.zip`): تازه‌ها unseen/collapsed/dialog on both dashboards,
+  merchant/admin/partner guide landings + new walkthroughs, light+dark, 390+desktop —
+  all three-questions PASS. Deployed SHAs: frontend `b09ae29` · backend `b332feb`
+  (unchanged) · ops `ab35a0b` (unchanged).
 
 - **2026-07-12 — P4 deploy to dev.digiinvoice.ir.** Runbook followed: DB snapshot
   `digitax-pre-p4-20260712-0714.sql.gz`, ff-only pulls, api + frontend rebuilt
