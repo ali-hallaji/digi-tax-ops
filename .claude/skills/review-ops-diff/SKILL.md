@@ -26,7 +26,7 @@ Run before every commit in digi-tax-ops.
 - No Kubernetes, Prometheus, Grafana, or MinIO added to default Compose stack.
 
 ### 3. Compose / Docker Safety
-- `docker-compose config` would pass for any `docker-compose.yml` change.
+- `docker compose config` would pass for any `docker-compose.yml` change.
 - Port mappings are consistent with documented ports: postgres 5432, redis 6379, api 8000, frontend 3000 (FRONTEND_PORT).
 - No hardcoded credentials in `docker-compose.yml` — values come from `.env`.
 - `VITE_API_BASE_URL` is set as a build arg, not a runtime env var only.

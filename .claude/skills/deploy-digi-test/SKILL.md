@@ -17,7 +17,7 @@ Use when deploying or re-deploying the local/staging stack. Follows the document
 
 3. Validate Compose config:
    ```bash
-   docker-compose config
+   docker compose config
    ```
    Stop if this fails — do not proceed with broken config.
 
@@ -27,28 +27,28 @@ Run steps in order. Do not skip steps.
 
 ### Step 1: Start infrastructure
 ```bash
-docker-compose up -d postgres redis
+docker compose up -d postgres redis
 ```
 
 ### Step 2: Start API
 ```bash
-docker-compose up -d api
+docker compose up -d api
 ```
 
 ### Step 3: Apply migrations
 ```bash
-docker-compose exec api python -m alembic upgrade head
+docker compose exec api python -m alembic upgrade head
 ```
 Required after every backend deploy. Confirm it exits 0.
 
 ### Step 4: Start frontend
 ```bash
-docker-compose up -d frontend
+docker compose up -d frontend
 ```
 
 ### Step 5: Check service status
 ```bash
-docker-compose ps
+docker compose ps
 ```
 
 ### Step 6: Run preflight
@@ -62,11 +62,11 @@ Rebuild only when necessary (not for every deploy):
 
 - Backend code/deps/Dockerfile changed:
   ```bash
-  docker-compose build api && docker-compose up -d api
+  docker compose build api && docker compose up -d api
   ```
 - Frontend source/deps/Dockerfile/`VITE_API_BASE_URL` changed:
   ```bash
-  docker-compose build --no-cache frontend && docker-compose up -d --force-recreate frontend
+  docker compose build --no-cache frontend && docker compose up -d --force-recreate frontend
   ```
   **Note:** `VITE_API_BASE_URL` is build-time — restarting without rebuild does not apply changes.
 
@@ -78,7 +78,7 @@ Rebuild only when necessary (not for every deploy):
 **Blocker check:** <None | list>
 **Compose config:** VALID | INVALID — stopped
 **Migration result:** OK (exit 0) | FAILED — stopped
-**Services up:** <docker-compose ps summary>
+**Services up:** <docker compose ps summary>
 **Preflight:** PASS | FAIL
 
 **Result:** PASS | NEEDS FIXES

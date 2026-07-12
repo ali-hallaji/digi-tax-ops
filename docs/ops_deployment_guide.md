@@ -9,7 +9,7 @@
   digi-tax-ops/
 ```
 
-Run Docker Compose from `digi-tax-ops` with `docker-compose`.
+Run Docker Compose from `digi-tax-ops` with `docker compose`.
 
 For staging/server deployment steps, use
 [`docs/server_deploy_runbook.md`](server_deploy_runbook.md).
@@ -67,8 +67,8 @@ direct access, provide the environment-specific public API URL from ignored env
 configuration and rebuild the frontend image with:
 
 ```bash
-docker-compose build --no-cache frontend
-docker-compose up -d --force-recreate frontend
+docker compose build --no-cache frontend
+docker compose up -d --force-recreate frontend
 ```
 
 Restarting the existing frontend container is not enough after frontend source
@@ -78,7 +78,7 @@ changes or frontend build-time env changes, because Vite/TanStack bakes
 Runtime-only secrets stay in runtime environment configuration and must not be passed as Docker build args.
 
 ## Phase 0 acceptance
-- `docker-compose config` passes.
+- `docker compose config` passes.
 - postgres and redis start.
 - api service can be referenced even if backend skeleton is not built yet.
 - no production secrets.

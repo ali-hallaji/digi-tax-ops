@@ -32,7 +32,7 @@ require_command() {
 }
 
 get_container_id() {
-  docker-compose ps -q "$1" 2>/dev/null
+  docker compose ps -q "$1" 2>/dev/null
 }
 
 assert_service_running() {
@@ -50,7 +50,7 @@ assert_service_running() {
 }
 
 load_env
-require_command docker-compose
+require_command docker
 require_command docker
 
 POSTGRES_USER="${POSTGRES_USER:-digitax}"
@@ -62,7 +62,7 @@ POSTGRES_PORT="${POSTGRES_PORT:-5432}"
 assert_service_running postgres
 assert_service_running api
 
-if docker-compose exec -T postgres env PGPASSWORD="$POSTGRES_PASSWORD" \
+if docker compose exec -T postgres env PGPASSWORD="$POSTGRES_PASSWORD" \
   pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" >/dev/null 2>&1; then
   pass "PostgreSQL is accepting connections"
 else
@@ -70,7 +70,7 @@ else
 fi
 
 db_exists="$(
-  docker-compose exec -T postgres env PGPASSWORD="$POSTGRES_PASSWORD" \
+  docker compose exec -T postgres env PGPASSWORD="$POSTGRES_PASSWORD" \
     psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d postgres -tAc \
     "SELECT 1 FROM pg_database WHERE datname = '$POSTGRES_DB';" 2>/dev/null | tr -d '[:space:]'
 )"
@@ -79,12 +79,12 @@ if [ "$db_exists" = "1" ]; then
   pass "Database '$POSTGRES_DB' already exists"
 else
   info "Database '$POSTGRES_DB' is missing, creating it now"
-  docker-compose exec -T postgres env PGPASSWORD="$POSTGRES_PASSWORD" \
+  docker compose exec -T postgres env PGPASSWORD="$POSTGRES_PASSWORD" \
     createdb -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" "$POSTGRES_DB" \
     >/dev/null || fail "Failed to create database '$POSTGRES_DB'"
   pass "Database '$POSTGRES_DB' created"
 fi
 
-docker-compose exec -T api alembic upgrade head >/dev/null || fail "Alembic upgrade head failed inside api container"
+docker compose exec -T api alembic upgrade head >/dev/null || fail "Alembic upgrade head failed inside api container"
 pass "Alembic upgrade head completed successfully"
 

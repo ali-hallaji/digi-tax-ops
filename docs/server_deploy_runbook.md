@@ -1,5 +1,13 @@
 # Server Deploy Runbook
 
+> ⛔ **COMPOSE v2 ONLY.** Every command here is `docker compose` (space, v2). The server
+> has ONLY the v2 plugin; the v1 binary is retired and shadowed by a STOP wrapper.
+> **If `docker-compose` (v1, hyphen) is ever invoked on the server — by a script, a habit,
+> or a `command not found` fallback — STOP immediately and report.** Mixing v1 and v2 once
+> deployed the OLD image while "building" the new one (v1 uses `project_service` image
+> names, v2 uses `project-service`); always verify a deploy by curling the LIVE OpenAPI for
+> the new routes, never by trusting the build log.
+
 ## Purpose And Scope
 
 This runbook covers staging/server deployment for DigiTax using the three

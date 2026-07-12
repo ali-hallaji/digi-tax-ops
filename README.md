@@ -44,18 +44,18 @@ cp .env.example .env
 
 ```bash
 # Start all services
-docker-compose up -d
+docker compose up -d
 
 # Or start services individually
-# docker-compose up -d postgres redis
-# docker-compose up -d api
-# docker-compose up -d frontend
+# docker compose up -d postgres redis
+# docker compose up -d api
+# docker compose up -d frontend
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop all services
-docker-compose down
+docker compose down
 ```
 
 ## Local Services
@@ -107,17 +107,17 @@ digi-tax-ops/
 All services have built-in health checks:
 
 ```bash
-docker-compose ps
+docker compose ps
 ```
 
 ### Rebuild services
 
 ```bash
 # Rebuild backend services
-docker-compose build api
+docker compose build api
 
 # Rebuild frontend after dependency/build-config changes or VITE_API_BASE_URL changes
-docker-compose build --no-cache frontend
+docker compose build --no-cache frontend
 ```
 
 ## Server update quick path
@@ -139,14 +139,14 @@ git -C ../digi-tax-backend pull
 git -C ../digi-tax-frontend pull
 git -C . pull
 
-docker-compose config
+docker compose config
 
-docker-compose build api
-docker-compose up -d postgres redis api
-docker-compose exec api python -m alembic upgrade head
+docker compose build api
+docker compose up -d postgres redis api
+docker compose exec api python -m alembic upgrade head
 
-docker-compose build --no-cache frontend
-docker-compose up -d --force-recreate frontend
+docker compose build --no-cache frontend
+docker compose up -d --force-recreate frontend
 
 bash scripts/preflight.sh
 bash scripts/smoke_test.sh
@@ -155,16 +155,16 @@ bash scripts/smoke_test.sh
 Backend-only update:
 
 ```bash
-docker-compose build api
-docker-compose up -d api
-docker-compose exec api python -m alembic upgrade head
+docker compose build api
+docker compose up -d api
+docker compose exec api python -m alembic upgrade head
 ```
 
 Frontend-only update:
 
 ```bash
-docker-compose build --no-cache frontend
-docker-compose up -d --force-recreate frontend
+docker compose build --no-cache frontend
+docker compose up -d --force-recreate frontend
 ```
 
 Notes:

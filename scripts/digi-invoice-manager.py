@@ -40,9 +40,9 @@ def _die(msg: str) -> None:
     sys.exit(1)
 
 def _check_ops_services() -> None:
-    """Fail loudly if docker-compose stack is not up."""
+    """Fail loudly if docker compose stack is not up."""
     r = subprocess.run(
-        ["docker-compose", "ps", "--services", "--filter", "status=running"],
+        ["docker compose", "ps", "--services", "--filter", "status=running"],
         cwd=OPS_DIR, capture_output=True, text=True,
     )
     running = r.stdout.strip().splitlines()
@@ -64,8 +64,8 @@ def setup_bootstrap() -> None:
     _run(["bash", "scripts/bootstrap.sh"], cwd=OPS_DIR)
 
 def setup_up() -> None:
-    """Bring up the full local stack (postgres + redis + api) via docker-compose."""
-    _run(["docker-compose", "up", "-d"], cwd=OPS_DIR)
+    """Bring up the full local stack (postgres + redis + api) via docker compose."""
+    _run(["docker compose", "up", "-d"], cwd=OPS_DIR)
 
 # ── SEED ──────────────────────────────────────────────────────────────────────
 
@@ -73,7 +73,7 @@ def seed_dev() -> None:
     """Load fixed test accounts (09120000000 / 09120000099 / 09120000001) into running stack."""
     _check_ops_services()
     _run(
-        ["docker-compose", "exec", "-T", "api", "python", "-m", "app.cli.seed_dev_data"],
+        ["docker compose", "exec", "-T", "api", "python", "-m", "app.cli.seed_dev_data"],
         cwd=OPS_DIR,
     )
 
@@ -81,7 +81,7 @@ def seed_qa() -> None:
     """Load QA invoice scenario data into running stack."""
     _check_ops_services()
     _run(
-        ["docker-compose", "exec", "-T", "api", "python", "-m", "app.cli.seed_qa_invoice"],
+        ["docker compose", "exec", "-T", "api", "python", "-m", "app.cli.seed_qa_invoice"],
         cwd=OPS_DIR,
     )
 
@@ -96,7 +96,7 @@ def db_upgrade() -> None:
     """Run all pending Alembic migrations inside the api container."""
     _check_ops_services()
     _run(
-        ["docker-compose", "exec", "-T", "api", "alembic", "upgrade", "head"],
+        ["docker compose", "exec", "-T", "api", "alembic", "upgrade", "head"],
         cwd=OPS_DIR,
     )
 
@@ -105,13 +105,13 @@ def db_status() -> None:
     _check_ops_services()
     print("\n── Alembic current ──")
     _run(
-        ["docker-compose", "exec", "-T", "api", "alembic", "current"],
+        ["docker compose", "exec", "-T", "api", "alembic", "current"],
         cwd=OPS_DIR,
     )
     print("\n── DB tables (psql) ──")
     _run(
         [
-            "docker-compose", "exec", "-T", "postgres",
+            "docker compose", "exec", "-T", "postgres",
             "psql", "-U", "digitax", "-d", "digitax",
             "-c", r"\dt",
         ],
@@ -123,7 +123,7 @@ def db_tables() -> None:
     _check_ops_services()
     _run(
         [
-            "docker-compose", "exec", "-T", "postgres",
+            "docker compose", "exec", "-T", "postgres",
             "psql", "-U", "digitax", "-d", "digitax",
             "-c",
             "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename;",
@@ -152,7 +152,7 @@ def test_backend() -> None:
     _check_ops_services()
     _run(
         [
-            "docker-compose", "exec", "-T", "api",
+            "docker compose", "exec", "-T", "api",
             "python", "-m", "pytest", "-v", "--tb=short",
         ],
         cwd=OPS_DIR,
@@ -179,25 +179,25 @@ def maintenance_smoke() -> None:
 def maintenance_rebuild_api() -> None:
     """Rebuild api Docker image after any backend code change (no-cache to avoid stale layer)."""
     _run(
-        ["docker-compose", "build", "--no-cache", "api"],
+        ["docker compose", "build", "--no-cache", "api"],
         cwd=OPS_DIR,
     )
-    _run(["docker-compose", "up", "-d"], cwd=OPS_DIR)
+    _run(["docker compose", "up", "-d"], cwd=OPS_DIR)
 
 def maintenance_rebuild_frontend() -> None:
     """Rebuild frontend Docker image after frontend code or VITE_* env change."""
     _run(
-        ["docker-compose", "build", "--no-cache", "frontend"],
+        ["docker compose", "build", "--no-cache", "frontend"],
         cwd=OPS_DIR,
     )
     _run(
-        ["docker-compose", "up", "-d", "--force-recreate", "frontend"],
+        ["docker compose", "up", "-d", "--force-recreate", "frontend"],
         cwd=OPS_DIR,
     )
 
 # ── ENV ───────────────────────────────────────────────────────────────────────
 
-# Vars that come from docker-compose / infra — expected in .env but not in config.py
+# Vars that come from docker compose / infra — expected in .env but not in config.py
 _INFRA_VARS = {
     "POSTGRES_USER", "POSTGRES_PASSWORD", "POSTGRES_DB",
     "POSTGRES_HOST", "POSTGRES_PORT",
@@ -206,7 +206,7 @@ _INFRA_VARS = {
     "FRONTEND_BUILD_ALL_PROXY",
     "FRONTEND_PORT",
     "LOVABLE_API_KEY",
-    # docker-compose passes HOST/PORT via uvicorn cmd; API_HOST/API_PORT are legacy aliases
+    # docker compose passes HOST/PORT via uvicorn cmd; API_HOST/API_PORT are legacy aliases
     "API_HOST", "API_PORT",
     "VITE_API_TIMEOUT_MS",  # in env/example but unused in frontend source (legacy)
 }
@@ -438,10 +438,10 @@ Generate SECRET_KEY:
   python3 -c "import secrets; print(secrets.token_hex(32))"
 
 After updating .env:
-  docker-compose build --no-cache api      # if backend deps changed
-  docker-compose build --no-cache frontend # VITE_* are build-time
-  docker-compose up -d
-  docker-compose exec api alembic upgrade head
+  docker compose build --no-cache api      # if backend deps changed
+  docker compose build --no-cache frontend # VITE_* are build-time
+  docker compose up -d
+  docker compose exec api alembic upgrade head
   bash scripts/smoke_test.sh
 ════════════════════════════════════════════════════════════════════════════════
 """)
@@ -453,7 +453,7 @@ COMMANDS: dict[str, tuple[str, object]] = {
     # setup
     "setup:preflight":  ("Check Docker, env, DB name, and service readiness", setup_preflight),
     "setup:bootstrap":  ("First-time DB init + all migrations (idempotent)", setup_bootstrap),
-    "setup:up":         ("docker-compose up -d — bring up full local stack", setup_up),
+    "setup:up":         ("docker compose up -d — bring up full local stack", setup_up),
     # seed
     "seed:dev":         ("Load fixed test accounts (09120000000/099/001) into running stack", seed_dev),
     "seed:qa":          ("Load QA invoice scenario data into running stack", seed_qa),

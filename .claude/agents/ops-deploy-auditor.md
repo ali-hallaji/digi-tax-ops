@@ -33,7 +33,7 @@ Audit ops configuration for deploy correctness, environment safety, migration co
    - No real secrets or proxy credentials committed.
 
 5. Migration step audit:
-   - Deploy scripts or runbook include `docker-compose exec api python -m alembic upgrade head`.
+   - Deploy scripts or runbook include `docker compose exec api python -m alembic upgrade head`.
    - Migration is run inside the container — not on the host.
    - Any new Alembic migration file in `../digi-tax-backend/alembic/versions/` is noted as required for next deploy.
 

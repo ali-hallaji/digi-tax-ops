@@ -48,7 +48,7 @@ container_running() {
   local service="$1"
   local container_id
 
-  container_id="$(docker-compose ps -q "$service" 2>/dev/null)"
+  container_id="$(docker compose ps -q "$service" 2>/dev/null)"
   [ -n "$container_id" ] || return 1
   [ "$(docker inspect -f '{{.State.Running}}' "$container_id" 2>/dev/null)" = "true" ]
 }
@@ -61,16 +61,16 @@ frontend_config() {
   '
 }
 
-require_command docker-compose
+require_command docker
 require_command docker
 
-if COMPOSE_CONFIG="$(docker-compose config 2>/dev/null)"; then
-  pass "docker-compose config is valid"
+if COMPOSE_CONFIG="$(docker compose config 2>/dev/null)"; then
+  pass "docker compose config is valid"
 else
-  fail "docker-compose config is invalid"
+  fail "docker compose config is invalid"
 fi
 
-SERVICES="$(docker-compose config --services)"
+SERVICES="$(docker compose config --services)"
 
 for service in postgres redis api; do
   if service_exists "$service"; then
@@ -147,7 +147,7 @@ else
   fail "Postgres container is not running"
 fi
 
-if docker-compose exec -T postgres env PGPASSWORD="$POSTGRES_PASSWORD" \
+if docker compose exec -T postgres env PGPASSWORD="$POSTGRES_PASSWORD" \
   pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" >/dev/null 2>&1; then
   pass "Postgres responds to pg_isready"
 else
@@ -156,7 +156,7 @@ fi
 
 # Canonical DB is "digitax" (no underscore). Detect any lingering orphan — in
 # particular "digi_tax" — that would indicate a prior misconfiguration survived.
-orphan_dbs="$(docker-compose exec -T postgres \
+orphan_dbs="$(docker compose exec -T postgres \
   env PGPASSWORD="$POSTGRES_PASSWORD" \
   psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \
   "SELECT datname FROM pg_database
@@ -173,7 +173,7 @@ else
   fail "API container is not running"
 fi
 
-if docker-compose exec -T api sh -lc 'test -n "${DATABASE_URL:-}"' >/dev/null 2>&1; then
+if docker compose exec -T api sh -lc 'test -n "${DATABASE_URL:-}"' >/dev/null 2>&1; then
   pass "API container can see DATABASE_URL"
 else
   fail "API container cannot see DATABASE_URL"

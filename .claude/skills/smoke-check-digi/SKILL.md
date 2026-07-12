@@ -12,7 +12,7 @@ Run after any deploy to confirm the stack is healthy. Use the documented smoke s
 
 2. Confirm all services are up:
    ```bash
-   docker-compose ps
+   docker compose ps
    ```
 
 3. Run the smoke test script:
@@ -43,8 +43,8 @@ Run after any deploy to confirm the stack is healthy. Use the documented smoke s
 
 5. Check logs for errors:
    ```bash
-   docker-compose logs --tail=50 api
-   docker-compose logs --tail=20 frontend
+   docker compose logs --tail=50 api
+   docker compose logs --tail=20 frontend
    ```
 
 ## Known Blockers to Note
@@ -57,7 +57,7 @@ Run after any deploy to confirm the stack is healthy. Use the documented smoke s
 ```
 ## Smoke Check — digi-tax-ops
 
-**Services up:** <docker-compose ps summary>
+**Services up:** <docker compose ps summary>
 **API health:** OK | FAIL
 **CORS:** OK | FAIL
 **Auth flow:** OK | FAIL

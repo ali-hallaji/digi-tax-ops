@@ -5,20 +5,20 @@
 set -euo pipefail
 
 echo "▶ 1/5  Bringing up postgres + redis + api ..."
-docker-compose up -d postgres redis api
+docker compose up -d postgres redis api
 
 echo "▶ 2/5  Waiting a few seconds for postgres to accept connections ..."
 sleep 6
 
 echo "▶ 3/5  Applying database migrations (inside the api container) ..."
 # IMPORTANT: use 'exec' (inside compose network), NOT 'docker run' (isolated, can't see postgres)
-docker-compose exec -T api python -m alembic upgrade head
+docker compose exec -T api python -m alembic upgrade head
 
 echo "▶ 4/5  Seeding sample/dev data (inside the api container) ..."
-docker-compose exec -T api python -m app.cli.seed_dev_data
+docker compose exec -T api python -m app.cli.seed_dev_data
 
 echo "▶ 5/5  Service status:"
-docker-compose ps
+docker compose ps
 
 cat <<'EOF'
 
@@ -39,5 +39,5 @@ Then GO CHECK in your browser:
 API docs (to confirm backend is alive): http://localhost:8000/docs
 
 To stop everything later:
-    docker-compose down
+    docker compose down
 EOF

@@ -136,7 +136,7 @@ EOF
 
 load_env
 require_command curl
-require_command docker-compose
+require_command docker
 
 API_BASE_URL="${API_BASE_URL:-http://localhost:8000}"
 API_V1_URL="${API_V1_URL:-${API_BASE_URL}/api/v1}"
@@ -208,7 +208,7 @@ if [ "${SMOKE_TEST_RESTART_OTP:-0}" = "1" ]; then
     || fail "OTP restart: did not get dev_otp before restart"
   pass "OTP restart: dev_otp obtained before api restart"
 
-  docker-compose restart api >/dev/null 2>&1 || fail "OTP restart: docker-compose restart api failed"
+  docker compose restart api >/dev/null 2>&1 || fail "OTP restart: docker compose restart api failed"
   info "OTP restart: api restarted, waiting for health..."
   for i in $(seq 1 15); do
     if curl -sS -o /dev/null -w '%{http_code}' "${API_BASE_URL}/health/check" 2>/dev/null | grep -q '^200$'; then
@@ -232,7 +232,7 @@ else
   info "OTP restart test skipped (set SMOKE_TEST_RESTART_OTP=1 to enable)"
 fi
 
-if docker-compose config --services | grep -Fx frontend >/dev/null 2>&1; then
+if docker compose config --services | grep -Fx frontend >/dev/null 2>&1; then
   frontend_root_body="/tmp/digitax_frontend_root.$$"
   frontend_login_body="/tmp/digitax_frontend_login.$$"
   frontend_app_body="/tmp/digitax_frontend_app.$$"

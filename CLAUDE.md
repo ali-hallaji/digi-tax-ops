@@ -48,15 +48,15 @@ Refer to the server via shell/env only (`$DIGI_TEST_SSH`, `$DIGI_TEST_PATH`).
 Owner's proven sequence:
 ```bash
 git pull
-docker-compose config                  # validate first
-docker-compose build api               # if backend changed  (see note ↓)
-docker-compose build --no-cache frontend   # if frontend changed
-docker-compose up -d                   # postgres+redis → api → frontend
-docker-compose exec api python -m alembic upgrade head   # if schema changed
+docker compose config                  # validate first
+docker compose build api               # if backend changed  (see note ↓)
+docker compose build --no-cache frontend   # if frontend changed
+docker compose up -d                   # postgres+redis → api → frontend
+docker compose exec api python -m alembic upgrade head   # if schema changed
 bash scripts/smoke_test.sh
 ```
 > **Stale-image caution:** if a backend change doesn't take effect after deploy, the
-> cached `COPY ./app` layer is the culprit — rebuild with `docker-compose build
+> cached `COPY ./app` layer is the culprit — rebuild with `docker compose build
 > --no-cache api`. This is the same stale-image trap documented in the workspace
 > CLAUDE.md §5.1; it can bite on the server too, not just locally.
 
