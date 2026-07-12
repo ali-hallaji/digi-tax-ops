@@ -182,8 +182,17 @@ never loses their place, and the feature has zero coupling to journal pagination
 
 ## Open questions
 
-### D14 (OPEN) — Customer-less finalized invoices: how should they journal?
-**Status: not decided, not implemented.** Found during the Mission-3 dev backfill: 3
+### D14 (IMPLEMENTED-DEFAULT, P4) — Customer-less finalized invoices: how should they journal?
+**Status: Candidate A implemented as the conservative default (P4/T7, 2026-07-12).**
+The engine now lazily creates a per-tenant system تفصیلی «مشتری متفرقه» under 1201
+(entity_type=`walkin`, is_system=true) and routes every customer-less finalized
+invoice's debit there; settlements, received cheques, and sale-returns with no
+customer close against the same account, so a settled walk-in sale nets the bucket to
+zero (the «only ever grows» concern applies only to invoices that are truly never
+settled — which is then an honest receivable, visible in the tree). **The accountant
+may still override the semantics later** — because the journal is a deterministic
+replay, switching to Candidate B (below) is a mapping-only change followed by a
+regenerate; no data migration. The original analysis is kept for that discussion: Found during the Mission-3 dev backfill: 3
 finalized invoices on dev have no `customer_id`, so the invoice سند builder
 (`journal.py:277-291`) can't resolve a receivable detail (`cust_det=None`) and the engine
 correctly routes each to suspense (9101) + a `journal_gaps` row (reason: "missing account
