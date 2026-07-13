@@ -32,13 +32,14 @@ when the peer is the trusted local proxy; keep peer-IP behaviour otherwise. Smal
 medium-priority. (Observed live 2026-07-11 during the P2 deploy smoke: an 8-request
 429 test blocked the whole dev site's OTP bucket for 300s.)
 
-## P7b — admin shell: session-expired renders «در حال بررسی» forever
+## P7b — admin shell: session-expired renders «در حال بررسی» forever — DONE (2026-07-13, frontend `525d7b5`, LOCAL/unpushed)
 
-`_admin.admin.tsx` renders the same «در حال بررسی دسترسی ادمین» card for BOTH
+`_admin.admin.tsx` rendered the same «در حال بررسی دسترسی ادمین» card for BOTH
 `isCheckingAdminAccess` and `isSessionExpired` (401 from /admin/me) — an expired
-admin session looks like an infinite loading state instead of a re-login prompt.
-Split the two states: 401 → a clear «نشست شما منقضی شده» card with a login button
-(no logout side-effects). Small.
+admin session looked like an infinite loading state instead of a re-login prompt.
+Fixed: 401 → a «نشست شما منقضی شده» card + «ورود دوباره» button (clears the dead
+local session, no server logout, preserves the intended route). The partner shell
+(`_partner.partner.tsx`) had the identical trap — fixed the same way.
 
 ## PB — Self-Hosting سازمانی (enterprise on-prem)
 
@@ -60,10 +61,11 @@ records payroll spend today, and the PA-T2 reminders already surface the standin
 tax/insurance deadlines — merchants aren't blind to payroll obligations before v1
 ships. Gate: after the core accounting + partner loop matures.
 
-## PB — تورهای per-صفحه (per-section mini-tours)
+## PB — تورهای per-صفحه (per-section mini-tours) — DONE (2026-07-13, frontend `b229f20`+`0da4d6c`+`eda923b`, LOCAL/unpushed)
 
-Extend the P6 onboarding-tour engine with per-section mini-tours triggered from a
-small «؟» affordance on a page/section (not just the one-time global tour). Reuses
-the existing tour anchors + step model; adds a per-section trigger + a «seen» key
-per mini-tour so it doesn't nag. Low-risk, incremental. Gate: after the current
-guide/school content stabilizes.
+Extended the P6 onboarding-tour engine with 7 per-page mini-tours (invoice-create,
+settlement dialog, cheques, reports, accountant/journal, partner-console, reminders),
+each 3–4 steps, auto-firing once on first visit and replayable from a «؟ راهنمای این
+صفحه» button (helpTourId on the shared PageHeader). Reuses the P6 anchors/step model;
+per-tour «completed» key + an app-wide "one auto-fired tour per session" slot so it
+doesn't nag. Guide S8-16 + settings toggle copy + a merchant what's-new entry (no-drift).
