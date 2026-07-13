@@ -1,8 +1,17 @@
 # Backlog — queued items (founder-gated; do NOT start until explicitly queued)
 
-## طراحی معماری داده برای مقیاس‌پذیری آینده (P8 slot, after P6)
+## طراحی معماری داده برای مقیاس‌پذیری آینده (P8 slot, after P6) — DONE (2026-07-13, backend `622a506`+`6994c87`, LOCAL/unpushed)
 
-**Goal:** evidence-based database design review before user/data volume grows.
+Measure-first audit delivered in `db-audit.md` (workspace root). Shipped migration
+`m6n7o8p9q0r1`: 8 evidence-based indexes (CONCURRENTLY); 3 candidates rejected as
+over-indexing. Key finding: `random_page_cost` must be `1.1` on SSD for the composites
+to be adopted. Backlogged with measurements (below): read-path N+1s (journal export,
+purchase/return line loads), journal-engine `ensure_detail` N+1 + per-entry flush,
+trial-balance `entry_date`-on-`journal_lines` denormalization, `journal_lines`
+fiscal-year partitioning, and PITR/WAL archiving. Tests 775 pass / 7 baseline fail
+(zero new); reconciliation invariant holds. Pending founder GO + guarded deploy.
+
+**Original goal:** evidence-based database design review before user/data volume grows.
 
 **Deliverables:**
 - (a) **Schema audit** — missing indexes on hot FKs and query-filter columns;
