@@ -4,6 +4,45 @@
 
 ---
 
+## وضعیت جاری — پایان سشن (2026-07-13) — COMMITTED + PUSHED به origin/main · deploy روی dev هنوز انجام نشده
+
+همهٔ کارهای زیر کامل، commit و به `origin/main` **push** شده‌اند. اما **هنوز روی
+`dev.digiinvoice.ir` دیپلوی نشده‌اند** — dev کد قدیمی را اجرا می‌کند (`/health/version`
+روی dev هنوز `404` می‌دهد، یعنی version-guard هم هنوز live نیست). پس alembic head روی
+dev هنوز `m6n7o8p9q0r1` نیست و این سشن نتوانست آن را از بیرون تأیید کند؛ دیپلوی گام
+بعدیِ founder است.
+
+- **PA — Revenue Dashboard Pack** و **PB — Partner Workspace v2** (پرتفوی همکار،
+  حلقهٔ درخواست فعال‌سازی ماژول + کمیسیون، usage metering، earnings) — DONE.
+- **گاردهای زیرساخت:** (۱) **v1-kill** — docker-compose v1 بازنشسته + shadow با STOP
+  wrapper؛ قانون «فقط `docker compose` v2». (۲) **version-guard** — `GET /health/version`
+  (git SHA + alembic head) در بک‌اند + بیک SHA در `/version.json` فرانت، برای
+  verify-smoke دیپلوی (served SHA == deployed SHA و image alembic head == DB head).
+- **P7b** — نشست منقضیِ ادمین/همکار دیگر اسپینر بی‌پایان «در حال بررسی» نشان نمی‌دهد؛
+  کارت «نشست منقضی شده» + دکمهٔ «ورود دوباره» (frontend `525d7b5`).
+- **تورهای per-صفحه** — ۷ تور کوتاهِ متنی (فاکتور، تسویه، چک، گزارش، نمای حسابدار،
+  کنسول همکار، یادآورها) + دکمهٔ «؟ راهنمای این صفحه»، یک auto-fire در هر سشن
+  (frontend `b229f20`/`0da4d6c`/`eda923b`).
+- **P8 — ممیزی مقیاس‌پذیری DB (measure-first)** — گزارش کامل `db-audit.md` (ریشهٔ
+  workspace). ۸ ایندکسِ evidence-based (migration `m6n7o8p9q0r1`، همه CONCURRENTLY)؛
+  ۳ کاندید با measurement رد شد (over-indexing)؛ یافتهٔ کلیدی: `random_page_cost`
+  باید روی SSD `1.1` باشد وگرنه planner ایندکس‌ها را adopt نمی‌کند. Before/after روی
+  tenantِ ۱۵۰هزار فاکتور: sales-register **16.6ms→0.34ms**، purchases-register
+  **13.6ms→0.15ms**، cash-flow **20ms→4ms**. تست `775 pass / 7 baseline fail`
+  (صفر جدید)؛ invariantِ تراز سبز؛ migration بالا/پایین/بالا تمیز، ۰ ایندکس invalid.
+  seeder prod-shape به‌عنوان dev tool commit شد (`scripts/seed_prod_shape*.sql`).
+
+**گام بعدیِ founder — دیپلوی guarded روی dev (اولین اجرا زیر گارد جدید):** Step 0
+export‌ِ `BACKEND_SHA`/`FRONTEND_SHA` → `build --no-cache` → `up -d --no-deps` →
+`alembic upgrade head` (۸ ایندکس CONCURRENTLY) → verify-smoke (served SHA == deployed
+SHA و image head == DB head) + چک `SELECT count(*) FROM pg_index WHERE NOT indisvalid`
+باید `0` باشد + **اعمال `random_page_cost=1.1`** (بدون آن ایندکس‌ها adopt نمی‌شوند) →
+یک گزارش سنگین روی dev دوباره اجرا و timing ثبت شود. **`docker compose` v2 فقط.**
+captcha/rate-limit روی dev طبق config سرور ON است (این سشن دیپلوی نکرد، پس دوباره
+verify نشد).
+
+---
+
 ## آخرین وضعیت — Batch B «لایهٔ طلایی» (۲۰ تیر ۱۴۰۵ / 2026-07-10) — LOCAL, NOT PUSHED
 
 لایهٔ اختیاریِ «نمای حسابدار» ساخته شد: موتور دوطرفهٔ سند (درخت حساب‌ها + دفتر روزنامه)
