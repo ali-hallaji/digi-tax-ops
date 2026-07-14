@@ -2,6 +2,45 @@
 
 ---
 
+## ✅ PM — Module control v2 (partner credit) + Inventory Lite (2026-07-14) — DEPLOYED to dev
+
+**Backend `50ece50` · frontend `c34349f` · ops `60595ac`. Dev DB head `r1s2t3u4v5w6`
+(2 new migrations `q0r1s2t3u4v5` + `r1s2t3u4v5w6`). Verify-smoke green; live smoke green.**
+
+### Part 1 — partner instant activation on credit
+Partners flip a granted client's module ON directly with IMMEDIATE effect (merchants
+still can't self-activate). Dedicated `partner_credit_activations` table; commission
+fires ONCE to the ACTIVATING partner on admin **settle** (not the referrer). Partner
+portfolio pills → «فعال‌سازی اعتباری» / «در انتظار تسویه» (+ revert own-origin); admin
+«فعال‌سازی‌ها و درخواست‌ها» → «ثبت پرداخت» (amount+note→commission) + «بازگردانی».
+Endpoints: `POST /partner/businesses/{id}/modules/{feature}/activate|deactivate`;
+`GET|settle|revert /admin/module-credit-activations`. **4 lifecycle/permission tests pass.**
+
+### Part 2 — Inventory Lite (انبار ساده)
+New feature `inventory_lite` (default OFF, per-product opt-in). `products` gains
+`track_inventory`/`opening_stock_qty`/`stock_qty`(derived)/`low_stock_threshold`.
+`recompute_stock` replays documents (sales−, purchases+, returns reverse), hooked
+best-effort into finalize/cancel/purchase/return; **negative allowed; NO journal
+impact**. Merchant: موجودی column (low/negative badges) + form track-toggle/qty/
+threshold + movement drawer + dashboard «کالاهای رو به اتمام» card.
+`GET /products/{id}/movements` + `/products/inventory/low-stock` (module-gated).
+**3 derivation tests pass.** Full suite at the 7-failure FakeDBSession baseline (zero new).
+
+### Seed additions (both local + dev)
+- کافه دنج (P1): inventory_lite on 10 tracked products, low/negative mix (کیک 2→−2…).
+- خانم محمدی (P4): unsettled credit activation of inventory_lite on پخش آریا.
+
+### Live smoke (dev, captcha solved-free by toggling OFF then restored+verified)
+- Credit: admin settle → partner accrued 1,800,000 → 3,150,000 (+15% of 9M), **once**;
+  double-settle → 409.
+- Inventory: purchase +5 (194→199), finalize sale −3 (199→196) — hooks work live.
+
+### State
+Captcha + rate-limit **ON** dev + local (login → 400, verified). Snapshots:
+`root@dev:/root/dev-predeploy-pm-*.sql.gz` + `dev-postseed-pm-*.sql.gz`. Dev at 18% disk.
+
+---
+
 ## 📌 بدهی‌های بَچ نهایی کیفیت (debt registry — do not lose)
 
 Scheduled explicitly AFTER the feature freeze (post-SMS batch). None of these may
