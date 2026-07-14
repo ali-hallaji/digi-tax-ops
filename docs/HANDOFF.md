@@ -28,6 +28,35 @@ widget, never disabled), assertions on VISIBLE text/numbers, station screenshots
 
 ---
 
+## ✅ PH — Experience harness + login-experience fixes (2026-07-15) — DEPLOYED, harness green LOCAL + DEV
+
+**Backend `440720b` · frontend `0215daf` · ops `decea5b`+. NO migrations.
+Harness: 6/6 green locally (2.5m) AND against dev (2.5m) — captcha ON both.**
+
+- **T1a root cause**: unauthenticated /app visits bounce to `/login?redirect=/app`
+  and "explicit redirect always wins" sent the business-less partner into the
+  wizard. Fixed with the founder precedence table (bare /app excluded as
+  non-intent) in `computePostLoginDestination` + role-aware `/` and `/login`
+  defaults. 12 unit tests. **T1b**: admin+zero-businesses → «شما مدیر سیستم
+  هستید» card on /app. **T1c**: `digitax_last_panel` was the ONE unkeyed
+  user-influencing localStorage key → per-user map (v2); tour/whats-new/wizard
+  stores were already user-keyed; queryClient cleared at login start + logout.
+- **Harness** (`digi-tax-frontend/tests/e2e-harness/`, `pnpm harness
+  [--base-url]`): P1 inventory+settlement, P2 school (۱٬۰۱۶M TB + ۱۳۷M treasury
+  + real xlsx), P3 switcher/member-visibility (staff 7 vs admin-member all),
+  P4 partner landing proof, P5 admin (T1b card, counts, tax-calendar), 06 leak.
+  Real login every time: Altcha PoW solved by the REAL widget; dev-OTP read from
+  the network response; per-IP rate-limit pacing (14s); tours dismissed as a user
+  would. Fixtures single-sourced from `world_fixtures.py` via
+  `persona_fixtures.json`. GATE 0 in the runbook + deploy skill.
+- **Dev reseeded to canonical** before the dev harness run: the founder's manual
+  QA had organically created «دیبا تک» under the admin account (that sighting is
+  the two-worlds policy working — but the harness asserts the canonical world).
+  Pre-reseed snapshot kept: `/root/dev-prereseed-ph-*.sql.gz`.
+- Captcha + rate-limit ON local + dev (login without captcha → 400, verified).
+
+---
+
 ## ✅ PR — Role-architecture correction (2026-07-15) — DEPLOYED to dev
 
 **Backend `fcfeb4d` · frontend `4d7e2e8`. NO migrations (zero schema change).**
