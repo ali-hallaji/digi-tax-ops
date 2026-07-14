@@ -4,7 +4,61 @@
 
 ---
 
-## وضعیت جاری — پایان سشن (2026-07-13) — COMMITTED + PUSHED به origin/main · deploy روی dev هنوز انجام نشده
+## وضعیت جاری — پایان سشن PX-A (2026-07-14) — DEPLOYED روی dev زیر گاردِ version-guard
+
+**PX-A — Onboarding bug + UX surgery pack** (فرانت‌اند، ۶ تسک + داکس) کامل شد،
+push و روی `dev.digiinvoice.ir` **دیپلوی guarded** شد. جزئیات کامل:
+`digi-tax-frontend/docs/progress.md` (بخش PX-A). خلاصه:
+
+- **T1 (بلاکر):** باگ «چک‌لیست تمام شد ولی داشبورد راه‌اندازی می‌ماند» — ریشه:
+  mutation‌های تکمیل‌کننده (`مشتری/کالا/نهایی‌سازی فاکتور`) کوئری `["onboarding"]`
+  را invalidate نمی‌کردند. حل + «فعلاً رد شو» per-business + بنر ادامهٔ راه‌اندازی.
+  مسیر کامل با کاربر تازه از طریق curl تأیید شد (stage_2 بلافاصله).
+- **T2:** «افزودن کسب‌وکار» همیشه visible؛ در سقف پلن → دیالوگ آرام honest-lock
+  (الگوی کارت پلن، mailto، بدون دکمهٔ پرداخت قلابی) در سه مسیر (سایدبار، کارت
+  /app/businesses، گاردِ /app/onboarding).
+- **T3:** ردیف آرام «ورود همکاران» / «ورود مدیران سیستم» در لاگین → همان کانال
+  sanitized `?redirect=`؛ تقدم: intent صریح > lastPanel > /app؛ ۸ تست واحد
+  (`pnpm test:unit`، runner داخلی Node — dependency جدید صفر).
+- **T4:** تنظیمات به ۴ گروه: «حساب من» / «کسب‌وکار» / «حسابداری و همکار» / «پلن»؛
+  هیچ کارتی حذف نشد؛ anchor id بخش‌ها اضافه شد؛ ۱۲ ارجاع راهنما در همان کامیت
+  به‌روز شد (no-drift).
+- **T5:** موتور تور سخت شد: locate با retry → `scrollIntoView(center)` →
+  double-rAF settle → measure؛ ResizeObserver + scroll/resize زنده؛ anchorِ
+  غایب/مخفی → SKIP در جهت حرکت (هرگز 0,0). زندهٔ اسپات‌لایت بعد از اسکرول تأیید شد.
+- **T6:** فوتر سایدبار (مرچنت + ادمین + همکار) → یک ردیف فشرده + DropdownMenu
+  (سوییچر رادیویی، افزودن کسب‌وکار با قفل T2، راهنما، تنظیمات، خروجِ جدا).
+  اثبات 390px با نمای حسابدار ON: آیتم آخر 770px < فوتر 777px — بدون همپوشانی.
+
+**دیپلوی guarded (اولین اجرای کامل زیر گارد، این سشن):** SHAها:
+backend `73fb0fd` (بدون تغییر این سشن؛ همان head پوش‌شدهٔ P8) · frontend
+`bedad23` · ops `a82971a`. توالی: Step-0 export SHA → `build --no-cache` →
+`up -d --no-deps` → `alembic upgrade head` → **verify:** `/health/version` ==
+BACKEND_SHA و image head == DB head `m6n7o8p9q0r1` (psql هم جدول‌های
+`reminders`/`partner_module_requests` را تأیید کرد) · `pg_index NOT indisvalid`
+= **0** · `random_page_cost=1.1` اعمال و reload شد · `/version.json` ==
+FRONTEND_SHA. همه `docker compose` v2. Captcha لوکال موقتاً برای dev-OTP خاموش
+و **دوباره ON + verify** شد؛ روی dev طبق کانفیگ سرور ON.
+
+Sweep viewing-only: ‏۱۷ اسکرین‌شات در `qa-screens/pxa-20260714/` — سه‌سوال PASS؛
+فلوهای تایپی (لاگین OTP، ویزارد، فرم‌ها) برای QA دستی founder.
+
+**یافته‌های دیپلوی (follow-up):**
+- `scripts/smoke_test.sh` روی سرور در چک CORS **fail می‌شود چون Origin را
+  `http://127.0.0.1:8080` هاردکد کرده** — روی dev فقط `https://dev.digiinvoice.ir`
+  در allowlist است (رفتار درست backend). دستی با Origin واقعی verify شد (200 +
+  `access-control-allow-origin`). فیکس اسکریپت: Origin را از env بگیرد. بخش
+  OTP اسکریپت هم روی dev با captcha ON ذاتاً قابل عبور نیست — smoke کامل فقط
+  لوکال سبز می‌شود؛ روی سرور از گارد deploy-verification (standalone) استفاده شد.
+- timing گزارش سنگین روی dev ثبت نشد — dev دادهٔ prod-shape ندارد؛ اندازه‌گیری‌های
+  P8 در `db-audit.md` (لوکال، ۲.۴M ردیف) معتبرند. `random_page_cost=1.1` روی
+  postgres سرور ALTER SYSTEM + reload و verify شد (`SHOW` → 1.1).
+- `.env` سرور `DEBUG=true` دارد (pre-existing، برای dev-OTP در پاسخ API) —
+  قبل از prod باید خاموش شود (در چک‌لیست pre-prod موجود).
+
+---
+
+## وضعیت قبلی — پایان سشن (2026-07-13) — COMMITTED + PUSHED به origin/main · deploy روی dev هنوز انجام نشده
 
 همهٔ کارهای زیر کامل، commit و به `origin/main` **push** شده‌اند. اما **هنوز روی
 `dev.digiinvoice.ir` دیپلوی نشده‌اند** — dev کد قدیمی را اجرا می‌کند (`/health/version`
