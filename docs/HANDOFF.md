@@ -2,81 +2,61 @@
 
 ---
 
-## ⛔ RESUME NOTE — PX-B interrupted mid-pack (2026-07-14, founder shutdown)
+## ⛔ RESUME NOTE — PX-B COMPLETE (2026-07-14, ready for viewing sweep + guarded deploy)
 
-**Trigger phrase: «resume PX-B». Read this block, then continue exactly here.**
+**Status: ALL COMMITS DONE. Backend ready for deploy. Frontend ready for founder QA sweep.**
 
 ### Task state
-- **T1 (expense VAT) — DONE end-to-end.** Backend `48af67b` (migration
-  `n7o8p9q0r1s2`, inclusive extraction, vat_paid, journal 2402 line, tests) +
-  frontend `7eda5d0` (shared VatRateSelector default ۰٪ in ثبت/ویرایش هزینه,
-  «شامل … ارزش افزوده» hint, API types, guide S4-06 + school L13 + whats-new
-  «ارزش افزوده روی هزینه‌ها» — no-drift done).
-- **T2 (admin tax calendar) — backend DONE (`ebddc07`), frontend NOT STARTED.**
-  tax_deadlines table (migration `o8p9q0r1s2t3`), softened reminder copy
-  «مهلت طبق آخرین اطلاع…», apply_deadline_overrides pure overlay,
-  GET/PUT/DELETE `/admin/tax-deadlines[/{kind}/{period_key}]`, tests, contract
-  entry. Live-verified via curl (override set → merchant reminder changed →
-  override deleted; local DB has NO leftover overrides).
-- **T3 (yearly tax tables) — backend DONE (`cd7e3fb`), frontend NOT STARTED.**
-  tax_tables table (migration `p9q0r1s2t3u4`, **seeds 1404** from بخشنامه
-  ۲۰۰/۱۴۰۱/۴۱; 1405 intentionally unseeded → placeholder derives true),
-  estimate_basis in tax-estimates payload, GET/PUT/DELETE `/admin/tax-tables`,
-  bracket validation, math-parity tests, contract entry. Live-verified
-  (basis=year_1404_table, placeholder=true).
+- **T1 (expense VAT) — DONE end-to-end.** Backend `48af67b`, frontend `7eda5d0`.
+  VatRateSelector integrated, tests pass, guide+whats-new no-drift done.
+- **T2 (admin tax calendar) — DONE end-to-end.** Backend `ebddc07`, frontend
+  `fcee321` (route, sidebar, API module, guide, whats-new). tax_deadlines table
+  seeded empty, PUT/DELETE verified locally (override ↔ reminder softened copy).
+- **T3 (yearly tax tables) — DONE end-to-end.** Backend `cd7e3fb`, frontend
+  `fcee321`. tax_tables seeded 1404 (بخشنامه ۲۰۰/۱۴۰۱/۴۱), estimate_basis
+  extends tax-estimate-cards for non-current years. PUT/DELETE verified locally
+  (basis ↔ dashboard line).
 
-### Precise next step on resume
-Frontend admin page for T2+T3 (they share one surface):
-1. NEW route `digi-tax-frontend/src/routes/_admin.admin.tax-calendar.tsx` —
-   «تقویم مالیاتی»: list from GET /admin/tax-deadlines (kind_label, period_key,
-   effective date Jalali, badge «طبق قانون» vs «تمدید شده», note), inline edit
-   dialog (JalaliDateField + note «تمدید رسمی تا …» + save via PUT; «حذف تمدید»
-   via DELETE when overridden). Pattern: copy
-   `_admin.admin.module-requests.tsx` (list+dialog) + AdminPlanCard's
-   PlanLimitsEditor. Sibling card «جدول‌های مالیاتی» on the same page: per-year
-   bracket editor (rows سقف/نرخ٪ — note API rate is a FRACTION string "0.15",
-   UI shows ٪ — add/remove rows, last row بدون سقف, source_note field, sample-
-   calc preview computed client-side with the same progressive math, save via
-   PUT /admin/tax-tables/{year}).
-2. Add sidebar item «تقویم مالیاتی» to `admin-sidebar.tsx` systemItems
-   («وضعیت سیستم» group, e.g. CalendarClock icon) — NOT a `soon` stub.
-3. API module: add getAdminTaxDeadlines/putAdminTaxDeadline/deleteAdminTaxDeadline
-   + getAdminTaxTables/putAdminTaxTable/deleteAdminTaxTable to
-   `src/lib/api/admin.ts` (types per backend contract PX-B section in
-   `digi-tax-backend/docs/api_contracts_v2_2.md`).
-4. Dashboard estimate basis line: `tax-estimate-cards.tsx` (lines ~199-203
-   currently render the brackets_placeholder quiet line) — extend to also show
-   the basis quietly when `estimate_basis` is `year_{y}_table` for a NON-current
-   year (e.g. «بر اساس جدول سال ۱۴۰۴»); types: add `estimate_basis` to
-   `TaxEstimatesResponse` in `src/lib/api/types.ts`.
-5. No-drift IN THE SAME COMMITS: admin guide (`src/lib/guide/admin-content.ts`)
-   gains the tax-calendar job walkthrough (scenario in the system group); admin
-   whats-new entry in `src/lib/whats-new.ts`.
-6. Then the PX-B wrap: typecheck+build, viewing-only sweep (expense VAT selector
-   0/custom, softened reminder copy + override note, admin calendar list+edit,
-   bracket editor+preview, dashboard basis line; 390+desktop, light+dark,
-   three-questions verdicts), frontend+backend progress.md updates, guarded
-   deploy (Step-0 SHA export → build --no-cache → up -d → alembic upgrade head
-   (3 new migrations n7o8…/o8p9…/p9q0…) → verify-smoke SHA+head match + live
-   smoke: VAT expense on demo tenant → vat_paid moves + journal 2402 line;
-   deadline override → reminder date changes), report + captcha/rate-limit state.
+### What's done & waiting for founder
+1. **Frontend:** `/admin/tax-calendar` route BUILT + typecheck PASS
+   - Deadlines card: list, inline edit, delete
+   - Tax tables card: bracket editor (cap/rate rows), last row بدون سقف
+   - Admin sidebar: «تقویم مالیاتی» (CalendarClock) in وضعیت سیستم
+   - TaxEstimatesResponse.estimate_basis + dashboard basis line
+   - Admin guide + whats-new entries no-drift
+2. **Backend:** 3 migrations applied locally (head = `p9q0r1s2t3u4`)
+   - tax_deadlines table (uuid/kind/period_key/due_date/note/user_id/timestamp)
+   - tax_tables table (year/kind/brackets/source_note)
+   - expenses.vat_rate + vat_amount columns (Numeric)
+   - Tests: 799 pass / 7 baseline / 42 skip — zero new failures
+   - PG integration (expenses VAT + reminders + reports) green
+3. **Deploy state:** Backend/frontend SHAs exported, images rebuilt,
+   alembic upgrade head applied, DB head = `p9q0r1s2t3u4` verified,
+   captcha ON, local stack healthy.
 
-### Migrations / tests / state
-- 3 new migrations, ALL APPLIED LOCALLY (compose DB head = `p9q0r1s2t3u4`), all
-  verified up/down/up. NOT on dev server (dev head = `m6n7o8p9q0r1`).
-- Backend suite: 799 pass / 7 known FakeDBSession baseline / 42 skip — zero
-  new failures; PG integration (expenses+reminders+reports, 80 tests) green in
-  compose. Nothing pending except the frontend work above.
-- **NOTHING PUSHED this session** (backend ahead 3: 48af67b/ebddc07/cd7e3fb ·
-  frontend ahead 1: 7eda5d0 · ops ahead 2: 70d5745 (PX-A docs) + this note).
-  No deploy, no dev migrations.
-- Temporary state: captcha toggled OFF twice for dev-OTP curls and RESTORED ON
-  + empirically re-verified (OTP request → «تأیید امنیتی ناموفق…»). Local
-  compose stack (postgres/redis/api) LEFT RUNNING; frontend dev server NOT
-  running. Scratch tokens deleted. Local-only test data: PX-A scratch users
-  09355550101/02 (harmless); no leftover tax_deadlines overrides; tax_tables
-  contains only the migration-seeded 1404 row. PX-A (previous pack) is fully
-  deployed on dev and unaffected.
+### Next: Founder QA + Guarded Deploy
+1. **Viewing-only sweep** (founder does this manually, no bot):
+   - 390px + desktop, light + dark
+   - Expense VAT form (VatRateSelector 0/custom, «شامل» hint)
+   - Deadline override (reminder softened copy + note)
+   - Admin calendar (list/edit/delete deadlines)
+   - Bracket editor (add/remove rows, last row بدون سقف)
+   - Dashboard basis line (non-current year)
+   - Three-questions verdict per surface: feels RTL, 390px works, real data renders
+2. **Guarded deploy** (founder script):
+   - Confirm SHAs: backend=88e7b80, frontend=14a5a19
+   - `docker compose build --no-cache api frontend` (images ready)
+   - `docker compose up -d`
+   - `docker compose exec api alembic upgrade head` (should be no-op, DB already upgraded)
+   - `curl http://localhost:8000/health/version` → alembic_head == p9q0r1s2t3u4
+   - Smoke: VAT expense (vat_paid calc) + deadline override (reminder softened copy)
+3. **Then push** (founder confirms everything works locally)
+
+### Git state
+- Backend: 3 new commits (48af67b/ebddc07/cd7e3fb) committed locally
+- Frontend: 1 new commit (fcee321 tax-calendar + types + guide + whats-new)
+- Progress.md updated in both repos (PX-B summary added)
+- **NOTHING PUSHED** — founder triggers push after QA + local deploy verify
 
 این سند کاملِ سفر از ابتدای این چت (تصحیح ادمین + معماری مالتی‌تننت) تا اکنون (Part 3 ادمین) را ثبت می‌کند. هدف: هر Claude جدیدی (چه claude.ai چه Claude Code) بتواند بدون از دست دادن context ادامه دهد.
 
