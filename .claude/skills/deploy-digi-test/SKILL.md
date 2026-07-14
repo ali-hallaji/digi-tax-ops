@@ -34,6 +34,19 @@ export BACKEND_SHA="$(git -C ../digi-tax-backend rev-parse HEAD)"
 export FRONTEND_SHA="$(git -C ../digi-tax-frontend rev-parse HEAD)"
 ```
 
+### Step 0.5: Disk preflight before a `--no-cache` build (added 2026-07-14)
+A `--no-cache` build writes a fresh full image; repeated builds accumulate
+dangling images and once filled the server root to 100%, breaking a migration
+mid-deploy. Reclaim unused **images + build cache** first — **never volumes**
+(the DB lives in a named volume). A weekly cron does this too.
+```bash
+df -h /                    # confirm headroom
+docker image prune -af     # unused images only — NOT volumes
+docker builder prune -af   # build cache only  — NOT volumes
+df -h /                    # verify before building
+```
+**Never `docker system prune --volumes`** here — it would delete the database.
+
 ### Step 1: Start infrastructure
 ```bash
 docker compose up -d postgres redis

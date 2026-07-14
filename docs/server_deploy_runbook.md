@@ -65,6 +65,16 @@ git -C . pull
 
 docker compose config
 
+# DISK PREFLIGHT (added 2026-07-14 after a DiskFull incident): a `--no-cache`
+# build writes a fresh full image; repeated builds pile up dangling images and
+# once filled the 38G root to 100%, which broke a migration mid-deploy. Reclaim
+# unused IMAGES + build cache BEFORE building. NEVER prune volumes (the DB volume
+# must survive). A weekly cron (/etc/cron.weekly/docker-image-prune) also does this.
+df -h /                              # confirm headroom first
+docker image prune -af               # unused images only — NOT volumes
+docker builder prune -af             # build cache only — NOT volumes
+df -h /                              # verify reclaimed space before building
+
 # Bake the git SHA of EACH repo into its image (the stale-image guard reads it back).
 export BACKEND_SHA="$(git -C ../digi-tax-backend rev-parse HEAD)"
 export FRONTEND_SHA="$(git -C ../digi-tax-frontend rev-parse HEAD)"
@@ -79,6 +89,10 @@ docker compose up -d --force-recreate frontend
 bash scripts/preflight.sh
 bash scripts/smoke_test.sh          # includes the Deploy-Verification guard (below)
 ```
+
+> **Never `docker system prune --volumes`** on this server. The postgres data
+> lives in a named volume; `--volumes` would delete the database. Prune only
+> `image` and `builder` (both safe). See CLAUDE gotcha #14 lineage.
 
 Backend-only update:
 
