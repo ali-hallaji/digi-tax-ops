@@ -2,6 +2,74 @@
 
 ---
 
+## ✅ GRAND RESEED + FULL-SYSTEM VERIFICATION (2026-07-14) — deployed to dev
+
+**Both local AND dev wiped (drop schema + `alembic upgrade head`) and reseeded with
+a new deterministic multi-persona world; whole system verified. Deployed under the
+version-guard.** Backend `d680c38` · ops `89e9991` · frontend unchanged `a9908fd`.
+Dev DB head `p9q0r1s2t3u4`. Snapshots (pre/post, both hosts) below.
+
+### The new canonical seed — `python -m app.cli.seed_realistic_world`
+Deterministic (fixed seed), idempotent-by-key, wipe-first. 5 tenants, 154 invoices,
+89 payments, 273 journal entries, **0 journal gaps**. Replaces the old
+`seed_dev_data` for verification work (that CLI still exists). Verify with
+`app.cli.verify_world`.
+
+### Persona login table (password `Admin@12345`, or dev-OTP)
+| Mobile | Persona | Look at |
+|---|---|---|
+| `09120001001` | **کافه دنج** (سارا کریمی) — individual, basement | cash-heavy dashboard, ~60 invoices, walk-ins (مشتری متفرقه), expenses ±VAT, cheques, reminders |
+| `09120001002` | **بازرگانی نیک‌تجارت** (محمد توکلی) — legal, accountant view | the **school world**: journal + **balanced** trial-balance, **سود ۱۶۵M**, صندوق ۱۳۷M / بانک ۱٬۰۱۶M / تنخواه ۸M, payable سرماساز ۶۲۰M, manual سند افتتاحیه, xlsx/csv export, one archived account |
+| `09120001003` | **هلدینگ آریا** (آریا نجفی) — multi_business(5)+team | switch 3 businesses (پخش/سنتر/تک), distinct fiscal years + currency, **dashboards differ** (no bleed) |
+| `09120001006` | کامران سعیدی — آریا پخش **admin-member** | sees **all** records in پخش آریا |
+| `09120001007` | نیلوفر رستمی — آریا پخش **staff** | sees **only own-created** records (D5) |
+| `09120001004` | **خانم محمدی** (مؤسسهٔ محاسبان) — partner `HAM-TEST1` | `/partner`: portfolio (نیک‌تجارت + پخش آریا), commission 15%, earnings, 1 pending module request |
+| `09120001005` | پویا اسدی — **pending partner applicant** | admin partner-approval queue |
+| `09120000001` | **admin** | queues: 1 pending taxpayer · 1 pending partner · 1 module request · deadline override (1405Q1); tax_tables 1404 |
+
+### Verification results (local AND dev, identical)
+- **A. Invariants:** all 5 trial balances **balanced**; نیک‌تجارت numbers exact
+  (net_sales 1,805M · purchases 1,600M · expenses 40M · **profit 165M** · VAT 76M;
+  صندوق 137M · بانک 1,016M · تنخواه 8M · payable 620M); regenerate **idempotent**;
+  **0 gaps**; manual entry **survives** regenerate.
+- **B. Cross-tenant isolation — 25/25** (the founder's explicit concern): reads +
+  writes of another tenant's resources → 403/404 everywhere (victim data intact);
+  switcher shows only own businesses; non-member select → 404; partner sees only
+  granted tenants, non-granted → 404, **revoke → immediate cutoff (200→404) → restore**;
+  D5 member scope (staff 7 own-only < admin 20 sees-all).
+- **C. Golden paths — 11/11:** P1 dashboard four-questions; P2 accountant surface +
+  valid xlsx/csv; P3 two businesses ≠ dashboards; P4 portfolio real counts + earnings;
+  P5 admin queues show exactly the seeded pending items.
+- **D. UI visual sweep:** deferred to founder per the standing no-browser-driving rule
+  (§11.2) — the DATA behind every surface is proven above; use the persona table.
+
+### Bugs found + fixed by realistic data
+1. **seed** issue_date unset → P&L counted 0 revenue → set `issue_date` on sales (in `3f2a09d`).
+2. **seed** accountant_view toggle without the entitlement → merchant `/accounting/*`
+   returned 403 FEATURE_NOT_ENABLED → grant the entitlement with the toggle (`d680c38`).
+   (No **app** bugs found — isolation and D5 scope are correct; a one-off transient 500
+   on a cross-tenant expense GET right after a schema-drop reseed was NOT reproducible
+   directly — the query is properly tenant-scoped.)
+
+### Snapshots (rollback safety)
+- Local pre-reseed: `db-snapshots/local-pre-reseed-14050423-211536.sql.gz` (112 MB)
+- Dev pre-reseed: `root@dev:/root/dev-pre-reseed-20260714-174558.sql.gz` (81 KB)
+- Dev pre-deploy: `root@dev:/root/dev-predeploy-world-20260714-183215.sql.gz`
+- Dev post-seed: `root@dev:/root/dev-postseed-world-20260714-183406.sql.gz` (108 KB)
+
+### DiskFull follow-up — CLOSED
+Weekly image-prune cron on the server (`/etc/cron.weekly/docker-image-prune`, images +
+build-cache only, **never volumes**, wired via `/etc/crontab`); prune step added to the
+runbook + `deploy-digi-test` skill before `--no-cache` builds. Dev disk 18% / 30G free.
+
+### State
+Captcha + rate-limit **ON** on both local and dev (empirically verified: login → 400
+«تأیید امنیتی ناموفق»). Both DBs hold the realistic world. Dev scratch scripts removed.
+For dev API verification I toggled captcha/rate-limit OFF then restored+verified (dev),
+and used the same toggle locally.
+
+---
+
 ## ✅ PX-B COMPLETE — PUSHED + DEPLOYED to dev under version-guard (2026-07-14)
 
 **Status: pushed to origin/main and deployed to `dev.digiinvoice.ir`. Live smoke
