@@ -2,6 +2,17 @@
 
 ---
 
+## 🏛️ STANDING PRINCIPLE — role architecture (founder-locked, PR batch)
+
+«پنل کسب‌وکار (/app) برای همهٔ کاربران یک سیاست واحد دارد — هیچ استثنایی. "ادمین"
+یک نقش بک‌آفیسی جداست که فقط کاربران تعیین‌شده (env/admin-managed، عملاً ۳-۴ نفر
+تیم سازنده) دارند؛ همان آدم می‌تواند کسب‌وکار خودش را هم در /app داشته باشد — دو
+دنیای مستقل. بک‌آفیس (/admin) هرگز به مشتری معرفی نمی‌شود. همکار (حسابدار) کاربر
+بک‌آفیس است با دسترسی محدود به سناریوهای خودش: مشتری‌های خودش، فعال‌سازی ماژول
+برای آنها، و گزارش مالی/کمیسیون خودش — نه هیچ‌چیز دیگر.»
+
+---
+
 ## ✅ PM — Module control v2 (partner credit) + Inventory Lite (2026-07-14) — DEPLOYED to dev
 
 **Backend `50ece50` · frontend `c34349f` · ops `60595ac`. Dev DB head `r1s2t3u4v5w6`
@@ -53,6 +64,14 @@ silently drop; each is a full, dedicated effort:
 3. **Full guide rewrite after feature freeze** — merchant + admin + partner guides
    rewritten top-to-bottom against the frozen product (not incremental patches).
 4. These are scheduled AFTER the feature freeze (post-SMS batch).
+5. **VAT/عوارض split (مالیات vs عوارض breakdown)** — required for official
+   reporting; implement inside the Moadian batch.
+6. **Quarterly VAT return preparation view (اظهارنامهٔ فصلی)** — Moadian batch.
+7. **Moadian Stage D core** (invoice patterns, bulk send, ابطال/اصلاحی/برگشتی
+   lifecycles, signing, sandbox) — NEXT after SMS; requires the founder's
+   official docs (ASK for them, never guess the protocol).
+8. **Payroll module (مالیات حقوق via the yearly tax_tables pattern)** —
+   standalone future phase.
 
 ---
 
