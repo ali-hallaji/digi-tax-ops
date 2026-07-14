@@ -13,6 +13,34 @@
 
 ---
 
+## ✅ PR — Role-architecture correction (2026-07-15) — DEPLOYED to dev
+
+**Backend `fcfeb4d` · frontend `4d7e2e8`. NO migrations (zero schema change).**
+
+- **T1** — one merchant policy for everyone. Founder sighting diagnosed: the SEED
+  is clean (admin `09120000001` owns NOTHING); the conflation was in CODE —
+  `get_business_context_for_auth_db` listed ALL businesses for is_system_admin, so
+  the admin's /app switcher showed every seeded business. Removed the see-all
+  branch (and the matching `_require_owner_or_admin` bypass). /app now uses
+  membership-only listing for EVERYONE. RBAC tests rewritten.
+- **T2** — public admin door removed from login («ورود مدیران سیستم» gone; «ورود
+  همکاران» → /admin/my-clients). Admin reachable only via direct /admin URL or the
+  «پنل مدیریت» /app footer+header entry (gated on `is_system_admin`, now on GET /me).
+- **T3** — /partner/* consolidated INTO the /admin/* back-office shell (shell
+  migration, NOT logic rewrite). One shell, role-scoped: system_admin → full
+  console; approved partner → 4-item «پنل همکار» (مشتریان من / درآمد و تسویه /
+  پروفایل و کد همکار / راهنمای همکار); none/pending/rejected/suspended → partner
+  status screens. Routes → /admin/my-clients(+drill-ins), /admin/earnings,
+  /admin/partner-profile, /admin/partner-guide. Old /partner/* 301-redirect (splat).
+  Services/endpoints/grants/commission UNCHANGED.
+- **T4** — shared `<AccountMenu>`: /app sidebar footer row AND header name cluster
+  open the same menu; quiet header logout icon-button added.
+
+Standing principle written verbatim below. Suite at the 7-failure baseline (zero new);
+frontend typecheck + build + eslint + 8/8 unit tests green.
+
+---
+
 ## ✅ PM — Module control v2 (partner credit) + Inventory Lite (2026-07-14) — DEPLOYED to dev
 
 **Backend `50ece50` · frontend `c34349f` · ops `60595ac`. Dev DB head `r1s2t3u4v5w6`
