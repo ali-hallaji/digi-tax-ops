@@ -8,6 +8,15 @@ Use when deploying or re-deploying the local/staging stack. Follows the document
 
 ## Pre-Deploy Checks (mandatory)
 
+0. **GATE 0 — the experience harness (PH rule): no deploy while the harness is red.**
+   ```bash
+   cd ../digi-tax-frontend && pnpm harness
+   ```
+   All persona journey specs must pass against local BEFORE any push/deploy. After
+   the deploy, re-run against dev: `pnpm harness --base-url https://dev.digiinvoice.ir`.
+   Captcha is never disabled for the harness (the login helper waits for the real
+   Altcha widget to solve). A red spec blocks the deploy — fix first.
+
 1. Read `docs/progress.md` Active Blockers — stop if any `[DEPLOY]` or `[INFRA]` blocker is unresolved.
 
 2. Confirm `.env` exists and is not `.env.example`:

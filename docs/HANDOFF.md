@@ -2,6 +2,21 @@
 
 ---
 
+## 🏛️ STANDING RULE — the experience harness (founder-locked, PH batch)
+
+The old "never drive the browser" rule is REPLACED by:
+**«Claude Code runs the Playwright experience harness before every deploy; careful
+typing into simple forms is allowed; the founder's eyes are for taste and final
+sign-off, never for finding broken flows. No deploy while the harness is red.»**
+
+Harness: `digi-tax-frontend/tests/e2e-harness/` — one journey spec per seed persona,
+real login (dev-OTP typed through the real page; Altcha PoW solved by the real
+widget, never disabled), assertions on VISIBLE text/numbers, station screenshots to
+`qa-screens/harness-<ts>/`. Run `pnpm harness` (local) / `pnpm harness --base-url …`
+(dev). Wired as GATE 0 in the deploy runbook + deploy skill.
+
+---
+
 ## 🏛️ STANDING PRINCIPLE — role architecture (founder-locked, PR batch)
 
 «پنل کسب‌وکار (/app) برای همهٔ کاربران یک سیاست واحد دارد — هیچ استثنایی. "ادمین"

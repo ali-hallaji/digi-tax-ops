@@ -71,11 +71,14 @@ and are run manually by the founder in a terminal: `bootstrap.sh` (DB+migrations
 `preflight.sh` (compose/env/DB/readiness), `smoke_test.sh`
 (health/CORS/OTP/bearer/frontend), `up_local_test.sh` (local bring-up shortcut).
 
-## Verification is the founder's job — no Playwright-driving, curl for test data
-Claude Code must NOT use the Playwright MCP to click/log-in/screenshot/verify during a
-task. After smoke scripts + typecheck + build pass, STOP and hand off.
-Verify endpoints via `curl` with a bearer token — never browser automation.
-The Playwright E2E suite runs only at phase end, by exit code.
+## Experience-harness rule (PH — replaces "no Playwright-driving")
+"Claude Code runs the Playwright experience harness before every deploy; careful
+typing into simple forms is allowed; the founder's eyes are for taste and final
+sign-off, never for finding broken flows. No deploy while the harness is red."
+The harness (`digi-tax-frontend/tests/e2e-harness/`, `pnpm harness`, `--base-url`
+for dev) is a MANDATORY gate in the deploy runbook — run it green locally before
+push AND against dev after deploy. Endpoints still get `curl` verification;
+the phase-end E2E suite is unchanged.
 
 ## Hard constraints
 - Do not edit backend/frontend application logic from this repo.

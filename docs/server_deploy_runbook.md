@@ -34,6 +34,24 @@ Run deployment commands from `digi-tax-ops` unless a command explicitly uses
 
 ## Pre-Deploy Safety Checks
 
+### GATE 0 — the experience harness (MANDATORY, PH rule)
+
+**No deploy while the harness is red.** Before ANY push/deploy, run the Playwright
+experience harness green against local, and after deploying, run it green against dev:
+
+```bash
+cd ../digi-tax-frontend
+pnpm harness                                        # local (default base URL)
+pnpm harness --base-url https://dev.digiinvoice.ir  # after deploy, against dev
+```
+
+One journey spec per seed persona; logins go through the REAL login page (dev-OTP,
+Altcha PoW solved by the real widget — never disable captcha for the harness).
+Artifacts land in `qa-screens/harness-<ts>/`. A red spec blocks the deploy — fix
+first, never "deploy anyway".
+
+### Repo cleanliness
+
 Check all three repos before pulling or deploying:
 
 ```bash

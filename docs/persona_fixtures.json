@@ -1,0 +1,149 @@
+{
+  "password": "Admin@12345",
+  "personas": {
+    "admin": {
+      "mobile": "09120000001",
+      "name": "DigiTax Admin",
+      "password": "Admin@12345",
+      "role": "system_admin",
+      "businesses": [],
+      "explore": "پنل مدیریت: داشبورد (شمارنده‌ها)، بررسی پرونده‌ها، همکاران، فعال‌سازی‌ها، تقویم مالیاتی",
+      "expected": {
+        "dashboard_counts": {
+          "pending_taxpayer_reviews": 1,
+          "partners_pending": 1,
+          "partners_active": 1,
+          "module_requests_pending": 1,
+          "credit_activations_pending": 1,
+          "users": 8,
+          "tenants": 5
+        },
+        "tax_calendar_override": {
+          "kind": "vat_quarterly",
+          "period_key": "1405Q1",
+          "due_date": "2026-04-20",
+          "note": "تمدید رسمی"
+        }
+      }
+    },
+    "p1": {
+      "mobile": "09120001001",
+      "name": "سارا کریمی",
+      "password": "Admin@12345",
+      "role": "merchant_owner",
+      "businesses": [
+        "کافه دنج"
+      ],
+      "explore": "داشبورد عملیاتی، کالا/خدمات با ستون موجودی (انبار ساده)، فاکتورها، چک‌ها",
+      "expected": {
+        "products_total": 30,
+        "tracked_products": 10,
+        "negative_stock_product": "کیک شکلاتی 1",
+        "negative_stock_value": "-2",
+        "low_stock_count": 4,
+        "finalized_invoices": 60,
+        "customers": 15
+      }
+    },
+    "p2": {
+      "mobile": "09120001002",
+      "name": "محمد توکلی",
+      "password": "Admin@12345",
+      "role": "merchant_owner",
+      "businesses": [
+        "بازرگانی نیک‌تجارت"
+      ],
+      "explore": "نمای حسابدار (دفتر روزنامه/کل/تراز)، گزارش سود و زیان، دانلود اکسل — دنیای مدرسهٔ حسابداری",
+      "expected": {
+        "net_sales": "1805000000",
+        "purchases": "1600000000",
+        "expenses": "40000000",
+        "profit": "165000000",
+        "profit_display_toman": "۱۶٬۵۰۰٬۰۰۰",
+        "vat_received": "76000000",
+        "cash_box": "137000000",
+        "bank_mellat": "1016000000",
+        "petty_cash": "8000000",
+        "finalized_invoices": 4,
+        "manual_journal_title": "سند افتتاحیهٔ نمونه (نیک‌تجارت)"
+      }
+    },
+    "p3": {
+      "mobile": "09120001003",
+      "name": "آریا نجفی",
+      "password": "Admin@12345",
+      "role": "merchant_owner",
+      "businesses": [
+        "پخش آریا",
+        "فروشگاه آریا سنتر",
+        "خدمات آریا تک"
+      ],
+      "explore": "سوئیچر ۳ کسب‌وکار (اعداد داشبورد هر کدام متفاوت)، اعضای تیم روی پخش آریا",
+      "expected": {
+        "business_count": 3,
+        "invoices_by_business": {
+          "پخش آریا": 20,
+          "فروشگاه آریا سنتر": 30,
+          "خدمات آریا تک": 40
+        }
+      }
+    },
+    "p3_member_admin": {
+      "mobile": "09120001006",
+      "name": "کامران سعیدی",
+      "password": null,
+      "role": "member_admin",
+      "businesses": [
+        "پخش آریا (مدیر)"
+      ],
+      "explore": "دسترسی مدیر: همهٔ ۲۰ فاکتور پخش آریا را می‌بیند",
+      "expected": {
+        "visible_invoices": 20
+      }
+    },
+    "p3_member_staff": {
+      "mobile": "09120001007",
+      "name": "نیلوفر رستمی",
+      "password": null,
+      "role": "member_staff",
+      "businesses": [
+        "پخش آریا (کارمند)"
+      ],
+      "explore": "دسترسی کارمند: فقط ۷ فاکتور خودش را می‌بیند (own-only)",
+      "expected": {
+        "visible_invoices": 7
+      }
+    },
+    "p4": {
+      "mobile": "09120001004",
+      "name": "زهرا محمدی",
+      "password": null,
+      "role": "partner_approved",
+      "businesses": [],
+      "explore": "پنل همکار (داخل /admin): مشتریان من (۲ کسب‌وکار)، درآمد و تسویه، کد همکار HAM-TEST1",
+      "expected": {
+        "partner_code": "HAM-TEST1",
+        "landing": "/admin/my-clients",
+        "portfolio_clients": 2,
+        "portfolio_names": [
+          "بازرگانی نیک‌تجارت",
+          "پخش آریا"
+        ],
+        "commission_percent": "15.00",
+        "accrued_total": "1800000",
+        "payout_total": "1800000"
+      }
+    },
+    "p5": {
+      "mobile": "09120001005",
+      "name": "پویا اسدی",
+      "password": null,
+      "role": "partner_pending",
+      "businesses": [],
+      "explore": "وضعیت «در حال بررسی» درخواست همکاری",
+      "expected": {
+        "partner_status": "pending"
+      }
+    }
+  }
+}
