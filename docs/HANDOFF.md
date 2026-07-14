@@ -2,7 +2,58 @@
 
 ---
 
-## ⛔ RESUME NOTE — PX-B COMPLETE (2026-07-14, ready for viewing sweep + guarded deploy)
+## ✅ PX-B COMPLETE — PUSHED + DEPLOYED to dev under version-guard (2026-07-14)
+
+**Status: pushed to origin/main and deployed to `dev.digiinvoice.ir`. Live smoke
+green. Only the founder VIEWING sweep remains (the actual admin UI pixels).**
+
+### Deployed SHAs (verify-guard all green)
+- backend `88e7b80` · frontend `a9908fd` · ops `4e32607`
+- `/health/version` → `git_sha=88e7b80…`, `alembic_head=p9q0r1s2t3u4` (served == deployed)
+- `/version.json` → `sha=a9908fd…` (served == deployed) · image head == DB head
+- `pg_index WHERE NOT indisvalid` = **0** · `tax_tables` seeded 1404 · captcha ON (dev)
+- 3 PX-B migrations applied on dev (`n7o8…`/`o8p9…`/`p9q0…`); dev DB head now `p9q0r1s2t3u4`
+
+### Live smoke on dev (curl, captcha solved via Altcha PoW — dev security NOT weakened)
+1. **VAT expense (demo tenant 09120000000):** 1,100,000 ریال @ 10% → `vat_amount`
+   =100,000 (inclusive extraction); dashboard `vat_position.vat_paid` moved
+   0→100,000→0 (after delete). Journal entry #7 (accountant_view enabled on the
+   active tenant only, then reverted): debit 5306 «سایر» net 1,000,000 + debit
+   **2402 «مالیات ارزش افزوده پرداختی» 100,000** + credit 11010001 «صندوق» gross
+   1,100,000 — balanced. Scratch expense deleted; journal regenerated; toggle reverted.
+2. **Deadline override:** admin PUT `vat_quarterly/1405Q2` due 2026-10-07→2026-10-12
+   + note → merchant reminder shifted to 2026-10-12 and now shows «(تمدید رسمی …)»;
+   DELETE reverted it to statutory. No override left.
+- Cleanup verified on dev: 0 scratch expenses, 0 tax_deadline overrides, tax_tables
+  only 1404. (One tenant `407748b7` has accountant_view ON since **2026-07-10** —
+  pre-existing Batch-B state, NOT from this session; the tenant I toggled reverted.)
+
+### ⚠️ Deploy incident + fix (IMPORTANT ops finding)
+The first `alembic upgrade head` on dev **failed with `DiskFullError` — the 38G
+root was 100% full** (0 avail). Root cause: **27.9 GB of unused/dangling Docker
+images (63 images)** accumulated from repeated `--no-cache` builds across sessions.
+The DDL is transactional so it rolled back cleanly (DB stayed at `m6n7o8p9q0r1`, no
+partial schema), but the new api image was already live → briefly inconsistent.
+Fixed with `docker image prune -a -f` (reclaimed 26.98 GB; **volumes untouched** —
+DB is 69 MB), re-ran the migration → head `p9q0r1s2t3u4`, all green.
+**Follow-up:** the deploy runbook / `deploy-digi-test` should `docker image prune -f`
+(or `-a`) BEFORE a `--no-cache` build, and/or a cron prune. Dev now at 18% disk.
+
+### Also shipped this deploy
+- `smoke_test.sh` CORS Origin is now env-driven (`SMOKE_CORS_ORIGIN`) — the prior
+  hardcoded `127.0.0.1:8080` failed on dev (PX-A follow-up, now closed).
+
+### Frontend correctness pass (Opus re-review of the Haiku admin page — `cc60ecc`)
+The initial Haiku tax-calendar page had real defects, all fixed + verified live:
+bare `{items,total}` vs `response.data.items` (would have blanked both cards);
+always-mounted edit dialogs initialized from a null target (empty fields / data
+wipe on save); `add row` sent `cap=""` (backend 422); rate shown as raw fraction
+(now percent + real progressive-tax preview); Gregorian dates mislabeled «(شمسی)»
+(now `<JalaliDate>`); dashboard basis line `.includes("current")` never matched.
+
+---
+
+## (historical) PX-B pre-deploy note — ready for viewing sweep + guarded deploy
 
 **Status: ALL COMMITS DONE. Backend ready for deploy. Frontend ready for founder QA sweep.**
 
