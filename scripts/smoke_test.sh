@@ -144,13 +144,20 @@ FRONTEND_PORT="${FRONTEND_PORT:-3000}"
 FRONTEND_URL="${FRONTEND_URL:-http://localhost:${FRONTEND_PORT}}"
 FRONTEND_BASE_URL="${FRONTEND_BASE_URL:-$FRONTEND_URL}"
 TEST_MOBILE="${TEST_MOBILE:-09120000099}"
+# CORS preflight Origin must be an entry in the backend allowlist. Locally that
+# is the Vite dev origin; on the test server the allowlist holds only the public
+# HTTPS origin, so a hardcoded 127.0.0.1 made this check fail there (see HANDOFF
+# PX-A deploy follow-up). Keep it env-driven — default preserves local behavior;
+# the server deploy exports SMOKE_CORS_ORIGIN=https://<test-domain>.
+SMOKE_CORS_ORIGIN="${SMOKE_CORS_ORIGIN:-http://127.0.0.1:8080}"
 
 assert_http_ok "${API_BASE_URL}/health/check" "GET /health/check"
 assert_http_ok "${API_BASE_URL}/health/db" "GET /health/db"
 
+info "CORS preflight Origin: ${SMOKE_CORS_ORIGIN}"
 cors_headers="$(
   curl -sS -D - -o /dev/null -X OPTIONS "${API_V1_URL}/auth/otp/request" \
-    -H "Origin: http://127.0.0.1:8080" \
+    -H "Origin: ${SMOKE_CORS_ORIGIN}" \
     -H "Access-Control-Request-Method: POST" \
     -H "Access-Control-Request-Headers: content-type"
 )" || fail "CORS preflight request failed"
