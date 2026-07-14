@@ -2,6 +2,21 @@
 
 ---
 
+## 📌 بدهی‌های بَچ نهایی کیفیت (debt registry — do not lose)
+
+Scheduled explicitly AFTER the feature freeze (post-SMS batch). None of these may
+silently drop; each is a full, dedicated effort:
+
+1. **Admin panel coherence overhaul** — menus/consistency/polish across the whole
+   `/admin/*` shell (grouping, naming, dead stubs, visual consistency).
+2. **Unified «پروندهٔ مشتری» view in admin** — one place per customer: user →
+   businesses → taxpayer status → plan/modules → partner relationship → usage.
+3. **Full guide rewrite after feature freeze** — merchant + admin + partner guides
+   rewritten top-to-bottom against the frozen product (not incremental patches).
+4. These are scheduled AFTER the feature freeze (post-SMS batch).
+
+---
+
 ## ✅ GRAND RESEED + FULL-SYSTEM VERIFICATION (2026-07-14) — deployed to dev
 
 **Both local AND dev wiped (drop schema + `alembic upgrade head`) and reseeded with
