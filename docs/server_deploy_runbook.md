@@ -360,6 +360,16 @@ Manual checks:
 - Smoke checks should not expose obvious hardcoded backend IPs in frontend HTML
   or bundle responses.
 
+**Final report — always include the persona-login guide path:** every deploy
+report ends with a pointer to `docs/persona_logins.md` (the guided per-persona
+«چه چیزی را ببین» review checklist, generated from `world_fixtures.py`). If the
+seed changed this deploy, regenerate it first:
+
+```bash
+docker compose exec -T api python -m app.cli.world_fixtures > docs/persona_fixtures.json
+docker compose exec -T api python -m app.cli.world_fixtures --markdown > docs/persona_logins.md
+```
+
 ## Rollback Notes
 
 Keep rollback simple:

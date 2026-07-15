@@ -123,6 +123,9 @@ bakes `unknown` and Step 7 can't verify the image.
 **Migration result:** OK (exit 0) | FAILED — stopped
 **Services up:** <docker compose ps summary>
 **Preflight:** PASS | FAIL
+**Persona logins (founder review):** docs/persona_logins.md — regenerate from
+`world_fixtures.py` if the seed changed; hand it to the founder as the guided
+taste-review checklist.
 
 **Result:** PASS | NEEDS FIXES
 ```

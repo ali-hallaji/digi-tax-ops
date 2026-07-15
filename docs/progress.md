@@ -1,13 +1,31 @@
 # Ops Progress
 
-Last updated: 2026-07-12
+Last updated: 2026-07-15
 
 ## Current Phase
-P7a (rate-limiter proxy keying) + P6 (smart onboarding tour) — verified local + swept,
-DEPLOYED to dev.digiinvoice.ir 2026-07-12. (P4.5 guide catch-up shipped just before.)
+PJ (partner/merchant world separation + persona-table polish) — implemented + validated
+LOCAL (unit 18/18, typecheck, eslint, build, extended harness). Deploy to dev + dev
+harness + live smoke PENDING explicit founder GO (golden-rule: not pushed).
 
 ## Completed
 
+- **2026-07-15 — PJ: partner/merchant world separation + persona-table polish (LOCAL green; deploy pending GO).**
+  Founder principle (verbatim in HANDOFF role-architecture section): a business-less
+  partner never sees the merchant world — no `/app`, no create-business button, no
+  onboarding; creation stays reachable ONLY through a conscious «کسب‌وکار شخصی» path in
+  the partner profile; a partner WITH a business sees a dual-panel switcher like a
+  dual-role admin. **T1 (frontend):** `_app.tsx` probes `/partner/me` for a user with no
+  active business and hard-redirects an approved partner to `/admin/my-clients` (calm
+  loader between, never a wizard flash); `account-menu.tsx` hides «افزودن کسب‌وکار» for
+  that state; `partner-sidebar.tsx` shows «پنل کسب‌وکار» only when she owns a business;
+  `partner-profile.tsx` gains the «کسب‌وکار شخصی» section (sessionStorage intent survives
+  the /app→wizard hop). Pure `resolveBusinesslessAppEntry` routing matrix + partner-with-
+  business `lastPanel` case unit-tested (18/18). **T2:** `world_fixtures.py` per-persona
+  `see` bullets → `persona_logins.md` guided review checklist; regenerated
+  `persona_fixtures.json` + `persona_logins.md`; deploy runbook/skill report now points to
+  the doc. **T3:** partner guide «دنیای شما همان پنل همکار است» scenario + school L22
+  «حسابدار همکار» two-worlds clarity; no whats-new entry (no `partner` audience/surface —
+  partner home never mounts the card). No migrations; DB head unchanged. SHAs on deploy.
 - **2026-07-12 — P7a + P6 deploy to dev.digiinvoice.ir.** Backend `109b374` (P7a:
   proxy-aware rate-limiter client-IP keying, env `TRUSTED_PROXIES`, no migration) +
   frontend `df6c13b` (P6: native onboarding tour L1/L2/L3 + settings toggle + replay +

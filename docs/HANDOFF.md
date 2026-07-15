@@ -26,6 +26,50 @@ widget, never disabled), assertions on VISIBLE text/numbers, station screenshots
 بک‌آفیس است با دسترسی محدود به سناریوهای خودش: مشتری‌های خودش، فعال‌سازی ماژول
 برای آنها، و گزارش مالی/کمیسیون خودش — نه هیچ‌چیز دیگر.»
 
+**PJ addendum (founder-locked) — همکارِ بدون کسب‌وکار، دنیای کاسب را نمی‌بیند:**
+«همکارِ بدون کسب‌وکار، دنیای کاسب را نمی‌بیند: نه /app، نه دکمهٔ ساخت کسب‌وکار،
+نه onboarding. توانایی ساخت حذف نمی‌شود ولی فقط از یک مسیر آگاهانه در پروفایل
+همکار در دسترس است («برای مؤسسهٔ خودم حسابداری می‌خواهم»). همکاری که کسب‌وکار
+دارد، سوییچر دوپنلی می‌بیند — مثل ادمینِ دو-نقشه.»
+Implementation: a business-less approved partner visiting `/app` (or any `/app/*`)
+is redirected to `/admin/my-clients` — no merchant empty-state, no wizard; her
+account/partner menus show neither «افزودن کسب‌وکار» nor «پنل کسب‌وکار». The one
+door in is the «کسب‌وکار شخصی» section of `/admin/partner-profile`, which opens the
+normal wizard (plan limits apply). Once she owns ≥1 business the dual-panel switcher
+appears and she follows `lastPanel` exactly like a dual-role admin. The pure
+precedence lives in `resolveBusinesslessAppEntry` /
+`computePostLoginDestination` (`src/lib/access/post-login.ts`).
+
+---
+
+## ✅ PJ — Partner/merchant world separation (2026-07-15) — LOCAL green; deploy pending founder GO
+
+**Frontend + backend(docs-gen) + ops docs. NO migrations (zero schema change).
+Unit 18/18 · typecheck · eslint · build green. Harness extended (P4). Pending: dev
+deploy + dev harness + live smoke.**
+
+- **T1 — hide the merchant world from a business-less approved partner.** The
+  post-login hop was already handled (PH); PJ closes the DIRECT-visit hole. `_app.tsx`
+  probes `/partner/me` when there's no active business and (approved partner + no
+  business + no conscious intent) hard-redirects to `/admin/my-clients` — a calm
+  loader in between, never a wizard flash. `account-menu.tsx` hides «افزودن کسب‌وکار»
+  for that state; `partner-sidebar.tsx` shows «پنل کسب‌وکار» ONLY when she owns a
+  business (dual-panel like a dual-role admin). The conscious path: a «کسب‌وکار شخصی»
+  section in `partner-profile.tsx` sets a sessionStorage intent (survives the
+  /app→wizard hop) then opens the normal wizard. Decision extracted to a pure,
+  unit-tested `resolveBusinesslessAppEntry` (routing matrix, 5 cases) +
+  partner-with-business `lastPanel` case added to `computePostLoginDestination` tests.
+- **T2 — persona-table polish.** `world_fixtures.py` gains a per-persona `see` field
+  (3–4 concrete «open page X → see Y» steps); `persona_logins.md` renders a guided
+  review checklist below the table. Regenerated `persona_fixtures.json` +
+  `persona_logins.md`. Deploy runbook/skill report now surfaces the doc path.
+- **T3 — no-drift.** Partner guide gains a «دنیای شما همان پنل همکار است» scenario;
+  school L22 «حسابدار همکار» vocabulary reinforces the two-worlds separation. No
+  whats-new entry: the whats-new card renders only on the merchant + admin dashboards
+  (no `partner` audience, and the partner home never mounts it) — the partner-facing
+  change is communicated via the guide + the new profile section instead.
+- Golden-rule note: NOT pushed. Awaiting explicit founder GO for the guarded dev deploy.
+
 ---
 
 ## ✅ PH — Experience harness + login-experience fixes (2026-07-15) — DEPLOYED, harness green LOCAL + DEV
