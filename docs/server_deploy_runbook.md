@@ -370,6 +370,46 @@ docker compose exec -T api python -m app.cli.world_fixtures > docs/persona_fixtu
 docker compose exec -T api python -m app.cli.world_fixtures --markdown > docs/persona_logins.md
 ```
 
+## Reset the verification world (dev) — SEED-12
+
+The 12-persona world (`app.cli.seed_realistic_world`) is the canonical QA data.
+Locally the founder runs `make reset-world` (or `bash scripts/reset_world.sh`). On
+dev/staging, **snapshot FIRST, always** (a reset drops the schema):
+
+```bash
+# 1. Snapshot (mandatory)
+TS=$(date +%Y%m%d-%H%M%S)
+docker compose exec -T postgres pg_dump -U digitax -d digitax | gzip > /root/digitax-pre-reset-$TS.sql.gz
+# 2. Wipe → migrate → seed → regenerate the persona docs
+docker compose exec -T postgres psql -U digitax -d digitax -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+docker compose exec -T api alembic upgrade head
+docker compose exec -T api python -m app.cli.seed_realistic_world
+docker compose exec -T api python -m app.cli.world_fixtures > docs/persona_logins-check.json   # optional verify
+```
+The per-persona login guide is `docs/persona_logins.md` (regenerated). Surface it in
+the deploy report so the founder's taste-review is guided.
+
+## Notifications / SMS go-live switch (Kavenegar)
+
+SMS is provider-agnostic and OFF (console) by default — dev keeps returning `dev_otp`.
+To turn on real SMS once Kavenegar credentials arrive, **no code change** is needed:
+
+```bash
+# 1. Set env on the server (.env)
+SMS_PROVIDER=kavenegar
+KAVENEGAR_API_KEY=<the key>
+KAVENEGAR_OTP_TEMPLATE=digiotp        # must match the template name in the Kavenegar panel
+# 2. Restart api (env is read at startup)
+docker compose up -d --no-deps --force-recreate api
+# 3. Send one real OTP and verify the audit trail
+#    - request an OTP for a real handset via the login page
+#    - the SMS should arrive from the digiotp template
+#    - check the admin سلامت سیستم page → «آخرین پیامک‌ها» shows status=sent + a provider_ref
+#    - or: SELECT status, provider, provider_ref FROM notification_log ORDER BY created_at DESC LIMIT 1;
+```
+Rollback: set `SMS_PROVIDER=console` and restart api. Reminders-by-SMS is still
+«به‌زودی» — only the OTP path is wired through the core today.
+
 ## Rollback Notes
 
 Keep rollback simple:
