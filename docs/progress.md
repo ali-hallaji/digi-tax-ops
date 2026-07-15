@@ -3,10 +3,32 @@
 Last updated: 2026-07-15
 
 ## Current Phase
-PJ (partner/merchant world separation) + D1/D2 defect batch — DEPLOYED to
-dev.digiinvoice.ir 2026-07-15. Harness 6/6 green LOCAL + DEV (captcha ON both).
+SEED-12 (12-persona world + provider-agnostic notification core) — DEPLOYED to
+dev.digiinvoice.ir 2026-07-15. Harness 7/7 green LOCAL + DEV (captcha ON both).
 
 ## Completed
+
+- **2026-07-15 — SEED-12: 12-persona world + SMS-ready notification core — DEPLOYED to dev.**
+  Deployed SHAs: backend `23fd537` · frontend `8806708` · ops `5092f7d` (postgres ID
+  `c491fbf64fb` unchanged; NEW migration `s2t3u4v5w6x7` notification_log applied; head
+  advanced `r1s2t3u4v5w6`→`s2t3u4v5w6x7`). Dev snapshot `/root/digitax-pre-seed12-20260715-093925.sql.gz`.
+  **Part 1** — seed world 8→13 personas: P6 سوپرمارکت (high volume: 200 cust / 40 prod /
+  500 inv / 30 cheques, batched recompute), P7 آژانس (services-only + advances, toman/07-01),
+  P8 شرکت بازرگانی دوم (3rd granted client → خانم محمدی portfolio now 3), P9 آرش رستمی
+  (2nd approved partner HAM-TEST2 @ 20% + own referred client), P10 سمیرا (dual-panel:
+  partner HAM-TEST3 + personal tenant). One command: `bash scripts/reset_world.sh` (local:
+  `make reset-world`; NB `make` isn't on the dev server — use the script) wipes→migrates→
+  seeds→regenerates persona docs→prints the login table. world_fixtures reconciled to the
+  live DB (14 users / 10 tenants / 3 active partners / 2 pending reviews). **Part 2** —
+  notification core: `send_sms(mobile, template, tokens)` behind a Provider interface;
+  ConsoleProvider (default: logs + audits, dev_otp untouched) + KavenegarProvider (Verify/
+  Lookup REST, OFF until `KAVENEGAR_API_KEY`). notification_log audits every send. OTP path
+  wired (digiotp); console preserves today's behaviour. `GET /admin/notifications` +
+  admin سلامت سیستم «آخرین پیامک‌ها» card. **Live proof**: notification_log on dev has
+  console `digiotp` rows (masked `0912***1001`…) from the harness OTP logins. 8 notif tests
+  pass; suite at 7-failure FakeDBSession baseline (zero new). Harness gains P6 high-volume
+  smoke + P4→3-clients; the persistent dev login flake fixed (clear auth storage before
+  login → both hosts 7/7, 0 flaky). SMS go-live switch documented in the runbook.
 
 - **2026-07-15 — D1/D2 defect batch — DEPLOYED to dev.** Frontend only; NO migrations;
   DB head unchanged `r1s2t3u4v5w6`. **D1 (admin password reset "broken" for multi-business

@@ -42,6 +42,30 @@ precedence lives in `resolveBusinesslessAppEntry` /
 
 ---
 
+## ✅ SEED-12 — 12-persona world + provider-agnostic notification core (2026-07-15) — DEPLOYED to dev
+
+**Deployed SHAs: backend `23fd537` · frontend `8806708` · ops `5092f7d`. NEW migration
+`s2t3u4v5w6x7` (notification_log); postgres ID `c491fbf64fb` unchanged. Harness 7/7 green
+LOCAL + DEV (0 flaky); 8 notif tests pass; suite at 7-fail baseline. Captcha ON both.**
+- **Part 1 — 12-persona world.** Added P6 سوپرمارکت (high vol: 200/40/500), P7 آژانس
+  (services-only + advances, toman/07-01), P8 شرکت بازرگانی دوم (3rd granted client for
+  خانم محمدی → portfolio now 3), P9 آرش رستمی (2nd partner HAM-TEST2 @20% + own referred
+  client), P10 سمیرا (dual-panel: partner HAM-TEST3 + personal tenant). One command:
+  `bash scripts/reset_world.sh` (local `make reset-world`; **`make` is NOT on the dev
+  server — use the script**). world_fixtures reconciled to the live DB (14 users / 10
+  tenants / 3 active partners / 2 pending reviews); regenerated persona_logins.md.
+- **Part 2 — notification core (SMS turns on by config).** `send_sms(mobile, template,
+  tokens)` → Provider interface. ConsoleProvider (default; logs + audits; dev_otp
+  untouched) + KavenegarProvider (Verify/Lookup REST; OFF until `KAVENEGAR_API_KEY`).
+  notification_log audits every send (masked mobile). OTP wired through the core
+  (`digiotp`). `GET /admin/notifications` → admin سلامت سیستم «آخرین پیامک‌ها». **Go-live**:
+  `SMS_PROVIDER=kavenegar` + key + restart api — zero code change (runbook has the switch).
+  Live-proven: dev notification_log has console `digiotp` rows from the harness logins.
+- **Harness**: P6 high-volume smoke, P4→3-clients; the persistent dev login flake (a
+  lingering session redirecting /login→/app) fixed by clearing auth storage before login.
+
+---
+
 ## ✅ D1/D2 — Admin password-reset freeze + global scrollbars (2026-07-15) — DEPLOYED to dev
 
 **Frontend only. NO migrations. Harness 6/6 green local + dev.**
