@@ -42,11 +42,36 @@ precedence lives in `resolveBusinesslessAppEntry` /
 
 ---
 
-## ✅ PJ — Partner/merchant world separation (2026-07-15) — LOCAL green; deploy pending founder GO
+## ✅ D1/D2 — Admin password-reset freeze + global scrollbars (2026-07-15) — DEPLOYED to dev
 
-**Frontend + backend(docs-gen) + ops docs. NO migrations (zero schema change).
-Unit 18/18 · typecheck · eslint · build green. Harness extended (P4). Pending: dev
-deploy + dev harness + live smoke.**
+**Frontend only. NO migrations. Harness 6/6 green local + dev.**
+- **D1** — admin password reset "appeared broken" for MULTI-business users. Reproduced
+  harness-style: the flow (row «…» menu → confirm AlertDialog → temp Dialog, and the
+  detail-dialog path a multi-business admin naturally uses) left `document.body{pointer-
+  events:none}` stuck → the whole page FROZE (`page interactive after flow = false`; the
+  reset API itself was 200). Fixes: global `useRadixPointerEventsGuard` (`__root.tsx`)
+  that releases a stuck lock when no Radix overlay is open (app-wide); `modal={false}`
+  on the row menu; detail dialog closes before the confirm opens (no 3-modal stack);
+  confirm now shows the masked mobile (bidi `<bdi>`); friendly Persian error kept.
+  Harness 05 now asserts the reset dialog opens for the 3-business user + page stays
+  interactive. Reset is ≤2 clicks from the row (menu → item).
+- **D2** — ONE global thin overlay scrollbar (`styles.css`, `@layer base`): webkit
+  `::-webkit-scrollbar*` + Firefox `scrollbar-width/color`, thumb = `--muted-foreground`
+  30→52% on hover, transparent track, `background-clip:padding-box` overlay look. Covers
+  every native scroll surface (ScrollArea component is unused). Token-driven → correct in
+  light + dark; 390px RTL intact. Note: this env's Chromium renders overlay scrollbars
+  that auto-hide, so static shots don't show the thumb — verified via computed style
+  (`scrollbar-width:thin`, `scrollbar-color: oklch(0.515 0.026 200 / 0.32) transparent`).
+
+---
+
+## ✅ PJ — Partner/merchant world separation (2026-07-15) — DEPLOYED to dev
+
+**Deployed SHAs: backend `19e3d6c` · frontend `ecbafa2` · ops `5ce57d9`. NO migrations
+(head unchanged `r1s2t3u4v5w6`; postgres ID `c491fbf64fb9` unchanged). Unit 18/18 ·
+typecheck · eslint · build. Harness 6/6 green LOCAL + DEV; captcha ON both. Dev reseeded
+to canonical (snapshot `/root/digitax-pre-PJ-20260715-064135.sql.gz`). Live smoke:
+P4 `/app`→`/admin/my-clients` redirect proven; api container carries new world_fixtures.**
 
 - **T1 — hide the merchant world from a business-less approved partner.** The
   post-login hop was already handled (PH); PJ closes the DIRECT-visit hole. `_app.tsx`

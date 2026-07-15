@@ -3,13 +3,34 @@
 Last updated: 2026-07-15
 
 ## Current Phase
-PJ (partner/merchant world separation + persona-table polish) — implemented + validated
-LOCAL (unit 18/18, typecheck, eslint, build, extended harness). Deploy to dev + dev
-harness + live smoke PENDING explicit founder GO (golden-rule: not pushed).
+PJ (partner/merchant world separation) + D1/D2 defect batch — DEPLOYED to
+dev.digiinvoice.ir 2026-07-15. Harness 6/6 green LOCAL + DEV (captcha ON both).
 
 ## Completed
 
-- **2026-07-15 — PJ: partner/merchant world separation + persona-table polish (LOCAL green; deploy pending GO).**
+- **2026-07-15 — D1/D2 defect batch — DEPLOYED to dev.** Frontend only; NO migrations;
+  DB head unchanged `r1s2t3u4v5w6`. **D1 (admin password reset "broken" for multi-business
+  users):** root cause = Radix modal pointer-events race — the row «…» menu → confirm
+  AlertDialog → temp Dialog flow (worst for a multi-business user, who also opens the
+  detail dialog) left `document.body{pointer-events:none}` stuck, FREEZING the page
+  (reproduced: `page interactive after flow = false`). Fixes: a global
+  `useRadixPointerEventsGuard` in `__root.tsx` releases a stuck lock when no overlay is
+  open (app-wide safety net); `modal={false}` on the row menu; the detail dialog closes
+  before opening the confirm (no 3-modal stack); the confirm now shows the masked mobile
+  (bidi-isolated) so the admin is sure WHICH account; friendly Persian error kept. Harness
+  05 asserts the reset dialog opens for the multi-business user AND the page stays
+  interactive after. **D2 (ugly scrollbars):** ONE global token-driven thin overlay
+  scrollbar in `styles.css` (webkit + Firefox `scrollbar-width/color`), thumb =
+  `--muted-foreground` at 30–52%, transparent track; covers every native scroll surface
+  (dashboard تازه‌ها, sidebar, admin lists, journal tables, any max-h panel — all confirmed
+  native, ScrollArea unused). Verified: computed `scrollbar-width:thin`,
+  `scrollbar-color: oklch(0.515 0.026 200 / 0.32) transparent`; 390px RTL layout intact.
+  SHAs on deploy.
+- **2026-07-15 — PJ: partner/merchant world separation + persona-table polish — DEPLOYED to dev.**
+  Deployed SHAs: backend `19e3d6c` · frontend `ecbafa2` · ops `5ce57d9` (postgres ID
+  `c491fbf64fb9` unchanged, head unchanged, captcha ON). Dev reseeded to canonical
+  (snapshot `/root/digitax-pre-PJ-20260715-064135.sql.gz`); dev harness 6/6 green; live
+  smoke: /app→my-clients redirect proven, api container carries new world_fixtures.
   Founder principle (verbatim in HANDOFF role-architecture section): a business-less
   partner never sees the merchant world — no `/app`, no create-business button, no
   onboarding; creation stays reachable ONLY through a conscious «کسب‌وکار شخصی» path in
