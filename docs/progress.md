@@ -8,12 +8,23 @@ dev.digiinvoice.ir 2026-07-15. Harness 7/7 green LOCAL + DEV (captcha ON both).
 
 ## Completed
 
-- **2026-07-16 — PC: self-serve checkout + unified module-activation flow + activation UX polish.**
+- **2026-07-16 — PC: self-serve checkout + unified module-activation flow + activation UX polish
+  — DEPLOYED to dev.** Deployed SHAs: backend `683a146` · frontend `aafb678` · ops `1cb4b2e`
+  (version guard verified live: `/health/version` git_sha + `/version.json` sha).
   THREE new migrations: `t3u4v5w6x7y8` (module_prices) → `u4v5w6x7y8z9` (module_offers) →
-  `v5w6x7y8z9a0` (payment_orders); head `s2t3u4v5w6x7` → `v5w6x7y8z9a0`. NEW backend module
-  `app/modules/billing/`. **New env (MUST be set on deploy): `PAYMENT_FRONTEND_BASE_URL`**
-  (see the runbook — unset on a split-origin host means a successful payment redirects to
-  the API origin and 404s), plus `PAYMENT_GATEWAY=sim`, `SMS_ALLOWLIST=`.
+  `v5w6x7y8z9a0` (payment_orders); dev head `s2t3u4v5w6x7` → `v5w6x7y8z9a0`; all three tables
+  verified with psql (not just `alembic current`). Snapshot `/root/digitax-pre-pc-20260716-182423.sql.gz`;
+  postgres container untouched. Dev world reseeded. NEW backend module `app/modules/billing/`.
+  **New env (MUST be set on every deploy): `PAYMENT_FRONTEND_BASE_URL`** (see the runbook —
+  unset on a split-origin host means a SUCCESSFUL payment redirects to the API origin and
+  404s; caught locally before it could ship), plus `PAYMENT_GATEWAY=sim`, `SMS_ALLOWLIST=`.
+  Harness **8/8 green LOCAL + DEV**; captcha ON (a captcha-less OTP request still 400s) and
+  the per-IP auth rate limit ON (it fired repeatedly during this session's runs).
+  Live dev proof: order → `/pay/sim/{authority}` → callback 302 → verify → entitlement
+  `activated_via='online_payment'` + event «خرید آنلاین — سفارش …»; re-buy/unpriced/coming-soon
+  all 409; cancel path failed the order and activated nothing. Offer cycle proven on the seeded
+  pending offer: one-tap accept on a payment-kind offer 409s, the offer closes only when the
+  linked order is verified.
   - **T1 pricing** — `/app/plans` («امکانات و قیمت‌ها»): card per module, plain-Persian value
     copy, state, one CTA. Prices come from the new admin-managed `module_prices`
     (`/admin/plans`, which replaced an AdminPlaceholder stub). No price ⇒ «استعلام قیمت»
