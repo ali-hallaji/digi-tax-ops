@@ -1,12 +1,57 @@
 # Ops Progress
 
-Last updated: 2026-07-16
+Last updated: 2026-07-16 (PC)
 
 ## Current Phase
 SEED-12 (12-persona world + provider-agnostic notification core) — DEPLOYED to
 dev.digiinvoice.ir 2026-07-15. Harness 7/7 green LOCAL + DEV (captcha ON both).
 
 ## Completed
+
+- **2026-07-16 — PC: self-serve checkout + unified module-activation flow + activation UX polish.**
+  THREE new migrations: `t3u4v5w6x7y8` (module_prices) → `u4v5w6x7y8z9` (module_offers) →
+  `v5w6x7y8z9a0` (payment_orders); head `s2t3u4v5w6x7` → `v5w6x7y8z9a0`. NEW backend module
+  `app/modules/billing/`. **New env (MUST be set on deploy): `PAYMENT_FRONTEND_BASE_URL`**
+  (see the runbook — unset on a split-origin host means a successful payment redirects to
+  the API origin and 404s), plus `PAYMENT_GATEWAY=sim`, `SMS_ALLOWLIST=`.
+  - **T1 pricing** — `/app/plans` («امکانات و قیمت‌ها»): card per module, plain-Persian value
+    copy, state, one CTA. Prices come from the new admin-managed `module_prices`
+    (`/admin/plans`, which replaced an AdminPlaceholder stub). No price ⇒ «استعلام قیمت»
+    (never a fabricated number, not buyable); `active=false` ⇒ «به‌زودی». Entry points wired:
+    plan card, locked-feature card, AccountMenu — the «تماس بگیرید» dead end is gone.
+  - **T2 checkout** — cart-lite → order summary → «پرداخت» → SIMULATED Zarinpal
+    (`/pay/sim/{authority}`, badged «درگاه آزمایشی») → real callback → verify → entitlements
+    flip via the EXISTING `admin_set_entitlement` with `activated_via='online_payment'` +
+    order ref in the audit note. Receipt `/app/plans/orders/{id}` doubles as the honest
+    failure landing. Gateway is an interface (SimGateway | ZarinpalGateway stub, env-selected):
+    go-live = keys + env, no code change. Server-side: no re-buy of an active module, no buy
+    of an unpriced/inactive one, replayed callback never double-activates.
+  - **T3 offers** — the partner's silent credit-toggle is no longer the default. Partner now
+    picks: «ارسال پیشنهاد» (payment | «تسویه با همکار») — merchant sees a quiet dashboard/plans
+    card and accepts (checkout, or one-tap credit confirm) or rejects. The instant credit path
+    is PRESERVED as an explicit choice. Offer expiry (7d) is read-time — no cron. Admin queue
+    merged into «فروش و فعال‌سازی‌ها» (online orders + offers + credit activations + requests);
+    settle/approve/reject behaviour unchanged.
+  - **T4 polish** — every module row (admin plan tab + partner pills) now shows state AND how
+    it got there (خرید آنلاین / اعتباری همکار / دستی ادمین / پیشنهاد در انتظار).
+  - **T5 SMS safety** — `SMS_ALLOWLIST` honored by BOTH providers: when set, real SMS reaches
+    ONLY those numbers; everything else → console + `status=suppressed` (shown distinctly in
+    admin «آخرین پیامک‌ها»). Runbook now prescribes the 3-stage go-live (console →
+    kavenegar+allowlist(founder) → full) instead of one jump.
+  - **Tests**: 19 new backend (checkout lifecycle incl. cancel + double-buy + price gating +
+    callback idempotency + referred revenue; offer lifecycle incl. expiry; allowlist
+    suppression). Suite 877 passed / 7-failure FakeDBSession baseline (zero new).
+  - **Harness**: NEW spec 08 — P7 walks pricing → checkout → sim-pay → module active on the
+    plan card (~21s), and is SELF-RESTORING (switches the module back off via the admin UI) so
+    the gate is re-runnable rather than single-use.
+  - **New frontend unit test** `src/lib/guide/no-drift.test.ts`: the repo's no-drift rule was
+    convention-only and every failure mode was silent. It asserts unique ids, resolving
+    `related`/`link` targets, registered `helpTourId`s, and live tour anchors. It immediately
+    caught a PRE-EXISTING bug: two scenarios both had id `S7-05`, so «گزارش چک‌ها» was
+    unreachable via `getScenario` — renamed to `S7-07` (no reference behaviour changed).
+  - **Seed**: price list (incl. one «استعلام قیمت» + one «به‌زودی» so both honest states are
+    explorable) + ONE pending offer (خانم محمدی → شرکت بازرگانی دوم, the only granted client
+    with zero entitlements) so the founder sees the merchant side without setting it up.
 
 - **2026-07-16 — HOTFIX: admin activation expires_at 422 (founder hit mid-demo) — DEPLOYED to dev.**
   Deployed SHAs: backend `21221f3` · frontend `53bfda3` (version guard verified live:

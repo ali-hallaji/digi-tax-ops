@@ -389,26 +389,80 @@ docker compose exec -T api python -m app.cli.world_fixtures > docs/persona_login
 The per-persona login guide is `docs/persona_logins.md` (regenerated). Surface it in
 the deploy report so the founder's taste-review is guided.
 
-## Notifications / SMS go-live switch (Kavenegar)
+## Notifications / SMS go-live switch (Kavenegar) — STAGED, allowlist first
 
 SMS is provider-agnostic and OFF (console) by default — dev keeps returning `dev_otp`.
-To turn on real SMS once Kavenegar credentials arrive, **no code change** is needed:
+Turning on real SMS needs **no code change**. Do it in THREE stages, never in one
+jump: the dev database holds real-looking mobiles, and a single careless
+`SMS_PROVIDER=kavenegar` on a box with seeded/real numbers texts strangers.
+
+**The safety valve: `SMS_ALLOWLIST`** (PC-T5). Comma-separated mobiles. While it is
+NON-EMPTY, only those numbers can receive a real SMS; every other recipient is
+logged to the console instead and audited `status=suppressed` (the admin
+«آخرین پیامک‌ها» panel shows suppressed rows distinctly, and still records which
+provider it WOULD have used). Honored by BOTH providers. Empty = no restriction.
 
 ```bash
-# 1. Set env on the server (.env)
+# ── Stage 1 — console (today, and the permanent default for local/dev) ────────
+SMS_PROVIDER=console
+SMS_ALLOWLIST=                      # irrelevant while console; nothing is sent
+
+# ── Stage 2 — real provider, blast radius = the founder's own handset ─────────
 SMS_PROVIDER=kavenegar
 KAVENEGAR_API_KEY=<the key>
-KAVENEGAR_OTP_TEMPLATE=digiotp        # must match the template name in the Kavenegar panel
-# 2. Restart api (env is read at startup)
+KAVENEGAR_OTP_TEMPLATE=digiotp      # must match the template name in the Kavenegar panel
+SMS_ALLOWLIST=09XXXXXXXXX           # the founder's mobile ONLY
 docker compose up -d --no-deps --force-recreate api
-# 3. Send one real OTP and verify the audit trail
-#    - request an OTP for a real handset via the login page
-#    - the SMS should arrive from the digiotp template
-#    - check the admin سلامت سیستم page → «آخرین پیامک‌ها» shows status=sent + a provider_ref
-#    - or: SELECT status, provider, provider_ref FROM notification_log ORDER BY created_at DESC LIMIT 1;
+#   Verify BOTH halves before going further:
+#   a) request an OTP for the ALLOWLISTED handset → SMS arrives; «آخرین پیامک‌ها»
+#      shows status=sent + a provider_ref.
+#   b) request an OTP for any OTHER number → NO SMS arrives; the row reads
+#      status=suppressed, provider=kavenegar. This is the proof the valve works.
+#      SELECT status, provider FROM notification_log ORDER BY created_at DESC LIMIT 5;
+
+# ── Stage 3 — full send (only after stage 2 is proven on this host) ───────────
+SMS_ALLOWLIST=                      # empty ⇒ everyone
+docker compose up -d --no-deps --force-recreate api
 ```
-Rollback: set `SMS_PROVIDER=console` and restart api. Reminders-by-SMS is still
-«به‌زودی» — only the OTP path is wired through the core today.
+
+Rollback at any stage: `SMS_PROVIDER=console` (or re-populate `SMS_ALLOWLIST`) and
+restart api. Reminders-by-SMS is still «به‌زودی» — only the OTP path is wired
+through the core today.
+
+## Payments / checkout go-live switch (Zarinpal)
+
+Checkout ships on a SIMULATED gateway shaped exactly like Zarinpal
+(`request → redirect → callback → verify`), so going live is config, not a
+refactor. The sim page is badged «درگاه آزمایشی» and moves no money.
+
+```bash
+# Default everywhere until real keys exist:
+PAYMENT_GATEWAY=sim
+
+# Go-live:
+PAYMENT_GATEWAY=zarinpal
+ZARINPAL_MERCHANT_ID=<merchant id>
+ZARINPAL_BASE_URL=https://api.zarinpal.com
+docker compose up -d --no-deps --force-recreate api
+```
+
+**`PAYMENT_FRONTEND_BASE_URL` is required wherever the frontend is not
+same-origin with the API.** The gateway callback 302s the merchant to
+`{PAYMENT_FRONTEND_BASE_URL}/app/plans/orders/{id}`; if it is unset, the redirect
+is derived from the request and — on a split-origin setup like local dev (Vite
+:8080 vs API :8000) — lands on the API origin and 404s AFTER a successful
+payment. Set it explicitly:
+
+```bash
+# local dev
+PAYMENT_FRONTEND_BASE_URL=http://localhost:8080
+# dev server (same-origin behind nginx — set it anyway, don't rely on derivation)
+PAYMENT_FRONTEND_BASE_URL=https://dev.digiinvoice.ir
+```
+
+Prices are admin-managed at `/admin/plans` («قیمت ماژول‌ها»), NOT in env. A module
+with no published price shows «استعلام قیمت» to the merchant and cannot be bought
+online — that is the honest default, not a bug.
 
 ## Rollback Notes
 
