@@ -1,12 +1,34 @@
 # Ops Progress
 
-Last updated: 2026-07-15
+Last updated: 2026-07-16
 
 ## Current Phase
 SEED-12 (12-persona world + provider-agnostic notification core) — DEPLOYED to
 dev.digiinvoice.ir 2026-07-15. Harness 7/7 green LOCAL + DEV (captcha ON both).
 
 ## Completed
+
+- **2026-07-16 — HOTFIX: admin activation expires_at 422 (founder hit mid-demo) — DEPLOYED to dev.**
+  Deployed SHAs: backend `21221f3` · frontend `53bfda3` (version guard verified live:
+  `/health/version` git_sha + `/version.json` sha). NO migrations — head stays `s2t3u4v5w6x7`;
+  postgres container untouched. Root cause: the Jalali picker submits date-only strings
+  ("2026-08-22") but both admin activation schemas typed `expires_at: datetime` → Pydantic
+  `datetime_parsing` 422. Fix at the contract: shared `EndOfDayDateTime`
+  (backend `app/core/dates.py`) accepts date OR datetime; a bare date normalizes to
+  23:59:59 ("expires 1405/06/01" = through that day); tz-aware input → naive UTC. Applied to
+  `EntitlementToggleRequest` (plan tab) + `ModuleApproveRequest` (module-request approve) —
+  audit found no other datetime request fields anywhere in API routes (payout periods and
+  tax-calendar already use plain `date`). Frontend: date-parsing 422s now map to a
+  field-specific Persian message («تاریخ انقضا تاریخ معتبری نیست.»); activation dialog polish
+  (expiry field first, «خالی = فعال‌سازی دائمی؛ … تا پایان همان روز» helper, role=alert error);
+  three moadian onError handlers that rendered raw backend `detail` routed through the
+  Persian helper. Guards: 7 schema unit tests; harness admin spec now activates a module WITH
+  a Jalali expiry through the real dialog (asserts توست + فعال pill + انقضا line, then
+  deactivates to restore the world). Suite 813 passed / 7-failure baseline (zero new).
+  Harness 7/7 green LOCAL; live dev proof: date-only PUT → 200 `expires_at
+  2026-08-22T23:59:59`, garbage → 422, reverted. Captcha + rate-limit untouched ON.
+  NOTE: `smoke_test.sh` OTP step cannot pass with captcha ON (it doesn't solve PoW) — auth
+  verified via PoW curl + harness logins instead; CORS step needs `SMOKE_CORS_ORIGIN`.
 
 - **2026-07-15 — SEED-12: 12-persona world + SMS-ready notification core — DEPLOYED to dev.**
   Deployed SHAs: backend `23fd537` · frontend `8806708` · ops `5092f7d` (postgres ID
