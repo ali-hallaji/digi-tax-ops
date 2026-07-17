@@ -82,3 +82,43 @@ normalized off. Mock mode is unchanged (offline; harness stays green).
   port's `encrypter.py`).
 - Cosmetic: `name_trade` came back as the memory id — verify the `GET_FISCAL_INFORMATION`
   response field names and refine the mapping (does not affect the connection test).
+
+---
+
+## MD-2 — real invoice submission (added 2026-07-17)
+
+Wired the doc-exact MD-1 normalizer into a live send over self-tsp. Self-tested to a
+green mock end-to-end (نیک‌تجارت persona); the founder runs the real tiny invoice.
+
+**Pipeline** (`app/modules/moadian/application/send_service.py`):
+`build_submission_payload` (normalizer → real 22-char `taxid`, validated) → inner
+`dataSignature` = `sign_selftsp(normalize(data))` (raw RSA-PKCS1v15-SHA256, **no cert**) →
+`encrypt_packets` (AES-256-GCM + the SDK's XOR pre-step + RSA-OAEP-SHA256 key-wrap — port
+of `DefaultEncrypter`) → POST `INVOICE.V01` to `…/self-tsp/async/{priority}` (bulk ≤1000,
+unique uid/traceId) → per-packet `{uid, referenceNumber}` → `refresh_submission` inquiry →
+**org-stated status only** (SUCCESS→accepted, FAILED→rejected, IN_PROGRESS→pending; never
+synthesized).
+
+**Mappings** (each traced to RC_IITP):
+- `setm`/`cap`/`insp` — DERIVED from the `payments` ledger (no settlement field on the
+  invoice): paid=0→نسیه(2), paid≥total→نقدی(1), else نقدی/نسیه(3) with cap=paid,
+  insp=total−paid (جدول ۲۴؛ tbill≥cap+insp by construction، جدول ۲۰ ردیف ۲).
+- `pmt` — جدول ۵۷ (چک۱ نقد۳ POS۴ انتقال۷؛ unknown→سایر۸).
+- `ins`/`irtaxid` — جدول ۸: اصلاحی(۲)/ابطالی(۳)/برگشتی(۴) carry the accepted original's
+  taxid; اصلی must not. Export/waybill/bourse forbid برگشتی (جدول ۱۰ ردیف ۲).
+- Σ rules (جدول ۱۵/۱۷/۱۸/۲۰) asserted in tests against the SDK PDF §1-4 sample.
+
+**Patterns** — all 14 type-1 + 4 type-2 enumerated with required-field sets
+(`PATTERN_REQUIREMENTS`, جدول ۹/۱۰/۱۱); only الگوی اول (نوع اول) is mapped — the only shape
+our invoice data produces. The rest raise an honest "not implemented" (no silent wrong
+payload).
+
+**Gating** — merchant routes require the `moadian_submission` entitlement (پایلوت/«به‌زودی»
+for non-pilot) AND an `approved` connection profile; storefront stays «به‌زودی».
+`moadian_api_log` records every packet (no key/payload).
+
+**Endpoints**: `POST /admin/moadian/invoices/{id}/submit`, `…/submit-bulk`,
+`…/{id}/lifecycle`, `POST /admin/moadian/submissions/{id}/refresh`,
+`GET /admin/moadian/submissions`.
+
+**Not done until the founder confirms** a real invoice reference lands ACCEPTED in کارپوشه.
