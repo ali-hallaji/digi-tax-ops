@@ -1,8 +1,33 @@
 # Ops Progress
 
-Last updated: 2026-07-17 (DIBATAK founder persona + protected Moadian key)
+Last updated: 2026-07-17 (Moadian SELF-TSP no-cert transport — proven live)
 
 ## Current Phase
+**Moadian SELF-TSP (no-certificate) transport — DEPLOYED to dev.digiinvoice.ir
+2026-07-17.** SHAs: backend `b2c8e4b` · ops `3032654` (frontend unchanged). No migration.
+Dev guard unchanged: `MOADIAN_MODE=mock`, transport default `selftsp`, proxy unset, key
+empty. Harness **9/9 green** local; dev 9/9 (spec 05 admin one cold-context retry, passes
+warm — the documented dev flake, unrelated). Captcha (Altcha) ON.
+- **Root correction**: the `requestsmanager/api/v2` path validates the x5c cert chain and
+  rejects a direct taxpayer's self-signed cert (`CERTIFICATE_INVALID_ISSUER`, proven live
+  in the prior task). The **SELF-TSP** path (`req/api/self-tsp`, packet protocol)
+  authenticates against the **registered public key** with a raw RSA-PKCS1v15-SHA256
+  signature — **no JWS, no certificate**. New `transport_selftsp.py`, mirrored byte-for-byte
+  from the intamedia SDK PDF + the arjavand port (every wire decision annotated). LiveGateway
+  is mode-aware: `MOADIAN_TRANSPORT=selftsp` (new default) | `requestsmanager` (kept intact
+  behind the flag for a future CA-cert MODE-B).
+- **PROVEN LIVE** against the founder's real registered key (tenant 0618eb31): server-
+  information 200 + `GET_TOKEN` GRANTED (JWT taxpayerId 14008430838). Memory-id resolved
+  empirically — A41XRD granted, A3ZA7X rejected (code 4011, different key) → A41XRD is the
+  registered id (already stored, no change). Connection test **ok=true**, fiscal ACTIVE,
+  economic/national 14008430838. `GET_FISCAL_INFORMATION` returns the memory id in
+  `nameTrade` for this path, so that field is no longer surfaced as a trade name.
+- **module_prices** repopulated with the canonical price list (base 5M · accountant 2.5M ·
+  expense-breakdown 2M · inventory 3M · team 1M · moadian 1.5M «به‌زودی»/inactive ·
+  multi_business 0/رایگان) — targeted, no reseed, founder key untouched. +17 tests; full
+  suite zero-new. Two SDK PDFs + a `selftsp_transport.md` digest added to `docs/moadian/`.
+
+## Prior Phase
 **DIBATAK founder persona + protected Moadian key — DEPLOYED to dev.digiinvoice.ir
 2026-07-17.** SHAs: backend `90c756f` · ops `dba0e50` (frontend unchanged). No migration.
 Guard unchanged (`MOADIAN_MODE=mock`, proxy unset, key empty). Harness **9/9 green on dev**.
