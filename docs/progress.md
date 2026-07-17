@@ -5,8 +5,13 @@ Last updated: 2026-07-17 (MD-1 + UX-fix pack)
 ## Current Phase
 MD-1 (Moadian Stage D — crypto core + «کارتابل مودیان» wizard) + UX-fix pack
 (F1 notifications/orders · F2 accountant-view+partner/referral · F3 per-page tours)
-+ **economic-code three-format fix** + **base-plan pricing model**. Founder visually
-verified the MD-1/UX pack; deploying to dev with MOADIAN_MODE=mock. MD-2 next.
++ **economic-code three-format fix** + **base-plan pricing model** — **DEPLOYED to
+dev.digiinvoice.ir 2026-07-17.** SHAs: backend `8ddab61` · frontend `0217b9e` · ops
+`e2e6f90`. Guard verified LIVE: `MOADIAN_MODE=mock`, alembic head `x7y8z9a0b1c2`,
+notification + seller-economic-id routes + `base_plan` feature all present. Dev world
+reseeded (base_plan grandfathered, founder prices). Pre-deploy DB snapshot
+`/root/digitax-pre-md1-20260717-001903.sql.gz`. Compose v2-only (v1 STOP wrapper
+present). MD-2 next.
 
 ## Completed
 
