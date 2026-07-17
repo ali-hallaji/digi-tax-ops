@@ -21,3 +21,7 @@ claude_partial_*.diff
 
 # Local screenshot-sweep QA output (workspace-root level, not repo content)
 qa-screens/
+
+# Pre-reseed DB snapshots taken automatically by scripts/reset_world.sh
+.reseed-snapshots/
+*.sql.gz

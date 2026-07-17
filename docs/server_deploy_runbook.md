@@ -405,22 +405,31 @@ docker compose exec -T api python -m app.cli.world_fixtures --markdown > docs/pe
 
 ## Reset the verification world (dev) — SEED-12
 
-The 12-persona world (`app.cli.seed_realistic_world`) is the canonical QA data.
+The persona world (`app.cli.seed_realistic_world`) is the canonical QA data.
 Locally the founder runs `make reset-world` (or `bash scripts/reset_world.sh`). On
-dev/staging, **snapshot FIRST, always** (a reset drops the schema):
+dev/staging, use the SAME script — it now **snapshots automatically before the wipe**
+and **guards real Moadian keys** (see below), so the old hand-rolled snapshot line is
+no longer needed:
 
 ```bash
-# 1. Snapshot (mandatory)
-TS=$(date +%Y%m%d-%H%M%S)
-docker compose exec -T postgres pg_dump -U digitax -d digitax | gzip > /root/digitax-pre-reset-$TS.sql.gz
-# 2. Wipe → migrate → seed → regenerate the persona docs
-docker compose exec -T postgres psql -U digitax -d digitax -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-docker compose exec -T api alembic upgrade head
-docker compose exec -T api python -m app.cli.seed_realistic_world
-docker compose exec -T api python -m app.cli.world_fixtures > docs/persona_logins-check.json   # optional verify
+# Point the auto-snapshot at /root, then run the guarded reset.
+RESET_WORLD_SNAPSHOT_DIR=/root bash scripts/reset_world.sh
 ```
-The per-persona login guide is `docs/persona_logins.md` (regenerated). Surface it in
-the deploy report so the founder's taste-review is guided.
+
+What the script does, in order: (0) refuse to wipe if any `moadian_tenant_profiles`
+row holds a real encrypted private key — the seed never stores one, so any key blob is
+real, runtime-created material it cannot recreate; it lists the affected businesses and
+exits, and only `--force` overrides; (1) `pg_dump | gzip` snapshot to
+`$RESET_WORLD_SNAPSHOT_DIR` (default `./.reseed-snapshots/`), path printed; (2) wipe →
+`alembic upgrade head` → seed → regenerate `persona_logins.md` + `persona_fixtures.json`
++ the README table.
+
+- **Dev has no real keys** (MODE=mock, personas only), so the guard passes and the reset
+  proceeds without `--force`. If it ever reports a key, STOP — a real merchant connected
+  on that box; do not `--force` without confirming the key is disposable (it is destroyed
+  and only the snapshot recovers it).
+- The per-persona login guide is `docs/persona_logins.md` (regenerated). Surface it in
+  the deploy report so the founder's taste-review is guided.
 
 ## Notifications / SMS go-live switch (Kavenegar) — STAGED, allowlist first
 

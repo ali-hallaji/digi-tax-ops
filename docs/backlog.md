@@ -99,3 +99,21 @@ Trade-offs: latency, reliability of the egress, where per-tenant keys live, and 
 the proxy host is trusted with TLS-terminated traffic (it is NOT — the Moadian TLS is
 end-to-end to tp.tax.gov.ir; the proxy only forwards). Decide before MD-2 real submission
 goes live. `MOADIAN_PROXY_*` is currently for local/testing only.
+
+## Moadian private-key durability discipline (prod) — DOCUMENTED (2026-07-17)
+
+A wipe-first reseed (`reset_world.sh`) once destroyed a real, runtime-created Moadian
+private key — the seed never stores one, so any `moadian_tenant_profiles.encrypted_private_key_blob`
+is genuine merchant key material. Now guarded LOCAL/dev: reset-world snapshots before the
+wipe and refuses to proceed if a real key exists (lists them; `--force` overrides).
+
+For **production** the concern is different — reseeds never run there — but key durability
+still needs discipline, to document before real submission (MD-2) goes live:
+- Backups must include `moadian_tenant_profiles` (the encrypted blobs) AND the Fernet
+  `MOADIAN_CRED_KEY`; a blob without its key is unrecoverable. Rotating `MOADIAN_CRED_KEY`
+  (or falling back to `SECRET_KEY`) orphans every stored key — treat it as key-custody, not
+  ordinary config.
+- No prod migration/maintenance path may `DROP`/truncate `moadian_tenant_profiles`. Any
+  destructive op there needs a pre-op snapshot + explicit sign-off, mirroring the reseed guard.
+- Consider a "re-import your key" self-serve recovery in the cockpit for the case where a
+  key is lost but the public key is still registered in the merchant's کارپوشه.
