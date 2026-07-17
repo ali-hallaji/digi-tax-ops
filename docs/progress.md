@@ -1,12 +1,81 @@
 # Ops Progress
 
-Last updated: 2026-07-16 (PC)
+Last updated: 2026-07-17 (MD-1 + UX-fix pack)
 
 ## Current Phase
-SEED-12 (12-persona world + provider-agnostic notification core) — DEPLOYED to
-dev.digiinvoice.ir 2026-07-15. Harness 7/7 green LOCAL + DEV (captcha ON both).
+MD-1 (Moadian Stage D — crypto core + «کارتابل مودیان» wizard) + UX-fix pack
+(F1 notifications/orders · F2 accountant-view+partner/referral · F3 per-page tours)
++ **economic-code three-format fix** + **base-plan pricing model**. Founder visually
+verified the MD-1/UX pack; deploying to dev with MOADIAN_MODE=mock. MD-2 next.
 
 ## Completed
+
+- **2026-07-17 — Economic-code three-format validation + base-plan pricing (on top of
+  MD-1 + UX pack).**
+  - **Fix 1 (economic code)** — the «شماره اقتصادی فروشنده» field (and taxpayer profile,
+    business settings, customers) now accepts the THREE real-world formats via a central
+    `validate_economic_code(value, person_type?)` (11=شناسه ملی length-only · 10=کد ملی
+    mod-11 · 12=legacy) — no local regexes. The old 12-only rule was enforced in FOUR
+    places (frontend `useIdentityField`, taxpayer schema, taxpayer service save+submit,
+    tenant service) — all migrated. Normalizer tins/tinb pass through verbatim (no
+    pad/truncate). Helper copy «شناسه ملی (حقوقی)، کد ملی (حقیقی) یا کد اقتصادی قدیمی» +
+    friendly Persian error listing the three. Guide S8-14 updated. Verified end-to-end
+    (HTTP): founder's `14008430838` → 200 «ذخیره شد»; 9-digit → 400 friendly. 12 backend +
+    7 frontend tests.
+  - **Pricing (base-plan model)** — new `base_plan` feature = the 5M/mo per-business
+    subscription, modeled as an entitlement with a monthly `expires_at` (bought via the
+    existing checkout; no recurring engine). Seed prices (verified LIVE): base_plan 5M,
+    accountant_view 2.5M, expense_breakdown 2M, inventory_lite 3M, team_members 1M,
+    moadian_submission 1.5M **inactive/«به‌زودی»** (submission still mock; admin/partner
+    may pilot-activate), multi_business **0/رایگان**. Every existing tenant grandfathered
+    (base_plan granted in the seed; NEW businesses soft-lock). Plans page shows base_plan
+    as the headline + «رایگان» add-ons + free-partner-access copy; dashboard soft-lock
+    banner «این کسب‌وکار پلن پایهٔ خودش را نیاز دارد» (grandfathered businesses never see
+    it). Pricing view fixed to keep a 0 price as «رایگان» (was collapsing to «استعلام
+    قیمت»). **Deferred (flagged):** switcher per-business «در انتظار فعال‌سازی» tag, the
+    universal route-level gate (currently dashboard-level), renewal-extension on early
+    re-purchase. pytest 913/7-baseline (0 new) + 1 base_plan-expiry test.
+
+- **2026-07-17 — MD-1 (Moadian crypto core + 4-step cockpit) + UX-fix pack.**
+  - **MD-1 crypto** — real JWS/JWE engine (`app/modules/moadian/application/crypto.py`,
+    jwcrypto): auth JWS RS256 + x5c self-signed cert + `sigT` UTC + `crit:["sigT"]`
+    (registered via `header_registry`); invoice JWS→JWE (RSA-OAEP-256 + A256GCM, kid from
+    server-information); token-per-request. `taxid.py` — 22-char generator (6 memory-id +
+    5 hex days-since-epoch + 10 hex serial + 1 Verhoeff over a DECIMAL control string);
+    all 5 doc vectors reproduce byte-for-value, cross-checked vs 4 community Moadian
+    clients (arjavand/Snapp-Market-Pro/Torabi-srh/kiankamgar — no disagreement).
+    `gateway.py` — `MOADIAN_MODE=mock|live` (mock exercises the crypto offline);
+    `moadian_api_log` table («سوابق ارتباط»). Normalizer type1/pattern1 emits numeric
+    amounts + doc-example keys. 21 MD-1 tests pass.
+  - **Cockpit reshape** — `/app/moadian` is now the founder's exact 4-step wizard
+    (۱ ساخت/ورود کلید [MODE A default: generated keypair] → ۲ دانلود کلید عمومی + آموزش
+    کارپوشه → ۳ شناسهٔ حافظهٔ مالیاتی → ۴ آزمایش اتصال → «فعال»). MODE B (own cert)
+    secondary; **no «شرکت معتمد» wording anywhere**. Honest note: real submission ships
+    with official invoices later. Screenshot proof in `qa-screens/harness-*/p2-06-*`.
+  - **F1** — in-app notification inbox as a READ-MODEL over existing tables (offers /
+    paid orders / entitlement events / expiring entitlements); watermark
+    `tenants.notifications_read_at` for unread + mark-read (NO push infra). New routes
+    `GET|POST /businesses/{id}/notifications[/mark-read]`; header bell + unread badge +
+    account-menu «اعلان‌ها»/«تراکنش‌ها و خریدها»; orders list moved to `/app/plans/orders`.
+    Live-verified: GET 200 → 2 real items, mark-read → unread 0. 4 inbox integration tests.
+  - **F2** — «نمای حسابدار» manual toggle retired (visibility follows the
+    `accountant_view` entitlement alone; read-only status stays in the plan card);
+    «کد معرف» + «کد همکار» merged into one «همکار و معرف» card with two explained sections.
+  - **F3** — per-page mini-tours added for orders / notifications / checkout / accounts /
+    returns (+ moadian from MD-1); no-drift test 7/7 (every helpTourId registered, every
+    anchor present).
+  - **Retire list** — deleted orphan `mock/tax-status.ts`; relabeled the admin
+    taxpayer-profile queue «پروفایل مودیان»→«پروفایل مالیاتی» (the real Moadian queue keeps
+    its name); removed the dead `moadianApproved` gate; taxpayer-profile «در حال توسعه» card
+    now links to the live cockpit. Guide S8-14 rewritten around the wizard; school lesson
+    L23 «اتصال به سامانهٔ مودیان قدم‌به‌قدم»; two merchant whats-new entries.
+  - **Migrations** — one new: `x7y8z9a0b1c2` (tenants.notifications_read_at), applied +
+    verified with psql; dev head would advance `w6x7y8z9a0b1` → `x7y8z9a0b1c2`.
+  - **Gates** — pytest **902 pass / 7 baseline** (FakeDBSession, unchanged) = zero new
+    failures; ruff+black clean; typecheck+build clean; api rebuilt `--no-cache`, F1 live
+    on the local stack, `MOADIAN_MODE` unset→mock, migration baked in the image.
+    Harness cockpit spec (`09-p2-moadian`) green LOCAL. **Full 8/9-persona harness + push
+    pending founder sign-off.**
 
 - **2026-07-16 — PC: self-serve checkout + unified module-activation flow + activation UX polish
   — DEPLOYED to dev.** Deployed SHAs: backend `683a146` · frontend `aafb678` · ops `1cb4b2e`
