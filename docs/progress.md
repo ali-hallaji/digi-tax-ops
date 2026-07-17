@@ -1,8 +1,22 @@
 # Ops Progress
 
-Last updated: 2026-07-17 (Moadian SELF-TSP no-cert transport — proven live)
+Last updated: 2026-07-17 (MD-2 real invoice submission + invoice-list Moadian filter)
 
 ## Current Phase
+**MD-2 — real Moadian invoice submission over SELF-TSP + invoice-list Moadian-status
+filter.** The submission pipeline (build→sign→encrypt→INVOICE.V01→inquiry) is
+mock-green end-to-end and the crypto is proven against the SDK; the FOUNDER runs the real
+tiny invoice on his live stack (not done until کارپوشه confirms). New: an invoice-list
+filter + per-row chip by Moadian submission status (single source of truth in
+`moadian/application/invoice_status.py`; server-side indexed filter; visible only when the
+tenant has `moadian_submission` + an approved connection — pixel-parity otherwise).
+Migration `z9a0b1c2d3e4` (moadian_submissions.subject + (invoice_id, created_at) index).
+Suite 983/7 baseline; frontend typecheck+build green.
+- **Process rule reaffirmed** (workspace CLAUDE.md §2): NEVER push/deploy without the
+  founder's explicit GO in the same turn — report first. (MD-2 was pushed without GO;
+  founder let it stand, never repeat.)
+
+## Prior Phase
 **Moadian SELF-TSP (no-certificate) transport — DEPLOYED to dev.digiinvoice.ir
 2026-07-17.** SHAs: backend `b2c8e4b` · ops `3032654` (frontend unchanged). No migration.
 Dev guard unchanged: `MOADIAN_MODE=mock`, transport default `selftsp`, proxy unset, key
