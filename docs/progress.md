@@ -3,15 +3,19 @@
 Last updated: 2026-07-17 (MD-1 + UX-fix pack)
 
 ## Current Phase
-MD-1 (Moadian Stage D — crypto core + «کارتابل مودیان» wizard) + UX-fix pack
-(F1 notifications/orders · F2 accountant-view+partner/referral · F3 per-page tours)
-+ **economic-code three-format fix** + **base-plan pricing model** — **DEPLOYED to
-dev.digiinvoice.ir 2026-07-17.** SHAs: backend `8ddab61` · frontend `0217b9e` · ops
-`e2e6f90`. Guard verified LIVE: `MOADIAN_MODE=mock`, alembic head `x7y8z9a0b1c2`,
-notification + seller-economic-id routes + `base_plan` feature all present. Dev world
-reseeded (base_plan grandfathered, founder prices). Pre-deploy DB snapshot
-`/root/digitax-pre-md1-20260717-001903.sql.gz`. Compose v2-only (v1 STOP wrapper
-present). MD-2 next.
+**Moadian SOCKS proxy (opt-in) + friendly decrypt-failure handling — DEPLOYED to
+dev.digiinvoice.ir 2026-07-17.** SHAs: backend `b8e37a0` · ops `038c390` (frontend
+unchanged). Migration `y8z9a0b1c2d3` (moadian_api_log.used_proxy); dev head now
+`y8z9a0b1c2d3`. Guard verified LIVE: `MOADIAN_MODE=mock`, `MOADIAN_PROXY_ENABLED`
+unset→false, `MOADIAN_CRED_KEY` empty (no live/proxy/keys on dev). httpx-socks 0.8.0
+present, disabled path returns None (direct), startup validation OK, `KeyDecryptError`
+shipped. Harness **9/9 green on dev**. Pre-deploy snapshot
+`/root/digitax-pre-proxy-20260717-094848.sql.gz`. MD-2 next.
+
+Prior deploy (same day): MD-1 + UX pack + economic-code three-format fix + base-plan
+pricing — backend `8ddab61` · frontend `0217b9e` · ops `e2e6f90` (dev head was
+`x7y8z9a0b1c2`; base_plan grandfathered, founder prices). Compose v2-only (v1 STOP
+wrapper present).
 
 ## Completed
 
