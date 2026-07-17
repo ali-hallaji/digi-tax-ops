@@ -26,6 +26,11 @@ docker compose exec -T api python -m app.cli.seed_realistic_world
 # 3. Regenerate the single-source persona artifacts (docs read by humans + harness).
 docker compose exec -T api python -m app.cli.world_fixtures > docs/persona_fixtures.json
 docker compose exec -T api python -m app.cli.world_fixtures --markdown > docs/persona_logins.md
+# Refresh the README «🔑 ورود به دنیای دمو» login table in place (mount the repo so
+# the container can rewrite README.md between its PERSONA-LOGINS markers).
+docker compose run --rm -v "$(pwd)":/ops -T api \
+    python -m app.cli.world_fixtures --readme /ops/README.md || \
+    echo "  (README refresh skipped — run world_fixtures --readme README.md manually)"
 
 # 4. Print the login table.
 echo
