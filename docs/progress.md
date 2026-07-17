@@ -1,8 +1,33 @@
 # Ops Progress
 
-Last updated: 2026-07-17 (persona frozen contract + data completeness)
+Last updated: 2026-07-17 (Moadian live base-URL fix + reseed key-guard)
 
 ## Current Phase
+**Moadian live gateway base-URL fix + reseed key-preservation guard — DEPLOYED to
+dev.digiinvoice.ir 2026-07-17.** SHAs: backend `8056728` · ops `36eadeb` (frontend
+unchanged). No migration. Dev guard unchanged: `MOADIAN_MODE=mock`, proxy unset,
+`MOADIAN_PRIVATE_KEY_PEM` empty (KEYLEN=0). Harness **9/9 green on dev**; pre-reseed
+snapshot `/root/digitax-pre-reseed-20260717-114532.sql.gz`.
+- **Root cause of the founder's live `connection_failed`** (diagnosed by instrumentation,
+  not guessing): the local `.env` set `MOADIAN_BASE_URL=…/requestsmanager/api/v2`, but the
+  code appends `/api/v2/nonce`, so every call hit a doubled `…/api/v2/api/v2/nonce` → the
+  org's gateway 401'd it → the (stale-image) old mapper collapsed that to generic
+  `connection_failed`. Proven: doubled URL → 401, corrected URL → 200 + real nonce.
+- **Fix**: `LiveGateway.__init__` normalizes the base URL (strips a trailing `/api/vN`,
+  warns), so both base forms resolve correctly; the local `.env` was also corrected to the
+  documented `…/requestsmanager`. +4 unit tests. Re-verified via the real gateway: nonce
+  now 200; a throwaway (unregistered) key reaches `server-information` and returns the
+  precise `auth_rejected`, not the generic error.
+- **Reseed key-guard** (`reset_world.sh`): a wipe-first reseed had destroyed the founder's
+  real Moadian private key. The seed never stores a key, so any `encrypted_private_key_blob`
+  is genuine merchant material. reset_world now snapshots before the wipe (path printed) and
+  REFUSES to proceed if any real key exists (lists them; `--force` overrides). Runbook +
+  backlog (prod key-durability discipline) updated; `.reseed-snapshots/` gitignored.
+- **⚠ Founder data-loss note**: tenant `1634d015-…` + all stored Moadian keys are gone from
+  the local DB (wiped before the guard existed; no local snapshot predates it). A green live
+  connection test now needs the founder to re-import/re-generate a key registered in his
+  کارپوشه. Backend suite 947 pass / 7 baseline (zero new); ruff+black clean.
+
 **Persona table — FROZEN CONTRACT + data completeness — DEPLOYED to
 dev.digiinvoice.ir 2026-07-17.** SHAs: backend `50532e7` · ops `31b799d` (frontend
 unchanged). No migration (seed-data only; dev head stays `y8z9a0b1c2d3`). The seeded
