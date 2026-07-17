@@ -416,18 +416,21 @@ no longer needed:
 RESET_WORLD_SNAPSHOT_DIR=/root bash scripts/reset_world.sh
 ```
 
-What the script does, in order: (0) refuse to wipe if any `moadian_tenant_profiles`
-row holds a real encrypted private key — the seed never stores one, so any key blob is
-real, runtime-created material it cannot recreate; it lists the affected businesses and
-exits, and only `--force` overrides; (1) `pg_dump | gzip` snapshot to
-`$RESET_WORLD_SNAPSHOT_DIR` (default `./.reseed-snapshots/`), path printed; (2) wipe →
-`alembic upgrade head` → seed → regenerate `persona_logins.md` + `persona_fixtures.json`
-+ the README table.
+What the script does, in order (the seed never stores a Moadian key, so any
+`encrypted_private_key_blob` is real, runtime-created material it cannot recreate):
+(0a) **دیباتک (`09120000000`) is PROTECTED** — its key is captured to a holding schema
+before the wipe and restored onto the freshly-seeded tenant afterward («🔒 … PRESERVED»),
+so the founder's registered key survives every reseed with no `--force`;
+(0b) a real key on ANY OTHER tenant **blocks** the wipe — it lists the businesses and
+exits 1; only `--force` overrides (and `--force` wipes EVERYTHING, including دیباتک's key);
+(1) `pg_dump | gzip` snapshot to `$RESET_WORLD_SNAPSHOT_DIR` (default `./.reseed-snapshots/`),
+path printed; (2) wipe → `alembic upgrade head` → seed → regenerate `persona_logins.md` +
+`persona_fixtures.json` + the README table.
 
-- **Dev has no real keys** (MODE=mock, personas only), so the guard passes and the reset
-  proceeds without `--force`. If it ever reports a key, STOP — a real merchant connected
-  on that box; do not `--force` without confirming the key is disposable (it is destroyed
-  and only the snapshot recovers it).
+- **Dev has no real keys** (MODE=mock, personas only), so the reset proceeds without
+  `--force`. If it reports an OTHER-tenant key, STOP — a real merchant connected on that
+  box; do not `--force` without confirming the key is disposable (it is destroyed and only
+  the snapshot recovers it). دیباتک's key, if present, is always auto-preserved.
 - The per-persona login guide is `docs/persona_logins.md` (regenerated). Surface it in
   the deploy report so the founder's taste-review is guided.
 
