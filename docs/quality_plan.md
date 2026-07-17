@@ -166,6 +166,20 @@ hands over the official docs.
 - **Depends on.** Non-blocking today; schedule before high-volume real use. Logged from
   the MD-3 نوع دوم live test.
 
+### C-abtal. ابطالی/اصلاحی lifecycle packet is over-populated  ·  Effort M  ·  order (Stage D)
+- **Scope.** First live ابطال (cancellation, ins=3) of two نوع دوم invoices **succeeded**
+  (org SUCCESS/accepted) — but the org returned ~20 **non-blocking** warnings
+  (`14004/14007/14022–14059`) reporting that essentially every line, total, and
+  type/pattern field is «خارج از الگو» for an ابطالی. Root cause: `submit_lifecycle`
+  reuses the full `submit_invoices` build and re-sends the entire invoice body+totals
+  with `ins=3`, but an ابطالی صورتحساب's pattern expects a **minimal packet** keyed on the
+  reference taxid (`irtaxid`), not a full re-statement of the original. Verified live.
+- **Acceptance.** ابطالی/اصلاحی packets carry only the fields their pattern defines (per
+  RC_IITP §5 + جدول ۸); a live cancellation returns with no «خارج از الگو» warnings.
+- **Founder input.** Confirm the exact ابطالی/اصلاحی/برگشتی field sets from the official
+  doc before trimming (never guess which fields to drop).
+- **Depends on.** Part of Moadian Stage D (lifecycles). Non-blocking today.
+
 ### C12. Payroll module (مالیات حقوق)  ·  Effort XL  ·  order 12
 - **Scope.** A standalone payroll-tax module using the yearly `tax_tables` pattern:
   employees, monthly payroll, bracket-based withholding, and the list/return output.
