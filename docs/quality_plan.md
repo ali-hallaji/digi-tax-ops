@@ -149,6 +149,23 @@ hands over the official docs.
   subject code.** This is the gate; the item cannot start without them.
 - **Depends on.** MD-2 transport (done); A2 for the tax split.
 
+### C-serial. Moadian invoice serial (`inno`) alignment  ·  Effort M  ·  order (after go-live smoke)
+- **Scope.** The org returns a **non-blocking** warning `1300501` («سریال صورتحساب با
+  اطلاعات سامانه منطبق نیست») on every submission. Root cause (verified live): our
+  `_next_inno` uses **epoch-seconds** as the fiscal-memory internal serial, but the
+  taxid spec (§7-1) defines `inno` as the fiscal memory's **sequential internal
+  counter** («سریال صورتحساب داخلی حافظه مالیاتی»), which the org expects to increment
+  monotonically. Epoch-seconds are unique+monotonic (so invoices are ACCEPTED) but never
+  match the org's expected next-serial, hence the warning.
+- **Acceptance.** A gap-free, per-fiscal-memory sequential `inno` whose values match the
+  org's expected sequence; the `1300501` warning disappears on a live submission.
+- **Founder input.** Confirm the expected starting point / semantics — دیباتک has already
+  registered invoices with epoch-seconds serials, so the org's "last serial" is now a
+  large number; the counter must resume correctly from there (do not guess — validate
+  against the org's inquiry state before switching).
+- **Depends on.** Non-blocking today; schedule before high-volume real use. Logged from
+  the MD-3 نوع دوم live test.
+
 ### C12. Payroll module (مالیات حقوق)  ·  Effort XL  ·  order 12
 - **Scope.** A standalone payroll-tax module using the yearly `tax_tables` pattern:
   employees, monthly payroll, bracket-based withholding, and the list/return output.
