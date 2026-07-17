@@ -1,8 +1,31 @@
 # Ops Progress
 
-Last updated: 2026-07-17 (Moadian live base-URL fix + reseed key-guard)
+Last updated: 2026-07-17 (DIBATAK founder persona + protected Moadian key)
 
 ## Current Phase
+**DIBATAK founder persona + protected Moadian key — DEPLOYED to dev.digiinvoice.ir
+2026-07-17.** SHAs: backend `90c756f` · ops `dba0e50` (frontend unchanged). No migration.
+Guard unchanged (`MOADIAN_MODE=mock`, proxy unset, key empty). Harness **9/9 green on dev**.
+Pre-reseed snapshot `/root/digitax-pre-reseed-20260717-123734.sql.gz`.
+- **New persona `09120000000` «ترازپیشه دیبا» (brand دیباتک)** — the founder's REAL company
+  (LEGAL, شناسه ملی/economic code `14008430838`), append-only to the frozen contract.
+  TRIPLE ROLE on one login: system_admin + approved partner HAM-DIBA + merchant owner
+  (verified on dev: `is_system_admin=t`, `HAM-DIBA`, owner membership). Taxpayer seeded
+  APPROVED + `moadian_submission` granted (admin_manual «تست مؤسس») so the cockpit is
+  reachable for REAL Moadian connection testing. Full software-company world (8 legal
+  customers with synthetic checksum-valid شناسه ملی, 6 license/service products @ VAT 10%,
+  15 mixed sales, 2 purchases, cheques both ways, expenses ±VAT, a return, a manual JE —
+  trial balance balances). Seeds **NO key material**. World now **18 users · 13 tenants**;
+  admin dashboard **18/13/5** (users/tenants/active-partners).
+- **Protected Moadian key across reseeds** — the seed is NOT idempotent (needs a clean
+  schema, so the DROP is mandatory), so true full-subgraph "untouched" preservation is
+  impossible. `reset_world.sh` instead CAPTURES دیباتک's key material to a holding schema
+  before the wipe and RESTORES it after the seed («🔒 … PRESERVED») — the founder's
+  registered key survives every reseed with NO `--force`. A real key on any OTHER tenant
+  still blocks the wipe; `--force` wipes everything. Tested: fake key + fiscal id survive a
+  reseed; other-tenant key blocks; `--force` clean-slates. Backend 947/7 baseline (0 new).
+
+## Prior Phase
 **Moadian live gateway base-URL fix + reseed key-preservation guard — DEPLOYED to
 dev.digiinvoice.ir 2026-07-17.** SHAs: backend `8056728` · ops `36eadeb` (frontend
 unchanged). No migration. Dev guard unchanged: `MOADIAN_MODE=mock`, proxy unset,
