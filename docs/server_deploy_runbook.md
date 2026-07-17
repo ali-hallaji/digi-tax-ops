@@ -202,6 +202,39 @@ untrusted peer is ignored and the peer IP is used.
 - **Live proof:** two simulated client IPs via XFF through the real nginx — one
   bursts to `429`, the other stays `200` (see the smoke section).
 
+### Moadian Iran-egress (MOADIAN_PROXY_*)
+
+`tp.tax.gov.ir` is **Iran-access-only**. A server (or laptop) OUTSIDE Iran cannot
+reach it directly — a connection test / real submission never leaves (null
+`server_time`, no HTTP response; this is NOT a crypto/auth rejection). Two ways to
+give the api an Iran egress:
+
+- an **in-Iran SOCKS/HTTP proxy** the api routes Moadian traffic through, or
+- an **Iran-hosted egress** for the api itself.
+
+`MOADIAN_PROXY_*` (opt-in, default OFF) wires an egress proxy into the **Moadian
+client only** — never the global httpx client or SMS:
+
+```
+MOADIAN_PROXY_ENABLED=true
+MOADIAN_PROXY_URL=socks5h://127.0.0.1:2080   # socks5h = DNS resolved THROUGH the
+                                             # proxy (REQUIRED when the domain
+                                             # doesn't resolve outside Iran)
+MOADIAN_PROXY_USERNAME=                       # optional
+MOADIAN_PROXY_PASSWORD=                       # optional
+```
+
+- If `ENABLED=true` and `URL` is empty/invalid, the api **fails to start** with a
+  clear error (no silent misconfiguration).
+- When OFF, the Moadian client connects DIRECTLY (byte-identical to before).
+- The connection-test response carries `transport: {proxy, target}` and precise
+  error codes (`proxy_unreachable` / `dns_failed` / `connect_timeout` / `tls_error`
+  / `http_error` / `auth_rejected`) instead of one generic failure; every attempt
+  is logged to `moadian_api_log` with `used_proxy` (never the URL or credentials).
+- **Currently for local/testing only.** Production egress topology is a founder
+  decision — see backlog «توپولوژی خروجی ایران برای مودیان در پروداکشن». TLS to
+  the Tax Org stays end-to-end; the proxy only forwards bytes.
+
 ## Compose Config Validation
 
 Validate Compose before building or restarting services:

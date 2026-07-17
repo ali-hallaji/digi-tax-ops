@@ -42,6 +42,32 @@ precedence lives in `resolveBusinesslessAppEntry` /
 
 ---
 
+## 🧩 Moadian SOCKS proxy (opt-in, Moadian client only) — 2026-07 — LOCAL, no push until GO
+
+**Why:** `tp.tax.gov.ir` is Iran-access-only; a connection test from a server/laptop
+OUTSIDE Iran never reaches it (null `server_time`, no HTTP response — NOT a crypto/auth
+rejection). The founder runs an in-Iran SOCKS5 proxy (port 2080).
+
+**What (backend only):**
+- Env (opt-in, default OFF): `MOADIAN_PROXY_ENABLED` / `MOADIAN_PROXY_URL`
+  (full URL; prefer `socks5h://` = DNS THROUGH the proxy) / `MOADIAN_PROXY_USERNAME` /
+  `MOADIAN_PROXY_PASSWORD`. Startup **fails fast** if enabled + empty/invalid URL.
+- **Library: `httpx-socks[asyncio]==0.8.0`** — httpx 0.25's native SOCKS (socksio)
+  rejects `socks5h://` and can't do DNS-through-proxy. We map `socks5h://` → SOCKS5 +
+  `rdns=True`.
+- Wired ONLY into the Moadian client (`LiveGateway._get`). Global httpx / SMS untouched.
+  **Disabled path is byte-identical** (transport=None → plain client).
+- Diagnostics: connection-test response gains `transport: {proxy, target}`; failures map
+  to precise codes (`proxy_unreachable`/`dns_failed`/`connect_timeout`/`tls_error`/
+  `http_error`/`auth_rejected`) + friendly Persian; `moadian_api_log` gains `used_proxy`
+  (migration `y8z9a0b1c2d3`). Never logs the URL/credentials/key material.
+- Tests: `tests/modules/moadian/test_proxy.py` (disabled unchanged, enabled builds the
+  right transport w/ mocked socks — no live network, each error code, startup validation).
+- Runbook: «Moadian Iran-egress» section; backlog «توپولوژی خروجی ایران برای مودیان در
+  پروداکشن» (prod topology is a founder decision — `MOADIAN_PROXY_*` is local/testing).
+
+---
+
 ## ✅ SEED-12 — 12-persona world + provider-agnostic notification core (2026-07-15) — DEPLOYED to dev
 
 **Deployed SHAs: backend `23fd537` · frontend `8806708` · ops `5092f7d`. NEW migration

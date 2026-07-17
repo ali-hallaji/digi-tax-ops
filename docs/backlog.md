@@ -78,3 +78,24 @@ each 3–4 steps, auto-firing once on first visit and replayable from a «؟ ر�
 صفحه» button (helpTourId on the shared PageHeader). Reuses the P6 anchors/step model;
 per-tour «completed» key + an app-wide "one auto-fired tour per session" slot so it
 doesn't nag. Guide S8-16 + settings toggle copy + a merchant what's-new entry (no-drift).
+
+## توپولوژی خروجی ایران برای مودیان در پروداکشن (Moadian Iran-egress topology) — QUEUED (founder decision)
+
+tp.tax.gov.ir is Iran-access-only. Our servers (and the founder's laptop) are OUTSIDE
+Iran, so a connection test / real submission from them never reaches the destination
+(null `server_time`, no HTTP response — NOT a crypto/auth failure). MD-1 shipped an
+opt-in `MOADIAN_PROXY_*` (SOCKS5/socks5h) wired into the Moadian client only, which
+unblocks LOCAL/TESTING via the founder's in-Iran SOCKS proxy (port 2080).
+
+**Prod topology is a founder decision — options:**
+1. **Iran VPS for the api** — run the whole api inside Iran (simplest egress; but moves
+   the DB/app hosting decision).
+2. **Iran-hosted egress relay** — keep the api abroad, route ONLY Moadian traffic through
+   a small in-Iran relay/proxy (the `MOADIAN_PROXY_*` model, hardened for prod: stable
+   host, auth, monitoring).
+3. **Iran-egress proxy service** — a managed in-Iran SOCKS/HTTP egress.
+
+Trade-offs: latency, reliability of the egress, where per-tenant keys live, and whether
+the proxy host is trusted with TLS-terminated traffic (it is NOT — the Moadian TLS is
+end-to-end to tp.tax.gov.ir; the proxy only forwards). Decide before MD-2 real submission
+goes live. `MOADIAN_PROXY_*` is currently for local/testing only.
