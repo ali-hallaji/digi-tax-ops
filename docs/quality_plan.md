@@ -101,7 +101,7 @@ hands over the official docs.
 
 ## Track B — Admin
 
-### B5. Unified «پروندهٔ مشتری» view in admin  ·  Effort M  ·  order 5
+### B5. Unified «پروندهٔ مشتری» view in admin  ·  Effort M  ·  order 5  ·  **DELIVERED (Coherence Batch 1 · T2, 2026-07-18)** — `/admin/users/$userId`, existing endpoints only; partner-relationship lookup omitted (no mobile/user_id partner search endpoint — noted in-file); taste review pending.
 - **Scope.** One screen per customer that stitches: user → businesses → taxpayer status
   → plan/modules/entitlements → partner relationship → usage/activity. Read-first;
   actions (approve profile, adjust plan) link out to the existing flows, not
@@ -113,7 +113,7 @@ hands over the official docs.
 - **Founder input.** None to start; taste review at the end.
 - **Depends on.** Pairs naturally with B6.
 
-### B6. Admin panel coherence overhaul  ·  Effort M  ·  order 6
+### B6. Admin panel coherence overhaul  ·  Effort M  ·  order 6  ·  **LARGELY DELIVERED (Coherence Batch 1 · T1, 2026-07-18)** — sidebar regroup, dead-stub nav retirement, one list/row-action/approve-reject grammar, admin page-tours; remaining: taste sign-off + the deferred S3 polish list in `digi-tax-frontend/docs/flow_audit.md`.
 - **Scope.** Menus, grouping, naming, dead-stub removal, and visual consistency across
   the whole `/admin/*` shell. No new features — polish and coherence so the admin world
   reads as one product.

@@ -1,8 +1,50 @@
 # Ops Progress
 
-Last updated: 2026-07-17 (MD-2 real invoice submission + invoice-list Moadian filter)
+Last updated: 2026-07-18 (Coherence Batch 1 + Tax-Lens — LOCAL, gates green, awaiting GO)
 
 ## Current Phase
+**Coherence Batch 1 (frontend) + Tax-Lens «مالیات من از دو نگاه» (full-stack) — COMPLETE
+LOCALLY, one deploy window, NOT pushed (awaiting founder GO + review sitting).**
+
+Two tracks, one guarded window:
+- **Tax-Lens** — backend module `tax_lens` (migration `a1b2c3d4e5f6`: 3 tables +
+  `tenants.tax_activity_code`, prefill ضرایب for 1404+1405 source-noted PREFILL), contract
+  §TL, merchant `/app/tax-lens` (paid soft-lock, honest-empty lens B, activity picker,
+  coefficient-request queue) + admin `/admin/tax-coefficients` (ضرایب/درخواست‌ها/تاریخچه).
+  The PX-B `/admin/tax-tables` upsert/delete now also writes the `tax_config_events` audit
+  (additive). Demo verified: نیک‌تجارت books 41,250,000 vs coefficient 27,075,000 ریال
+  (delta 14,175,000, favors coefficient) — hand-checked math.
+- **Coherence Batch 1** — the full T0 audit execution (see
+  `digi-tax-frontend/docs/flow_audit.md`, now EXECUTED, and the frontend progress entry):
+  T1.1 sidebar regroup · T1a mechanical sweeps (zero raw-color status pills, RTL dialog
+  footers, unified back-nav, shared StateCard, «افزودن» lexicon, vocabulary unification) ·
+  T1b structural (text-start TableHead fix, ListShell/row-action/approve-reject
+  convergence, invoice step-4, onboarding merge) · T2 unified «پروندهٔ مشتری»
+  `/admin/users/$userId` + dashboard KPI de-dupe · T3 admin page-tours + replay parity +
+  hardened no-drift test · T4 dashboard IA (نبض مالی cash-first above the fold) · S1
+  dead-ends (cheques create, moadian retry, partner-apply discoverability).
+
+**Gates (all green, local):** backend pytest 947 passed / 7 known FakeDBSession baseline
+(0 new) · ruff + black clean (incl. the 3 pre-existing hits from `acf43f3` folded in) ·
+full curl matrix on every §TL endpoint (200/403-gate/422/409/idempotent/audit) · migration
+verified via psql `\dt` (not just alembic current) · frontend typecheck 0 / build green /
+unit 33/33 (extended no-drift proven to catch broken anchors) · **experience harness 9/9
+green local** (specs 05+08 updated in-change: new admin tours need `dismissTourIfPresent`;
+canonical module_prices restored locally — the local table only had rows added today).
+
+**Deploy notes for the window (after GO):**
+1. Local `reset_world.sh` REFUSED (correct): نیک‌تجارت holds a real Moadian key blob
+   locally; only دیباتک is auto-preserved. NO `--force` was used — seed deltas were applied
+   targeted (activity codes, module price, entitlement via `admin_set_entitlement`).
+   **The dev reseed may hit the same guard** — decide: targeted deltas (default) vs a
+   deliberate key-snapshotted wipe.
+2. Fiscal-year catch: current year is 1405; the migration originally prefilled only 1404
+   coefficients (every tenant would land on honest-empty lens B) — migration now seeds
+   both years; local DB backfilled to match.
+3. Frontend image rebuild required (`--no-cache frontend`); api `--no-cache` as always;
+   `alembic upgrade head`; verify live OpenAPI shows `/tax-lens/*`; harness against dev.
+
+## Prior Phase (MD-2)
 **MD-2 — real Moadian invoice submission over SELF-TSP + invoice-list Moadian-status
 filter.** The submission pipeline (build→sign→encrypt→INVOICE.V01→inquiry) is
 mock-green end-to-end and the crypto is proven against the SDK; the FOUNDER runs the real

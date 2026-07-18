@@ -1,10 +1,19 @@
 # Current Phase - Ops
 
-Last updated: 2026-06-24
+Last updated: 2026-07-18
+
+> **NOTE:** this file lagged behind reality (previous update 2026-06-24). The LIVE phase
+> tracker is `docs/progress.md` — trust it first. Since 2026-06-24 the workspace shipped:
+> P3 entitlements+commission, PX-B accountant pack, SEED-12 + persona freeze, PC self-serve
+> checkout, PH experience harness, MD-1/MD-2 Moadian crypto + SELF-TSP real submission,
+> role-architecture correction, and (2026-07-18, local, awaiting GO) Coherence Batch 1 +
+> the Tax-Lens module.
 
 ## Active Focus
 
-**UI Redesign Phase 5 — COMPLETE (2026-06-24, full scope). Next: Phase 6 / Receipts+Payments.**
+**Coherence Batch 1 + Tax-Lens «مالیات من از دو نگاه» — complete locally, gates green,
+awaiting founder review sitting + GO for the single dev deploy window. Details:
+`docs/progress.md` Current Phase.**
 
 Phases 1–5 of the UI redesign are complete. Phase 5 full scope delivered:
 - JalaliDateField on all purchase/expense forms (Gregorian date picker was a BUG — now fixed)
