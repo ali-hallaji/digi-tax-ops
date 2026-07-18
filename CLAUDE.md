@@ -45,6 +45,10 @@ Workspace root is not a git repo; each repo updates/deploys independently.
 
 ## Deploy rhythm (test server — never hardcode its IP/SSH in git)
 Refer to the server via shell/env only (`$DIGI_TEST_SSH`, `$DIGI_TEST_PATH`).
+These are persisted in the **gitignored** `.deploy.env` (never commit it) and
+auto-loaded by `~/.zshenv` into every shell/session — full details + the zsh
+word-split note (`ssh ${=DIGI_TEST_SSH}` in zsh; plain `$DIGI_TEST_SSH` splits in
+bash) in `docs/server_deploy_runbook.md` § Connection Vars.
 Owner's proven sequence:
 ```bash
 git pull

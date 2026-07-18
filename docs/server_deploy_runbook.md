@@ -32,6 +32,27 @@ workspace/
 Run deployment commands from `digi-tax-ops` unless a command explicitly uses
 `git -C` for a sibling repository.
 
+## Connection Vars (`$DIGI_TEST_SSH` / `$DIGI_TEST_PATH`)
+
+The test server is referenced **only** via these env vars — never hardcode the
+IP/SSH in git (ops CLAUDE.md hard rule).
+
+- **Where they live:** `digi-tax-ops/.deploy.env` — a **gitignored** store (same
+  treatment as `.env`; `git check-ignore` confirms it). It holds the two
+  `export` lines and is the single source of truth. **Never commit it.**
+- **Auto-load:** `~/.zshenv` sources `.deploy.env` if present. `~/.zshenv` is read
+  by *every* zsh invocation — interactive terminals **and** non-interactive shells
+  (Claude Code's Bash tool) — so every session has the vars with no manual
+  `export`. If the store is ever missing, recreate it with the two lines
+  (`DIGI_TEST_SSH`, `DIGI_TEST_PATH`); their values are known to the founder.
+- **Usage — mind the shell (the value carries an `ssh` port flag, i.e. spaces):**
+  - **bash** (this runbook's scripts, `bash -c`, `bash -s` heredocs): plain
+    `ssh $DIGI_TEST_SSH …` word-splits correctly.
+  - **zsh** (the Bash tool's default shell, the founder's terminal): zsh does
+    **not** word-split unquoted expansions — use `ssh ${=DIGI_TEST_SSH} …`, or
+    wrap the call in `bash -c '…'`. Plain `$DIGI_TEST_SSH` in zsh fails with
+    "hostname contains invalid characters".
+
 ## Pre-Deploy Safety Checks
 
 ### GATE 0 — the experience harness (MANDATORY, PH rule)
@@ -622,9 +643,9 @@ server changes.
 
 ## Nginx + Let's Encrypt (dev.digiinvoice.ir, set up 2026-07-08)
 
-Test server `65.109.213.75` runs nginx 1.24 (Ubuntu apt package) as a reverse
-proxy in front of the Compose stack, with a Let's Encrypt cert via certbot's
-nginx plugin.
+The test server (reachable via `$DIGI_TEST_SSH`; see § Connection Vars) runs nginx
+1.24 (Ubuntu apt package) as a reverse proxy in front of the Compose stack, with a
+Let's Encrypt cert via certbot's nginx plugin.
 
 - Config: `/etc/nginx/sites-available/dev.digiinvoice.ir` (symlinked into
   `sites-enabled/`). Routes: `/health/` and `/api/` → `127.0.0.1:8000` (api),

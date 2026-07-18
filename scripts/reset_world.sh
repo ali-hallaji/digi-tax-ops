@@ -146,11 +146,17 @@ fi
 # 5. Regenerate the single-source persona artifacts (docs read by humans + harness).
 docker compose exec -T api python -m app.cli.world_fixtures > docs/persona_fixtures.json
 docker compose exec -T api python -m app.cli.world_fixtures --markdown > docs/persona_logins.md
-# Refresh the README «🔑 ورود به دنیای دمو» login table in place (mount the repo so
-# the container can rewrite README.md between its PERSONA-LOGINS markers).
-docker compose run --rm -v "$(pwd)":/ops -T api \
-    python -m app.cli.world_fixtures --readme /ops/README.md || \
-    echo "  (README refresh skipped — run world_fixtures --readme README.md manually)"
+# Refresh the README «🔑 ورود به دنیای دمو» login table in place. Run the one-off
+# container as the host user that OWNS the repo (root on the server, the founder
+# locally) so it can write the mounted README — the prior default-user run hit a
+# PermissionError on the root-owned file and dumped a scary traceback. Any failure
+# here is non-fatal and, via the if/else, does NOT taint the script's exit code.
+if readme_err=$(docker compose run --rm --user "$(id -u):$(id -g)" -v "$(pwd)":/ops -T api \
+     python -m app.cli.world_fixtures --readme /ops/README.md 2>&1); then
+  echo "  ✓ README login table refreshed."
+else
+  echo "  ⚠ README refresh skipped (non-fatal): $(printf '%s' "$readme_err" | tail -1)"
+fi
 
 # 6. Print the login table.
 echo
@@ -159,4 +165,8 @@ cat docs/persona_logins.md
 echo "════════════════════════════════════════════════════════════════════════"
 echo "✓ reset-world complete — login guide: digi-tax-ops/docs/persona_logins.md"
 echo "  pre-wipe snapshot: $SNAP_ABS"
-[ "$PROTECTED" -eq 1 ] && echo "  🔒 دیباتک Moadian key was preserved across the reseed."
+# Use if/fi (not `[ … ] && echo`): when PROTECTED=0 the && list returns 1, and being
+# the script's LAST statement that made a clean reseed exit 1. The if always exits 0.
+if [ "$PROTECTED" -eq 1 ]; then
+  echo "  🔒 دیباتک Moadian key was preserved across the reseed."
+fi
