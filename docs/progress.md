@@ -1,9 +1,20 @@
 # Ops Progress
 
-Last updated: 2026-07-20 (TASK ZERO release: STUFFID batch committed + pushed; dev
-becomes a LIVE-Moadian mirror of the founder laptop — MOADIAN_MODE=live,
-TRANSPORT=selftsp, SOCKS proxy, MOADIAN_LIVE_BUSINESS_ALLOWLIST guard (empty),
-DEBUG=false. Founder manual follow-ups: cockpit credential entry + allowlist add.)
+Last updated: 2026-07-20 (TASK ZERO release DEPLOYED to dev: backend `3eeb171` ·
+frontend `5fc6ad3` · ops `6da01d8`; migrations b8c9d0e1f2a3 + c9d0e1f2a3b4, head
+c9d0e1f2a3b4; stuffid catalog imported on dev — 3,984,695 codes / 561s, sha-skip
+proven; dev is now a LIVE-Moadian mirror: MOADIAN_MODE=live, TRANSPORT=selftsp,
+MOADIAN_PROXY_ENABLED=true → socks5h://172.18.0.1:2080,
+MOADIAN_LIVE_BUSINESS_ALLOWLIST= (SET+empty ⇒ deny-all), DEBUG=false; new
+notification_log.body_preview lets admins read dev-OTPs from «آخرین پیامک‌ها» and the
+harness reads them the same way (PoW solved in Node, captcha stays ON). Dev harness
+9/9. Moadian egress PROVEN from dev through the host SOCKS tunnel (real
+GET_SERVER_INFORMATION → org publicKeys); the Iran egress host needed an /etc/hosts
+pin `77.104.79.101 tp.tax.gov.ir` (its resolver SERVFAILs on tax.gov.ir). PENDING
+founder: (1) container-facing tunnel bind `autossh -D 172.18.0.1:2080` on dev
+(assistant blocked from creating listeners), (2) cockpit credential entry for دیباتک,
+(3) allowlist add `MOADIAN_LIVE_BUSINESS_ALLOWLIST=7bba07e6-8113-4f74-8bd3-c52c913cdcde`
++ `docker compose up -d api`.)
 
 ## Current Phase
 **STUFFID — official goods/service id catalog (کاتالوگ شناسه کالا و خدمت) + invoice-type
