@@ -1,6 +1,11 @@
 # Current Phase - Ops
 
-Last updated: 2026-07-18
+Last updated: 2026-07-19
+
+> **2026-07-19 — STUFFID catalog shipped locally** (official ~4M-code goods/service
+> catalog: boot-time auto-import from `data/stuffid/` archive, typeahead picker with
+> VAT autofill, admin catalog page, derived invoice نوع, per-business «نوع فعالیت
+> ویژه»). Details in `docs/progress.md` Current Phase. Joins the unpushed window below.
 
 > **NOTE:** this file lagged behind reality (previous update 2026-06-24). The LIVE phase
 > tracker is `docs/progress.md` — trust it first. Since 2026-06-24 the workspace shipped:

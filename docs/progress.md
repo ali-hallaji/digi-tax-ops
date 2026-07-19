@@ -1,8 +1,58 @@
 # Ops Progress
 
-Last updated: 2026-07-18 (Coherence Batch 1 + Tax-Lens — LOCAL, gates green, awaiting GO)
+Last updated: 2026-07-20 (TASK ZERO release: STUFFID batch committed + pushed; dev
+becomes a LIVE-Moadian mirror of the founder laptop — MOADIAN_MODE=live,
+TRANSPORT=selftsp, SOCKS proxy, MOADIAN_LIVE_BUSINESS_ALLOWLIST guard (empty),
+DEBUG=false. Founder manual follow-ups: cockpit credential entry + allowlist add.)
 
 ## Current Phase
+**STUFFID — official goods/service id catalog (کاتالوگ شناسه کالا و خدمت) + invoice-type
+derivation — COMPLETE LOCALLY, NOT pushed (joins the pending deploy window).**
+
+- **Catalog data**: full stuffid.tax.gov.ir export (6 CSVs, 6M raw rows, ~2GB) drops as
+  `digi-tax-ops/data/stuffid/stuffid_catalog_YYYYMMDD.tar.zst` (Jalali date; archive
+  gitignored, folder README committed with download/pack steps). Compose bind-mounts
+  `./data/stuffid` → `/data/stuffid` (api service).
+- **Backend** (`app/modules/stuff_catalog/`, migration `b8c9d0e1f2a3`): `tax_stuff_ids`
+  (code CHAR(13) PK, trgm GIN on title — the ONLY secondary index) + `catalog_imports`
+  audit + `tenants.special_invoice_pattern`. Boot-time NON-BLOCKING import in a daemon
+  thread (own loop + asyncpg COPY into UNLOGGED staging → dedup by latest LastEditDate →
+  atomic table swap preserving upsert-by-code; indexes built post-load). sha256 skip on
+  restart (proof: «already imported (sha256 match) — skipping» in api logs, restart adds
+  no import row). **Measured on the real archive: 3,984,695 unique codes (3,951,246
+  goods / 33,449 services) from 5,999,999 raw rows in 380s; table 1705 MB + indexes
+  802 MB (DB 18 MB → 2.5 GB); search warm: code-prefix 3ms, title trigram 21–33ms
+  (similarity-ranked over a 400-candidate cap).**
+- **Endpoints** (contract §STUFFID): `GET /stuff-ids/search` (typeahead; no exact total,
+  `has_more`), `GET /stuff-ids/{code}` (Persian 404), admin
+  `/admin/stuff-catalog/{status,imports,upload}` (upload = same pipeline, 202,
+  audit row `triggered_by=admin_upload`). All curl-verified incl. 403 for non-admin and
+  422 upload-name validation.
+- **Frontend**: `TaxItemPicker` now searches the official catalog (kind chip + VAT +
+  معاف, «نتیجه‌ای در فهرست رسمی یافت نشد…»); manual 13-digit ستید entry format-validated
+  with debounced catalog lookup («این شناسه در فهرست ما نیست» — gentle, never blocks);
+  picking auto-fills VAT (product form + invoice line, still editable). Admin page
+  `/admin/stuff-catalog` («شناسه‌های کالا و خدمت» under مالیات و تقویم): status card with
+  live progress polling, catalog search, upload, import history. System-health card:
+  «کاتالوگ شناسه‌ها: به‌روز — نسخهٔ ۱۴۰۵/۰۴/۲۸ · N ردیف» / «در حال بارگذاری (n%)».
+- **Invoice-type derivation (T3)**: `MoadianPatternSelector` (disabled fake controls)
+  DELETED; replaced by derived `MoadianTypeLine` — customer→نوع اول, walk-in→نوع دوم
+  (backend already derives inty at send; both live). Send-card badge + copy now derive
+  too, and the STALE «ارسال واقعی … در فاز بعدی» copy is fixed to read LIVE. Special
+  الگوها (RC_IITP v7.8 جدول ۹ p.29: ارز2/طلا3/پیمانکاری4/قبوض5/بلیط6/صادرات7/بارنامه8/
+  نفتی9/بورس11/بیمه13/زنجیره14) exposed ONLY via the advanced per-business «نوع فعالیت
+  ویژه» setting (settings page card; persisted `special_invoice_pattern`, 422 on bad
+  code) — each honestly «به‌زودی»; none implemented (our lines lack the doc-mandated
+  extra fields, e.g. gold consfee/spro/bros/tcpbs).
+- **Org lookup API finding**: NO public catalog API exists in the canonical PDFs; the
+  Java-SDK-only `getServiceStuffList` (SDK-9 §11-1, p.19, account-scoped) has no
+  documented REST wire path → NOT wired; «شناسه‌های ثبت‌شدهٔ من» tab logged as follow-up.
+- **Gates**: backend stuff_catalog tests 26/26, ruff+black clean; frontend typecheck 0 /
+  build green / unit 37/37 (incl. new type-derivation + importer-convention tests);
+  contract doc §STUFFID appended; runbook § STUFFID drop-folder + operator one-liner.
+  Harness + full pytest suite: see the gates line below (run this session).
+
+## Prior Phase (this window, still awaiting GO)
 **Coherence Batch 1 (frontend) + Tax-Lens «مالیات من از دو نگاه» (full-stack) — COMPLETE
 LOCALLY, one deploy window, NOT pushed (awaiting founder GO + review sitting).**
 

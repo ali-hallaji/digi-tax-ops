@@ -205,6 +205,29 @@ changes or frontend build-time env changes.
 
 Runtime-only secrets must remain runtime environment values. Do not pass them as Docker build args.
 
+### STUFFID catalog drop-folder (`data/stuffid/`)
+
+The `api` service bind-mounts `./data/stuffid` → `/data/stuffid` (read-write;
+declared in `docker-compose.yml`). On every api startup a background thread
+scans it for the newest `stuffid_catalog_YYYYMMDD.tar.zst` (Jalali date in the
+name) and imports it into `tax_stuff_ids` **without blocking startup**; an
+already-imported archive (sha256 recorded in `catalog_imports`) is skipped
+silently, so restarts stay fast. Full convention + packing steps:
+`data/stuffid/README.md` (committed; archives themselves are gitignored).
+
+Operator one-liner to place/refresh the catalog on any server:
+
+```bash
+scp stuffid_catalog_<جلالیYYYYMMDD>.tar.zst ${=DIGI_TEST_SSH}:$DIGI_TEST_PATH/digi-tax-ops/data/stuffid/ \
+  && ssh ${=DIGI_TEST_SSH} "cd $DIGI_TEST_PATH/digi-tax-ops && docker compose restart api"
+```
+
+(Alternatively upload through the admin page «شناسه‌های کالا و خدمت» — same
+pipeline, no restart needed.) Verify after deploy: admin system-health shows
+«کاتالوگ شناسه‌ها: به‌روز — نسخهٔ … · ~۴M ردیف», or
+`GET /api/v1/admin/stuff-catalog/status` → `state: "ready"`. Budget ~6–7 min
+import time and ~2.5 GB of Postgres volume growth on first import.
+
 ### Rate-limiter client IP behind the proxy (P7a)
 
 The auth rate limiter keys on the real client IP, not the proxy peer, so a single
