@@ -9,6 +9,16 @@ DEBUG=false. Founder manual follow-ups: cockpit credential entry + allowlist add
 **STUFFID — official goods/service id catalog (کاتالوگ شناسه کالا و خدمت) + invoice-type
 derivation — COMPLETE LOCALLY, NOT pushed (joins the pending deploy window).**
 
+> **ROOT CAUSE FOUND (2026-07-20) — the recurring «module_prices drifted empty» mystery:**
+> running the backend pytest suite with `DATABASE_URL` pointed at the LIVE local
+> `digitax` DB executes the `*_pg` integration tests against it, and
+> `tests/modules/billing/test_checkout_pg.py` does `delete(ModulePrice)` — wiping the
+> whole price list. The canonical in-image pytest command (no DB attached) skips those
+> tests, which is why it never bit there. RULE: never point the test suite at the live
+> local (or dev!) DB; restore via the targeted `seed_module_prices` upsert if bitten.
+> Follow-up logged: make `test_checkout_pg` snapshot/restore price rows instead of a
+> blanket delete.
+
 - **Catalog data**: full stuffid.tax.gov.ir export (6 CSVs, 6M raw rows, ~2GB) drops as
   `digi-tax-ops/data/stuffid/stuffid_catalog_YYYYMMDD.tar.zst` (Jalali date; archive
   gitignored, folder README committed with download/pack steps). Compose bind-mounts
