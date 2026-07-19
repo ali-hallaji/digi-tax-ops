@@ -52,6 +52,11 @@ services:
     container_name: digi-tax-api
     ports:
       - "8000:8000"
+    volumes:
+      # STUFFID catalog drop-folder (see data/stuffid/README.md). Read-write:
+      # the boot importer reads archives; the admin upload endpoint saves new
+      # archives here so they survive container recreation and reuse one pipeline.
+      - ./data/stuffid:/data/stuffid
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     healthcheck:
       test:
