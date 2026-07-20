@@ -1,5 +1,22 @@
 # Ops Progress
 
+## MOADIAN B.6 (2026-07-20) — issuance QA fixes (founder feedback)
+Two fixes, no new migration (catalog is code-derived).
+- **ITEM 1 — full type+pattern model**: `invoice_catalog.py` sources the OFFICIAL
+  model verbatim from RC_IITP.IS_v7.8 — TYPES جدول ۶ §7-4 (نوع اول/دوم/سوم) + PATTERNS
+  جدول ۹ §7-7 (الگوهای ۱–۱۴). `support` derived from the mapper (only نوع اول/دوم +
+  الگوی فروش). `GET /moadian/profile/invoice-catalog`. Form: «نوع صورتحساب» now a
+  radio list of ALL types — نوع سوم (پایانهٔ فروشگاهی) visible-disabled «به‌زودی» +
+  doc explanation; read-only «الگو: فروش» + coming-soon popover. Send-path
+  defense-in-depth refuses unsupported نوع/الگو (friendly). Excel نوع message updated.
+- **ITEM 2 — inquiry findability + inline states**: «استعلام» lives on the buyer
+  card, ALWAYS visible when the customer has any tax identity (not gated by نوع).
+  Inline states: loading/success(green)/org-warning(amber)/hard-error(red+retry)/
+  disabled(helper+edit link); freshness passive with re-check. B.5 autofill intact.
+- **Gates**: backend 1084 pass / 7 baseline / 4 skip, ruff+black clean; frontend
+  typecheck 0, build green, unit 42/42. Contract §B.6 appended; invoice guide updated.
+
+
 ## MOADIAN B.5 (2026-07-20) — invoice-issuance experience (founder product feedback)
 Three UX-critical changes for the money screen, all shipped + gated. PDF gate
 for CHANGE 3 PASSED: the taxpayer-inquiry service is documented (RC_TICS.IS §9-2
