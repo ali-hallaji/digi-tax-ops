@@ -1,5 +1,29 @@
 # Ops Progress
 
+## MOADIAN B.8 (2026-07-21) — two-step issuance QA fixes (founder feedback)
+Small frontend batch correcting B.7's step split. B.7 had moved «نوع صورتحساب» onto the
+detail «مشتری» step; founder rule is **step 2 = CUSTOMER-ONLY**.
+- **FIX 1 — type control back to step 1**: «نوع صورتحساب» (all three official types,
+  smart default, override, «به‌زودی») lives on the create form again; its buyer-identity
+  guard is suppressed there (no customer yet) and re-renders near the buyer card on the
+  «مشتری» step. The Moadian type radiogroup is now absent from step 2.
+- **FIX 2 — inquiry for EVERY customer**: «استعلام از سامانه مودیان» is always visible for
+  a selected customer AND on the customer form. No economic code → an inline identity
+  mini-form (شمارهٔ اقتصادی + optional شناسهٔ ملی, central validators) → «ذخیره و استعلام»
+  fires it. No hidden button, no dead-ends (customer-form button focuses the empty field).
+- **FIX 3 — inline edit synced to the customer record**: the «جزئیات» expander edits
+  economic code, national id, نشانی, کدپستی, تلفن inline; save UPDATES THE CUSTOMER RECORD
+  («در پروفایل مشتری ذخیره شد», one calm toast, no dialog). The per-invoice snapshot still
+  captures the values used on THIS invoice at submit; inquiry fill-empty unchanged.
+- **Gates**: frontend typecheck 0, build green, unit 42/42. Harness 9/9 local + 9/9 dev.
+  No backend change (no migration; api image untouched). Frontend-only deploy, compose v2
+  `--no-cache` (FRONTEND_SHA b663e9f). Live-proven on dev with a throwaway Playwright
+  view-only spec on دیباتک (real Altcha PoW solved — captcha ON): step-1 type control,
+  customer-only step 2, both inquiry paths, and inline-edit→record persistence
+  (API re-fetch confirmed `phone`); test customers/draft cleaned, persona untouched.
+  Invoice guide (tour) updated same batch. Commits: frontend cc14984 (FIX 1) · b663e9f
+  (FIX 2+3).
+
 ## MOADIAN B.7+C (2026-07-20) — issuance QA fixes + monetization (standalone Moadian SKU)
 Four founder QA fixes + full monetization, one deploy window. LIVE-proven headline:
 a **base-EXPIRED + moadian-ACTIVE** tenant issued a tax-reportable نوع دوم zero-total
