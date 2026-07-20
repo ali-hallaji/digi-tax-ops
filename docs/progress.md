@@ -1,5 +1,30 @@
 # Ops Progress
 
+## MOADIAN B.5 (2026-07-20) — invoice-issuance experience (founder product feedback)
+Three UX-critical changes for the money screen, all shipped + gated. PDF gate
+for CHANGE 3 PASSED: the taxpayer-inquiry service is documented (RC_TICS.IS §9-2
+GET Taxpayer / SELF-TSP GET_ECONOMIC_CODE_INFORMATION).
+- **CHANGE 1 — invoice type restored, overridable**: `moadian_type_override`
+  (mb3) on the draft; segmented «نوع صورتحساب» control (smart default «پیشنهاد
+  خودکار — قابل تغییر», one-tap override, inline guard rail for نوع اول w/o buyer);
+  Excel نوع column; derivation stays the bulk/Excel fallback.
+- **CHANGE 2 — interpret-first responses**: backend interpreter (single source
+  of truth) attaches `interpreted` to submit/refresh/list; dictionary seeded from
+  REAL A/B org codes (PDFs have no code table); unknown codes → `moadian_unknown_codes`
+  (mb4). Panel: interpreted headline + severity + copyable taxid/reference, raw in
+  a collapsed «پاسخ کامل سامانه»; chips reused in bulk/timeline/cockpit history.
+- **CHANGE 3 — buyer استعلام + editable autofill**: `POST /moadian/profile/
+  inquire-taxpayer` (live→proxy, sandbox→sandbox); «استعلام از سامانه مودیان» on
+  نوع اول → green confirm + autofills the invoice's OWN buyer snapshot (mb6),
+  never silently the customer (explicit «به‌روزرسانی مشتری»); last-inquiry
+  freshness on the customer (mb5). Buyer details collapsed/editable.
+- **Migrations**: mb3inty00003, mb4unkcodes04, mb5inquiry005, mb6buyer00006
+  (head mb6buyer00006). Contract §MOADIAN B.5 appended.
+- **PDF-silent**: no org error-code table exists → interpreter honest-seeds from
+  live logs + logs unknowns. Per-invoice buyer override chosen over touching the
+  customer, matching the founder's «invoice keeps its own snapshot» test.
+
+
 ## MOADIAN B (2026-07-20) — lifecycle live-proven (اصلاحی/ابطالی accepted), serial counter, unit-catalog infra, bulk + Excel import
 **Live chain accepted end-to-end (zero-total law):** اصلی → اصلاحی → ابطالی all
 **ثبت شده (SUCCESS)** on the real org from دیباتک; amend-after-cancel correctly
