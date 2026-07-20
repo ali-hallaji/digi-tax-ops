@@ -1,6 +1,8 @@
 # Ops Progress
 
-Last updated: 2026-07-20 (TASK ZERO release DEPLOYED to dev: backend `3eeb171` ·
+Last updated: 2026-07-20 (BATCH 0.5 DB perf audit + index migration
+`d0e1f2a3b4c5` + test-DB isolation guard — see the BATCH 0.5 entry; earlier
+same day: TASK ZERO release DEPLOYED to dev: backend `3eeb171` ·
 frontend `5fc6ad3` · ops `6da01d8`; migrations b8c9d0e1f2a3 + c9d0e1f2a3b4, head
 c9d0e1f2a3b4; stuffid catalog imported on dev — 3,984,695 codes / 561s, sha-skip
 proven; dev is now a LIVE-Moadian mirror: MOADIAN_MODE=live, TRANSPORT=selftsp,
@@ -15,6 +17,28 @@ founder: (1) container-facing tunnel bind `autossh -D 172.18.0.1:2080` on dev
 (assistant blocked from creating listeners), (2) cockpit credential entry for دیباتک,
 (3) allowlist add `MOADIAN_LIVE_BUSINESS_ALLOWLIST=7bba07e6-8113-4f74-8bd3-c52c913cdcde`
 + `docker compose up -d api`.)
+
+## BATCH 0.5 (2026-07-20) — DB performance audit + index migration + test-DB guard
+One-time index audit (inventory + EXPLAIN ANALYZE on the seeded world) → backend
+migration **`d0e1f2a3b4c5`** (new head) adding SIX plan-justified indexes: payments
+`(tenant_id, payment_date, created_at)` (list sort — measured 1.93→0.21ms, Sort node
+gone), cheques `(tenant_id, due_date, created_at)`, return_documents
+`(tenant_id, created_at)`, tax_coefficient_requests `(tenant_id, status)`, partial
+`product_id` FK indexes on invoice_draft_lines + purchase_lines (recompute_stock
+per-write sums). Full before/after + everything deliberately NOT indexed (incl. the
+proven-fine stuffid typeahead: PK range 0.4ms / selective-trgm 26ms / broad-term seq
+beats forced GIN warm 37 vs 50ms — dev's 146ms was a cold/partially-warm broad term):
+`docs/db_index_audit_2026-07.md`.
+**Test-DB isolation guard (module_prices root fix):** backend `tests/conftest.py`
+refuses pytest unless the DATABASE_URL DB name ends `_test` (exit 2 before any test;
+escape hatch `DIGITAX_TESTS_DB_ALLOW`). New `digi-tax-backend/scripts/run_tests.sh`
+creates+migrates `digitax_test` and runs the full suite there — **1046 pass / 7 known
+FakeDBSession baseline / 4 skip** (pg tests now RUN instead of skipping); live
+module_prices stayed 8 rows while digitax_test absorbed test_checkout_pg's wipe.
+`preflight.sh` whitelists `digitax_test`. Backend `5b9d663`+`948995f`.
+Follow-ups logged: make test_checkout_pg snapshot/restore instead of blanket delete
+(guard makes it non-urgent); optional query-side nudge for cold broad-term stuffid
+searches (behavior change — needs its own GO).
 
 ## Current Phase
 **STUFFID — official goods/service id catalog (کاتالوگ شناسه کالا و خدمت) + invoice-type
