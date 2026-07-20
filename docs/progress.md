@@ -1,5 +1,41 @@
 # Ops Progress
 
+## MOADIAN B (2026-07-20) — lifecycle live-proven (اصلاحی/ابطالی accepted), serial counter, unit-catalog infra, bulk + Excel import
+**Live chain accepted end-to-end (zero-total law):** اصلی → اصلاحی → ابطالی all
+**ثبت شده (SUCCESS)** on the real org from دیباتک; amend-after-cancel correctly
+blocked (friendly 422 per §5-3). Backend `ff501ed` · frontend `a36143b` · deployed
+dev; harness **9/9 local + 9/9 dev**; suite 1064 pass / 7 known baseline / 4 skip.
+- **Serial counter** (`mb1serial001`): per-memory sequential inno (جدول ۷: صعودی/
+  غیر تکراری), atomic upsert, seeded above history. Org warning **1300501 persists
+  even with consecutive serials** — its matching algorithm lives in RC_DCPS.SN
+  (not in our possession); non-blocking (invoices accept). FOLLOW-UP: obtain
+  RC_DCPS.SN from intamedia.ir.
+- **Unit catalog** (`mb2units0002`): `tax_units` + `GET /tax-units` + import CLI —
+  ships EMPTY; the machine-readable RC_UMGS.ST list is NOT in repo/PDFs and per
+  the no-guessing rule nothing was scraped. FOLLOW-UP (founder): supply the
+  official file → `python -m app.cli.import_tax_units`. Product form upgrades to
+  the official dropdown automatically; validator soft-flags non-official units;
+  seeds dropped invalid `C62` (no unit → mu omitted, live-proven).
+- **Lifecycle**: اصلاحی/ابطالی wired in the send card (consequence-first dialogs,
+  per-invoice timeline with subject/status/taxid/«آزمایشی»); برگشت از فروش from
+  the RETURN DOCUMENT (§5-4 packet = sold-minus-returned, discounts prorated;
+  full return → redirected to ابطالی). SPEC WALL: نوع دوم can't carry ins=4
+  (جدول ۹ ردیف ۲) — walk-in returns get a friendly 400; org-side برگشتی proof
+  needs a type-1 invoice → deferred to sandbox. ابطالی full-mirror accepted with
+  «خارج از الگو» warnings (org re-fetches body per §5-3) — optional minimal-packet
+  follow-up to silence them.
+- **Bulk**: 3 zero-total invoices via `/invoices/submit-bulk` — all 3 sent +
+  accepted. Invoices list: multi-select → sticky bar → sequential per-row progress.
+- **Excel import**: `POST /invoice-drafts/import-excel` → drafts only, whole-group
+  skip on any bad row, row/field/reason Persian errors. Sample versioned at
+  `digi-tax-frontend/public/samples/moadian-import-sample.xlsx`. Dev demo: sample
+  as-is → 1 imported (walk-in) + 1 failed with «مشتری‌ای با این شناسه ثبت نشده…».
+- **SANDBOX LEG STOPPED**: نیک‌تجارت still has NO sandbox credentials in dev DB
+  (founder manual step from MOADIAN A pending) — chains ran on live under the
+  ZERO-TOTAL law instead. When creds land: rerun chains with real amounts +
+  برگشتی on a typed-buyer invoice.
+
+
 ## MOADIAN A (2026-07-20) — REAL live submission activated end-to-end on dev + sandbox mode
 **Headline: DigiTax's first REAL accepted Moadian submission.** Zero-total proof
 invoice (1 line, 100% discount, payable 0, نوع دوم walk-in) submitted LIVE from dev
