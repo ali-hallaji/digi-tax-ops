@@ -1,5 +1,36 @@
 # Ops Progress
 
+## MOADIAN B.7+C (2026-07-20) — issuance QA fixes + monetization (standalone Moadian SKU)
+Four founder QA fixes + full monetization, one deploy window. LIVE-proven headline:
+a **base-EXPIRED + moadian-ACTIVE** tenant issued a tax-reportable نوع دوم zero-total
+invoice and it was **accepted («ثبت شد»)** — the standalone migration path for ~300
+legacy self-tsp customers works end-to-end.
+- **A — one customer step**: the create form asked customer AND the detail wizard's
+  «مشتری» step asked again. Fixed: create form = نوع سند + عنوان/تاریخ only; customer +
+  نوع صورتحساب + buyer استعلام/snapshot all live on the single «مشتری» step. Walk-in
+  «بدون مشخصات خریدار (نوع دوم)» choice. In-flight drafts lose no data.
+- **B — inquiry everywhere + fill-empty**: customer create/edit forms gain «استعلام» +
+  inline states; success fills EMPTY name/کد‌ملی only (GET Taxpayer returns only
+  nameTrade+nationalId — PDF silent on address/postal/phone, not invented);
+  «مشخصات تکمیل شد: …». Contact/نشانی collapsed (progressive disclosure).
+- **C — org's own rejection message**: interpreter carries `org_message` (verbatim);
+  panel shows «دلیل سامانه: …» under the headline. Bugfix found LIVE: the inquiry ROW
+  puts errors under `data` not `errors` — `_extract_codes` now reads both (live proof:
+  «مقدار فیلد «نرخ مالیات…» منطبق نیست»).
+- **D — monetization**: `entitlements/monetization.py`. New tenants get a base_plan
+  trial (BASE_TRIAL_DAYS=14 AND BASE_TRIAL_DOCUMENT_CAP=30, env-config; whichever first
+  → expired). Standalone Moadian SKU: base-expired + moadian-active keeps customers/
+  products/tax-reportable invoices/submit/history/inquiry/bulk usable; else soft-locked.
+  `resolve_access` matrix tested per cell; `require_capability` (402 BASE_PLAN_REQUIRED)
+  on invoice/customer/product/purchase/expense create. Existing tenants grandfathered.
+  merchant_get_plan surfaces base_plan+access; dashboard trial/standalone card; pricing
+  «فقط ارسال مودیان — بدون نیاز به پلن پایه». Contract §MOADIAN C matrix table + tests.
+- **Gates**: backend 1093 pass / 7 baseline / 4 skip, ruff+black clean; frontend
+  typecheck 0, build green, unit 42/42. No new migration (trial uses existing tables;
+  head mb6buyer00006). Harness 9/9 local + 9/9 dev. دیباتک entitlements toggled +
+  RESTORED for the live proof (identity/credentials untouched).
+
+
 ## MOADIAN B.6 (2026-07-20) — issuance QA fixes (founder feedback)
 Two fixes, no new migration (catalog is code-derived).
 - **ITEM 1 — full type+pattern model**: `invoice_catalog.py` sources the OFFICIAL
