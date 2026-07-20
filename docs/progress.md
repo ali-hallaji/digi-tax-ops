@@ -1,5 +1,41 @@
 # Ops Progress
 
+## MOADIAN A (2026-07-20) — REAL live submission activated end-to-end on dev + sandbox mode
+**Headline: DigiTax's first REAL accepted Moadian submission.** Zero-total proof
+invoice (1 line, 100% discount, payable 0, نوع دوم walk-in) submitted LIVE from dev
+through the host SOCKS tunnel and **ACCEPTED (ثبت شده / SUCCESS)** — taxid
+`A41XRD050AE006A5E30AE2`, reference `Sy3jEm-KCi7sf0DjuV9oW5ymHvitsai-_H29Gg`.
+- **Tunnel/socks verification**: app's own `build_moadian_transport()` (httpx-socks,
+  already pinned) works through `socks5h://172.18.0.1:2080` from inside the api
+  container — the founder's `ValueError: Unknown scheme for proxy URL` reproduces
+  only on raw `httpx proxies=` (a path live code never uses). Latent legacy-client
+  raw-proxies path fixed (shared transport injected) + CI guard tests.
+- **mu fix (live-rejection root cause)**: org error 0103502 — mapper sent `mu:""`;
+  mu is اختیاری (RC_IITP جدول ۳۲ p.50, official RC_UMGS.ST list) → now omitted when
+  the line has no unit code. Follow-ups logged below.
+- **Credential migration**: one-shot `scripts/migrate_moadian_creds.sh` (+ export/
+  import helpers) moved دیباتک's real credentials laptop→dev via in-memory ssh pipe
+  (decrypt laptop key → re-encrypt dev key; laptop DB read-only; no secret ever on
+  disk). Dev cockpit connection test PASSES live (fiscal_status ACTIVE, identity
+  14008430838 returned by the org).
+- **Allowlist**: `MOADIAN_LIVE_BUSINESS_ALLOWLIST=7bba07e6-8113-4f74-8bd3-c52c913cdcde`
+  set on dev (only that line changed). Negative check: non-listed business gets the
+  friendly «هنوز فعال نشده است» block.
+- **Sandbox mode (STEP 3)**: migration `e0f1a2b3c4d5` (NEW HEAD) — per-business
+  `environment: live|sandbox` on profiles + submissions; sandbox routes to
+  `MOADIAN_SANDBOX_BASE_URL` (default `https://sandboxrc.tax.gov.ir/req/api`),
+  bypasses the live allowlist, and every result/row is tagged «آزمایشی». Admin
+  toggle «مودیان — محیط آزمایشی (سندباکس)» on /admin/moadian-profiles; cockpit
+  sandbox banner + tags. Contract §Moadian Per-Business Environment appended.
+- **Standing laws added to workspace CLAUDE.md**: ZERO-TOTAL RULE + MOADIAN KEY
+  HYGIENE (permanent).
+- **Follow-ups logged**: (1) official RC_UMGS.ST unit-code (mu) list — import +
+  validate `unit_code` against it (seeds use `C62` which the org would reject live);
+  (2) inquiry warning 1300501 «سریال صورتحساب» — inno serial continuity vs کارپوشه;
+  (3) founder manual step — enter sandbox credentials for the sandbox-enabled
+  persona business via its cockpit wizard.
+
+
 Last updated: 2026-07-20 (BATCH 0.5 DB perf audit + index migration
 `d0e1f2a3b4c5` + test-DB isolation guard — see the BATCH 0.5 entry; earlier
 same day: TASK ZERO release DEPLOYED to dev: backend `3eeb171` ·
