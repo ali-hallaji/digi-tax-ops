@@ -29,6 +29,13 @@ through the host SOCKS tunnel and **ACCEPTED (ثبت شده / SUCCESS)** — tax
   sandbox banner + tags. Contract §Moadian Per-Business Environment appended.
 - **Standing laws added to workspace CLAUDE.md**: ZERO-TOTAL RULE + MOADIAN KEY
   HYGIENE (permanent).
+- **Gates**: backend 1053 pass / 7 known FakeDBSession baseline / 4 skip (isolated
+  digitax_test), ruff+black clean; frontend typecheck 0, build green, unit 40/40.
+  Migration `e0f1a2b3c4d5` applied on local AND dev (psql-verified both tables).
+  **Harness 9/9 local + 9/9 dev** (post-deploy). Deployed dev SHAs: backend
+  `039884e` · frontend `3bd1449` · ops `790ebc3`; live OpenAPI confirms the new
+  environment route. نیک‌تجارت (7085fcf2…) toggled sandbox on dev via the real
+  admin API; captcha ON throughout.
 - **Follow-ups logged**: (1) official RC_UMGS.ST unit-code (mu) list — import +
   validate `unit_code` against it (seeds use `C62` which the org would reject live);
   (2) inquiry warning 1300501 «سریال صورتحساب» — inno serial continuity vs کارپوشه;
