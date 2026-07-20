@@ -1,5 +1,38 @@
 # Ops Progress
 
+## ACCOUNTANT-PACK v2 (2026-07-21) — IN PROGRESS (8/10 committed, NOT pushed/deployed)
+Big batch. Committed local per part; ONE guarded deploy pending at the end. Gates on the
+committed work are green: backend 1093 pass / 7 baseline fail / 4 skip, ruff+black clean;
+frontend typecheck 0, build green.
+- **PART 1 — global fiscal-year switcher** ✓ (FE `7ed7192`, BE `ee36dd3`). One global FY
+  state per business, persisted per user (localStorage `digitax_fy_v1`, useSyncExternalStore
+  like the auth store). Compact «سال مالی ۱۴۰۵» Select in the shell header. Pure FY math →
+  `lib/fiscal-year/compute.ts`; `useFiscalYearStart`+store → `lib/fiscal-year/store.ts`. The
+  per-page bars (`useFiscalYearRange`/`FiscalYearQuickSelect`) delegate their YEAR to the
+  global store, so reports + accountant ledgers + tax-lens follow the switcher. Backend:
+  central `app/common/fiscal_window.py` dependency + `date_range_conditions`; date filtering
+  wired onto invoices/purchases/expenses/payments LIST services (optional, non-breaking).
+  **OBEYS**: reports, accounting (journal/ledger/trial-balance), tax-lens, exports.
+  **DELIBERATELY DOESN'T (yet)**: operational lists don't hard-filter by default (would hide
+  recent activity + break exact-count harness assertions on seed data straddling 1404/1405) —
+  backend capability is ready for opt-in; cheques excluded on purpose (lifecycle spans years).
+- **PART 2 — out-of-year lock** ✓ (BE `3dbfd3c`, FE `325bc00`). `assert_date_in_window` →
+  friendly Persian 422 naming the active year. Live on invoice create+edit (inline warning +
+  disabled submit + server enforcement). Backend validator also wired on purchase/expense
+  create (frontend window-passing on those forms is the immediate follow-up). Tests added.
+- **PART 5.1 draft bulk-delete** ✓ `da97851` · **5.2 password eye-toggle app-wide** ✓
+  `651f08c` · **5.3 invoice print findability** ✓ `0a8df07` · **5.4 settlement «چک»
+  regression tests** ✓ (BE `6984b60`, FE `28ef4a9`) · **5.5 persist smart-default moadian
+  type** ✓ (FE `a31bb82`, BE `10ef2cc`). What's-new + tour updated in-commit per surface.
+- **PART 3 — Persian PDF engine + Excel sweep** ⏳ NOT STARTED. WeasyPrint already exists
+  (`invoice_drafts/application/pdf_service.py`); reuse it for a report renderer (add Vazirmatn
+  TTF — brotli+fonttools in the image can decompress the frontend woff2). `xlsx_response`
+  (`accounting/application/xlsx.py`) is a generic RTL workbook helper to reuse. See the resume
+  note (`digi-tax-ops/docs/accountant_pack_v2_resume.md`).
+- **PART 4 — accountant drill-down** ⏳ NOT STARTED. Ledger = turnover; add `entry_id`/source
+  refs to ledger rows + clickable → `/app/accounting/entries/{id}`; PDF path net-new.
+
+
 ## MOADIAN B.8 (2026-07-21) — two-step issuance QA fixes (founder feedback)
 Small frontend batch correcting B.7's step split. B.7 had moved «نوع صورتحساب» onto the
 detail «مشتری» step; founder rule is **step 2 = CUSTOMER-ONLY**.
