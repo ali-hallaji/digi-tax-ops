@@ -1,5 +1,37 @@
 # Ops Progress
 
+## PHASE-1 CLOSURE — PARTS 5 & 6 (2026-07-22) — admin control room + partner polish, DEPLOYED to dev
+Final window of the closure batch. UI/IA on Opus, plumbing on Fable subagents; ui-ux-pro-max
+consulted. Additive migration only (`acraud00008` — global admin audit log); NO reseed.
+- **Part 5.1 — admin IA control room** ✓ (`c473750`). Sidebar regrouped into the founder's five
+  sections: کاربران و کسب‌وکارها / مودیان / مالی و پلن‌ها / محتوا و ضرایب / سلامت سیستم; guide → footer;
+  `/admin/submissions` + `/admin/audit-logs` promoted from «به‌زودی» to real feeds. New `AdminBreadcrumb`
+  wired across admin detail pages (consistent list/detail orientation).
+- **Part 5.2/5.3 — capabilities + audit** ✓ (backend `30582d5`, frontend `ec5ce8e`). NEW global
+  append-only `admin_audit_log` (migration `acraud00008`) + a post-commit recorder wired into EVERY
+  admin mutation (user/taxpayer/entitlement/moadian/partner/module/tax-config…) → `GET /admin/audit-logs`
+  (filterable «گزارش ممیزی» page) + «آخرین اقدامات ادمین» dashboard card. `POST /admin/users/{id}/trigger-otp`
+  (audited) surfaced on user detail. Businesses list gains a «پلن» column (active/trial/expired/none) +
+  plan-state filter + owner-mobile search. Moadian-profiles gain env chip + submission count + last status;
+  cross-tenant `GET /admin/moadian/submissions-feed` → real «ارسال‌های مودیان» page. System-health «نسخهٔ
+  سامانه» card (git_sha + alembic_head). +13 backend tests.
+- **Part 5.4 — money display fix** ✓ (`0e9fac5`). `formatMoneyIn` rounds to whole currency units — the
+  tax-estimate card no longer shows «۲۴,۴۰۴,۳۶۶.۹۷۲۴۸ تومان». +4 unit tests.
+- **Part 6 — partner polish** ✓ (`c7c05eb`). my-clients search + per-client plan/moadian chips (from
+  existing portfolio-summary); earnings period filter; rendered the dead «کسب‌وکار شخصی» onboarding door
+  (guide-drift bug); partner-sidebar راهنمای همکار item + prefix-active fix. Partner gaps listed for backlog
+  (per-client moadian CONNECTION status field, subscription expiry in portfolio-summary, server-side
+  earnings period query, invite-by-link onboarding).
+- **Gates:** backend **1150 pass / 7 baseline / 4 skip** (isolated digitax_test), ruff+black; frontend
+  typecheck 0 + build + **50/50 unit** (46 + 4 money); harness spec 05/08 updated for the new search
+  placeholder. Deployed dev: api `30582d5` (head `acraud00008`, `admin_audit_log` verified), frontend
+  `5788509`. Playwright view-only pass on dev **2/2** (5-section IA + all surfaces render; partner panel) —
+  shots `digi-tax-frontend/qa-screens/harness-crdev/cr-*`. Entitlement grant/revoke round-trip verified via
+  harness spec 05 (plan-card UI on P1, cleanly restored) + the +13 audit/trigger-otp backend tests; a
+  bespoke fresh-signup throwaway spec was descoped (fresh users have no auto-business + isolated-captcha
+  flakiness). Captcha ON throughout.
+- **Closure batch COMPLETE.** Next: accountant-feedback batch once testers have used the system.
+
 ## PHASE-1 CLOSURE — PHASE B (2026-07-22) — Parts 2+7 LIVE on dev via ADDITIVE deltas; full tester story verified
 Single-admin + demo-user landed WITHOUT a wipe: `app/cli/apply_phase1_deltas.py` (in the api
 image) demotes `09120000001` and appends the demo world — دیباتک never touched.
