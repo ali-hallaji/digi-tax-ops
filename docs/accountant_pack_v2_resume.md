@@ -1,5 +1,19 @@
 # Accountant-Pack v2 — RESUME NOTE (PART 3 + PART 4)
 
+> **STATUS 2026-07-21 (updated) — PART 3 + PART 4 are DONE, committed LOCAL, NOT pushed.**
+> The rest of this note is now historical (the plan that was executed). All local gates green:
+> backend 1104 pass / 7 baseline / 4 skip, ruff+black clean; frontend typecheck 0 + build;
+> experience harness 9/9 local; Playwright new-feature verification green (report Excel+PDF +
+> customers Excel downloaded, TB→ledger→voucher drill-down — shots in `qa-screens/harness-apverify/`).
+> **NO migration in this batch.** SHAs this session — BE: `257bb98` (pdf/xlsx foundation) ·
+> `b08c331` (reports) · `26598ec` (accounting pdf + drill-down fields) · `8bca068` (list sweep);
+> FE: `626fe73` (downloadBlob+ExportButton) · `f4e2ca2` (list+report surfaces) · `fc8f949`
+> (drill-down) · `20b7901` (FY window on purchase/expense forms); ops: progress.md (this update).
+> **ONLY remaining step: the single guarded dev deploy + dev harness/Playwright — pending founder GO.**
+> Deploy = compose v2, `docker compose build --no-cache api frontend`, up -d, NO alembic,
+> psql-verify the new routes via the LIVE OpenAPI, then `pnpm harness --base-url <dev>` 9/9 +
+> the Playwright view-only pass on dev.
+
 Written 2026-07-21 at a committed boundary. PART 1, 2, and all of PART 5 are done,
 committed locally (NOT pushed/deployed), gates green (backend 1093/7/4, frontend
 typecheck+build). This note lets the next session execute the two remaining

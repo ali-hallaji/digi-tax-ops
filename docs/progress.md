@@ -1,9 +1,11 @@
 # Ops Progress
 
-## ACCOUNTANT-PACK v2 (2026-07-21) — IN PROGRESS (8/10 committed, NOT pushed/deployed)
-Big batch. Committed local per part; ONE guarded deploy pending at the end. Gates on the
-committed work are green: backend 1093 pass / 7 baseline fail / 4 skip, ruff+black clean;
-frontend typecheck 0, build green.
+## ACCOUNTANT-PACK v2 (2026-07-21) — ALL PARTS COMMITTED LOCAL (guarded dev deploy pending founder GO)
+Big batch. Committed local per part; ONE guarded deploy pending (compose v2, `--no-cache`
+backend+frontend, **NO migration in this batch**, psql-verify). Gates green: backend
+**1104 pass / 7 baseline fail / 4 skip**, ruff+black clean; frontend typecheck 0, build green;
+experience harness **9/9 local**; new-feature Playwright verification green (report Excel+PDF
++ customers Excel downloaded, TB→ledger→voucher drill-down). Captcha (Altcha) stays ON.
 - **PART 1 — global fiscal-year switcher** ✓ (FE `7ed7192`, BE `ee36dd3`). One global FY
   state per business, persisted per user (localStorage `digitax_fy_v1`, useSyncExternalStore
   like the auth store). Compact «سال مالی ۱۴۰۵» Select in the shell header. Pure FY math →
@@ -19,18 +21,36 @@ frontend typecheck 0, build green.
 - **PART 2 — out-of-year lock** ✓ (BE `3dbfd3c`, FE `325bc00`). `assert_date_in_window` →
   friendly Persian 422 naming the active year. Live on invoice create+edit (inline warning +
   disabled submit + server enforcement). Backend validator also wired on purchase/expense
-  create (frontend window-passing on those forms is the immediate follow-up). Tests added.
+  create; **frontend window-passing on those forms now done** (FE `20b7901`) — same inline
+  out-of-year warning as invoices. Tests added.
 - **PART 5.1 draft bulk-delete** ✓ `da97851` · **5.2 password eye-toggle app-wide** ✓
   `651f08c` · **5.3 invoice print findability** ✓ `0a8df07` · **5.4 settlement «چک»
   regression tests** ✓ (BE `6984b60`, FE `28ef4a9`) · **5.5 persist smart-default moadian
   type** ✓ (FE `a31bb82`, BE `10ef2cc`). What's-new + tour updated in-commit per surface.
-- **PART 3 — Persian PDF engine + Excel sweep** ⏳ NOT STARTED. WeasyPrint already exists
-  (`invoice_drafts/application/pdf_service.py`); reuse it for a report renderer (add Vazirmatn
-  TTF — brotli+fonttools in the image can decompress the frontend woff2). `xlsx_response`
-  (`accounting/application/xlsx.py`) is a generic RTL workbook helper to reuse. See the resume
-  note (`digi-tax-ops/docs/accountant_pack_v2_resume.md`).
-- **PART 4 — accountant drill-down** ⏳ NOT STARTED. Ledger = turnover; add `entry_id`/source
-  refs to ledger rows + clickable → `/app/accounting/entries/{id}`; PDF path net-new.
+- **PART 3 — Persian-RTL PDF engine + Excel sweep** ✓ (BE `257bb98` foundation · `b08c331`
+  reports · `26598ec` accounting · `8bca068` list sweep; FE `626fe73` plumbing · `f4e2ca2`
+  surfaces). Shared `app/common/pdf/report_pdf.py` — one A4 RTL letterhead + generic table
+  renderer (WeasyPrint + **Vazirmatn TTF derived from the frontend woff2, vendored** under
+  `app/common/pdf/assets/fonts/`). Per-business ریال/تومان (`app/common/money_display.py`) +
+  Jalali (`app/common/dates_display.py`) applied to XLSX **and** PDF in ONE place; `export_xlsx`
+  (`app/common/exports.py`) wraps `xlsx_response` (gained a `money_format` param for toman
+  fractions). **Coverage:** PDF+XLSX on the 5 reports (register/party-balances/cash-flow/
+  profit-loss/expense-breakdown) + accountant ledger + trial-balance; **XLSX sweep on 8 list
+  surfaces** (customers, products, payments, cheques, purchases, expenses, returns, invoices) —
+  each unpaginated (`EXPORT_PAGE_SIZE`), honouring the active filters + fiscal window. Fixed a
+  **latent 422**: the register/party/cash-flow export exceeded `MAX_PAGE_SIZE` in
+  `paginate_rows`. Legacy CSV kept (ریال) unchanged. FE: ONE `downloadBlob` primitive
+  (base+Bearer+Persian errors+Content-Disposition) now backs every «خروجی …» button; the 4
+  CSV/PDF helpers collapsed onto it; one shared `<ExportButton>` (Excel/PDF/CSV, busy spinner,
+  Persian toast). All exports curl-verified (rial + toman); 3 PDFs visually confirmed with real
+  seed data; **12 new backend unit tests** (`tests/test_exports.py`).
+- **PART 4 — accountant drill-down** ✓ (BE in `26598ec`; FE `fc8f949`). Ledger rows now carry
+  `entry_id`/`source_type`/`source_id`; trial-balance rows carry `account_id`. TB account row →
+  `/app/accounting/ledger?account_id=…` (account pre-selected, **breadcrumb back to تراز
+  آزمایشی**) → clickable ledger line → source سند (read-only voucher). Clickable rows get a
+  chevron + keyboard support; entitlement-gated via the existing `_gate`. «خروجی PDF» added to
+  ledger + trial-balance (merchant only; partner drill-in unchanged). Playwright-verified end
+  to end (screenshots in `qa-screens/harness-apverify/`).
 
 
 ## MOADIAN B.8 (2026-07-21) — two-step issuance QA fixes (founder feedback)
