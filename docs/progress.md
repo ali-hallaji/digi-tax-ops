@@ -1,5 +1,36 @@
 # Ops Progress
 
+## TAX-LENS v2 + DASHBOARD LENSES (2026-07-21) — COMMITTED LOCAL (stacks on Accountant-Pack v2; ONE guarded deploy pending founder GO)
+Flagship «فروش و زیبایی» batch on top of the already-deployed Tax-Lens v1. Implementation on
+**Fable 5** (frontend flagship screens + backend endpoints via subagents); migration + all
+verification/gates on Opus. Gates green: backend **1132 pass / 7 baseline fail / 4 skip**,
+ruff+black; frontend typecheck 0 + build, guide no-drift tests green; **experience harness 9/9
+local**; Playwright new-feature pass (two-view, dashboard desktop + 390px, Moadian lens, admin
+برآوردی — shots in `digi-tax-frontend/qa-screens/harness-tlv2/`). Captcha (Altcha) ON. **HARD LAW
+honored — no tax number is guessed**: every value is sourced (admin, `is_estimated=False` +
+`source_note`) or shown as «برآوردی»; open accountant decisions logged in
+`docs/tax_lens_open_decisions.md`. Frozen personas untouched.
+- **PART 1 — Tax-Lens v2** ✓ (BE `41a7762`, FE two-view `57eb004`, FE admin `72b6c46`). Migration
+  `tlv2est00007` adds a structured `is_estimated` («برآوردی») flag (default TRUE) to
+  `tax_activity_coefficients` + `tax_tables`; admin coefficient + ماده-۱۳۱ table upsert persist +
+  audit it. `/tax-lens/summary` gains (lens A/B/delta math UNCHANGED — نیک‌تجارت still 41,250,000
+  vs 27,075,000): coefficient/bracket `is_estimated`, a `sources` document-count block
+  (tap-to-trace), and a factual `moadian` block (submitted vs unsent + last status). Flagship
+  two-view screen: calm «برآوردی» chips, an elevated «اختلاف دو نگاه» card with a plain-Persian
+  «چرا این دو نگاه فرق دارند؟» explainer, each figure a tap-through to its source report
+  («از ۴ فاکتور»), and a Moadian «نگاه سازمان» strip + soft-guidance line (never directive).
+- **PART 2 — Dashboard «نگاه‌ها» lens grid** ✓ (BE `cae9657`, FE `983a871`). ONE `/dashboard/lenses`
+  aggregate (**~20ms warm**, no N+1; monthly trend Jalali-bucketed, sums reconcile EXACTLY with
+  `profit_and_loss`): recharts sales/profit sparklines + YoY pills (hidden when no prior year), a
+  conditional Moadian lens (+ «ارسال گروهی» shortcut), a cash+receivables strip with due-soon
+  cheque soft-warnings. **Additive** — FinancialPulse/TaxEstimateCards/PlanStatusCard untouched. No
+  fake numbers; NO fabricated «طلب معوق» (there is no receivable-aging model — open decision).
+- Guides updated in-commit (`...guide` commit): tax-lens walkthrough (برآوردی/tap-to-trace/نگاه
+  سازمان) + a «نگاه‌ها» merchant what's-new card.
+- **Only new migration this batch = `tlv2est00007`.** Deploy = compose v2, `--no-cache` api+frontend,
+  `alembic upgrade head` (applies tlv2est00007, psql-verify the two `is_estimated` columns), then
+  harness 9/9 dev + Playwright. **This batch + Accountant-Pack v2 ship in ONE guarded window on GO.**
+
 ## ACCOUNTANT-PACK v2 (2026-07-21) — ALL PARTS COMMITTED LOCAL (guarded dev deploy pending founder GO)
 Big batch. Committed local per part; ONE guarded deploy pending (compose v2, `--no-cache`
 backend+frontend, **NO migration in this batch**, psql-verify). Gates green: backend
