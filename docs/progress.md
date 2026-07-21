@@ -1,6 +1,31 @@
 # Ops Progress
 
-## TAX-LENS v2 + DASHBOARD LENSES (2026-07-21) — COMMITTED LOCAL (stacks on Accountant-Pack v2; ONE guarded deploy pending founder GO)
+## PHASE-1 CLOSURE BATCH (2026-07-21) — Parts 1/3/4 DEPLOYED to dev; Parts 2/7 WIP (reseed-gated)
+Tester-unblock window. Prior batches (Tax-Lens v2 + Accountant-Pack v2) were DEPLOYED to dev
+first (founder GO) and verified: api `cae9657` · frontend `a52a6b7`, migration `tlv2est00007`
+psql-verified, harness 9/9 dev + Playwright view-only pass.
+- **Part 1 — DEV login OTP hint** ✓ DEPLOYED (backend `6909e5d` · frontend `d8d38c2`, deployed api
+  `6909e5d` + frontend `d8d38c2` on dev; `DEV_LOGIN_OTP_HINT=true` in dev `.env`, DEBUG=false).
+  New env flag (default off, dev-only, never prod), independent of debug; `OTPRequestResponse.otp_hint`
+  gated server-side by `dev_login_otp_hint_for` — NEVER `09120000000`/system admins. Login shows
+  «کد ورود (محیط آزمایشی): …» (--info), NOT prefilled (prefill raced input-otp auto-submit → fixed
+  `d8d38c2`). **Proven LIVE on dev:** hint shown for a seeded tester, REFUSED for the founder.
+- **Part 3 — dashboard discovery card + plans** ✓ DEPLOYED (frontend `34bda84`). Dismissible
+  «امکانات بیشتر می‌خواهید؟» → /app/plans (entitlement-aware, usePlan); standalone-Moadian badge.
+- **Part 4 — guides** ✓ DEPLOYED (frontend `f6113d9`). Walkthrough sweep + «پلن‌ها و ماژول‌های پولی»
+  section; no-drift 42/42.
+- **Gates:** backend Part 1 — 5 guard tests, 0 new failures (3 known FakeDBSession baseline);
+  frontend typecheck 0 + build; **harness 9/9 dev** (after the prefill fix); OTP-hint live proof 2/2.
+- **Parts 2 (single admin) + 7 (demo user 09120009000)** — seed CODE done + committed LOCAL
+  (backend `03e3c19`, **NOT pushed**), lint/parse clean, NOT reseed-verified. Remaining before the
+  window's deploy: world_fixtures admin re-point (→ dibatak) + demo entry + counts (users 19/tenants
+  14), spec 05 rewrite (bare-admin /app card block drops — دیباتک is admin+merchant), persona-docs
+  regen, then a GUARDED dev reseed (pg_dump snapshot; NEVER --force; prove دیباتک tenant/key/allowlist
+  survive + cockpit connection live), harness 9/9 + 390px mobile build-up journey, ops/README update.
+  **FULL detail + steps: `docs/RESUME_phase1_closure.md`.**
+- Next window after 2/7: **Parts 5 + 6** — admin + partner panel deep polish (Opus-level UI).
+
+## TAX-LENS v2 + DASHBOARD LENSES (2026-07-21) — DEPLOYED to dev 2026-07-21 (was: COMMITTED LOCAL)
 Flagship «فروش و زیبایی» batch on top of the already-deployed Tax-Lens v1. Implementation on
 **Fable 5** (frontend flagship screens + backend endpoints via subagents); migration + all
 verification/gates on Opus. Gates green: backend **1132 pass / 7 baseline fail / 4 skip**,
