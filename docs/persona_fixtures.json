@@ -5,32 +5,18 @@
       "mobile": "09120000001",
       "name": "DigiTax Admin",
       "password": "Admin@12345",
-      "role": "system_admin",
+      "role": "partner_approved (سابقاً ادمین — تنزل‌یافته)",
       "type": "—",
       "businesses": [],
-      "explore": "پنل مدیریت: داشبورد (شمارنده‌ها)، بررسی پرونده‌ها، همکاران، فعال‌سازی‌ها، تقویم مالیاتی — و هم‌زمان همکار (نقش دوگانه)",
+      "explore": "همکار HAM-ADMIN («مشتریان من»: شرکت سخت‌افزار آریانت) — دیگر مدیر سیستم نیست؛ پنل مدیریت فقط برای ۰۹۱۲۰۰۰۰۰۰۰",
       "see": [
-        "داشبورد ادمین را باز کن — شمارنده‌ها باید ۲ پروندهٔ در انتظار، ۱ همکار در انتظار، ۱ درخواست ماژول، ۱ فعال‌سازی اعتباری، ۱۸ کاربر و ۱۳ کسب‌وکار نشان دهند.",
-        "«همکاران» را باز کن — زهرا محمدی، آرش رستمی، سمیرا حسینی (تأییدشده) و پویا اسدی (در انتظار) را ببین.",
-        "این کاربر خودش هم همکار است (نقش دوگانه، کد HAM-ADMIN) — از «پنل همکار» می‌توانی «مشتریان من» را ببینی (شرکت سخت‌افزار آریانت).",
-        "«تقویم مالیاتی» را باز کن — باید بتوانی مهلت ۱۴۰۵Q1 را تمدید کنی."
+        "بعد از ورود روی «مشتریان من» (پنل همکار) فرود می‌آیی — نه پنل مدیریت.",
+        "«مشتریان من» باید شرکت سخت‌افزار آریانت را نشان دهد (کد همکار HAM-ADMIN).",
+        "/admin را دستی باز کن — نباید پنل مدیریت را ببینی (دسترسی مدیر سیستم برداشته شده)."
       ],
       "expected": {
-        "dashboard_counts": {
-          "pending_taxpayer_reviews": 2,
-          "partners_pending": 1,
-          "partners_active": 5,
-          "module_requests_pending": 1,
-          "credit_activations_pending": 1,
-          "users": 18,
-          "tenants": 13
-        },
-        "tax_calendar_override": {
-          "kind": "vat_quarterly",
-          "period_key": "1405Q1",
-          "due_date": "2026-04-20",
-          "note": "تمدید رسمی"
-        }
+        "system_admin": false,
+        "partner_code": "HAM-ADMIN"
       }
     },
     "p1": {
@@ -412,6 +398,53 @@
         "finalized_invoices": 15,
         "vendors": 2,
         "cheques_total": 2,
+        "no_seeded_key": true,
+        "dashboard_counts": {
+          "pending_taxpayer_reviews": 2,
+          "partners_pending": 1,
+          "partners_active": 5,
+          "module_requests_pending": 1,
+          "credit_activations_pending": 1,
+          "users": 19,
+          "tenants": 14
+        },
+        "tax_calendar_override": {
+          "kind": "vat_quarterly",
+          "period_key": "1405Q1",
+          "due_date": "2026-04-20",
+          "note": "تمدید رسمی"
+        }
+      }
+    },
+    "demo": {
+      "mobile": "09120009000",
+      "name": "کاربر نمونه",
+      "password": "Admin@12345",
+      "role": "merchant_owner (دموی کامل)",
+      "businesses": [
+        "دیجی‌تکس نمونه"
+      ],
+      "explore": "دموی همه‌چیز‌فعال: همهٔ ماژول‌ها روشن، دادهٔ دو سال مالی (۱۴۰۴+۱۴۰۵) — «نگاه‌ها» با مقایسهٔ سال‌به‌سال، مالیات از دو نگاه، نمای حسابدار، خروجی‌ها، چک‌ها، مرجوعی",
+      "see": [
+        "داشبورد را باز کن — «نگاه‌ها» باید روند فروش/سود و نشان‌های مقایسه با سال قبل را نشان دهد (دادهٔ ۱۴۰۴ و ۱۴۰۵).",
+        "«مالیات من از دو نگاه» را باز کن — هر دو نگاه با عدد واقعی.",
+        "«گزارش‌ها» را باز کن — خروجی PDF و Excel روی هر گزارش.",
+        "نمای حسابدار: تراز آزمایشی → دفتر کل → سند (کلیک‌خور).",
+        "«چک‌ها» چهار چک در وضعیت‌های مختلف؛ «مرجوعی‌ها» یک مرجوعی فروش و یک خرید.",
+        "«کارتابل مودیان» در محیط آزمایشی (سندباکس) است — بدون کلید واقعی."
+      ],
+      "expected": {
+        "person_type": "legal",
+        "customers": 12,
+        "products_total": 12,
+        "finalized_invoices": 20,
+        "draft_invoices": 3,
+        "purchases": 4,
+        "cheques_total": 4,
+        "returns": 2,
+        "expenses": 8,
+        "all_modules_entitled": true,
+        "moadian_environment": "sandbox",
         "no_seeded_key": true
       }
     }
