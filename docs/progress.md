@@ -1,5 +1,35 @@
 # Ops Progress
 
+## PHASE-1 CLOSURE — PHASE B (2026-07-22) — Parts 2+7 LIVE on dev via ADDITIVE deltas; full tester story verified
+Single-admin + demo-user landed WITHOUT a wipe: `app/cli/apply_phase1_deltas.py` (in the api
+image) demotes `09120000001` and appends the demo world — دیباتک never touched.
+- **Snapshot (rollback):** `/root/digitax-pre-phase1deltas-20260721-201903.sql.gz` (123M, on dev).
+- **دیباتک SURVIVAL PROOF:** pre/post md5 fingerprints byte-identical — tenant
+  `45bb4591…` and moadian profile (incl. encrypted key blob + fiscal id) `7fb2bb14…`;
+  submissions 23→23; `MOADIAN_LIVE_BUSINESS_ALLOWLIST` unchanged; **cockpit «آزمایش
+  دوباره» LIVE through the proxy → «اتصال برقرار شد»** (screenshots
+  `digi-tax-frontend/qa-screens/harness-phase1b/dibatak-0*.png`).
+- **PART 2 live:** admins 2→1; sole admin = founder `09120000000`. Harness spec 05/08 rewritten
+  onto دیباتک (`213abce`); the bare-admin `/app` role-card block DROPPED — that code path is now
+  persona-untested (single-admin rule wins, founder decision). `helpers.ts` logs in via
+  `otp_hint` first and reads the SMS-log fallback as the founder.
+- **PART 7 live:** demo `09120009000` «کاربر نمونه» / «دیجی‌تکس نمونه» — 12 customers,
+  12 products, 20 finalized + 3 draft invoices over FY1404+1405, 4 purchases, 4 cheques
+  (both tabs/lifecycles), 2 returns, 8 expenses; ALL 7 modules perpetual; taxpayer APPROVED;
+  Moadian SANDBOX with NO key material. World: **19 users / 14 tenants** (fixtures+docs regenerated).
+- **Tester story verified on dev:** demo-story spec 2/2 (hint login → lenses/tax-lens/exports/
+  trial-balance/cheques/returns/sandbox cockpit + founder-hint refusal re-proven) and the
+  **390px mobile build-up journey** green end-to-end (hint login → discovery card → plans →
+  sim-checkout → receipt → module unlocked → guide section; world restored). Shots:
+  `digi-tax-frontend/qa-screens/harness-phase1b/` (`demo-0*`, `mj-0*`).
+- **Gates:** backend **1137 pass / 7 baseline / 4 skip** (isolated digitax_test), ruff+black;
+  typecheck 0; harness **9/9 LOCAL** (deltas applied locally the same additive way) + dev run
+  (see latest harness artifacts). Captcha ON throughout. SHAs: backend `38c263a` · frontend
+  `213abce` · ops `a4f5370` — deployed api `38c263a` on dev (frontend unchanged `213abce`→built
+  earlier as `d8d38c2`; harness files aren't in the image).
+- **NEXT WINDOW — Parts 5+6 (admin control room + partner polish):** see
+  `docs/RESUME_phase1_closure.md` § Parts 5&6.
+
 ## PHASE-1 CLOSURE BATCH (2026-07-21) — Parts 1/3/4 DEPLOYED to dev; Parts 2/7 WIP (reseed-gated)
 Tester-unblock window. Prior batches (Tax-Lens v2 + Accountant-Pack v2) were DEPLOYED to dev
 first (founder GO) and verified: api `cae9657` · frontend `a52a6b7`, migration `tlv2est00007`

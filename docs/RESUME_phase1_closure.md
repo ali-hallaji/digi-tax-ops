@@ -1,4 +1,32 @@
-# RESUME NOTE — Phase-1 Closure Batch (tester-unblock window)
+# RESUME NOTE — Phase-1 Closure Batch
+
+> **STATUS 2026-07-22: Stages 1–3 of Phase B are DONE and live on dev** (see the
+> PHASE B entry at the top of progress.md — additive deltas, دیباتک survival proven,
+> tester story + 390px mobile journey green). **Only Parts 5 & 6 remain — next window.**
+
+## NEXT WINDOW — Parts 5 & 6: admin control room + partner polish (Opus-level UI)
+Founder spec (verbatim intent):
+- **ADMIN IA regroup** (ui-ux-pro-max deeply consulted, sellable «فروش و زیبایی» quality):
+  sidebar sections کاربران و کسب‌وکارها / مودیان / مالی و پلن‌ها / محتوا و ضرایب / سلامت
+  سیستم; breadcrumbs; consistent list/detail patterns. ~35 existing `_admin.admin.*` routes
+  to regroup (businesses, users, taxpayers×2, moadian-profiles, submissions, failed-submissions,
+  retry-queue, plans, module-requests, earnings, partners, tax-coefficients, tax-calendar,
+  stuff-catalog, announcements, support-tickets, audit-logs, system-health, guide, …).
+- **Capability gap-fill:** tenant/business search with plan+trial+entitlement state and
+  CHANGE it (grant/extend/revoke — `admin_set_entitlement` exists, audit exists); users with
+  roles + reset password (exists `/users/{id}/reset-password`) + **trigger OTP (missing)**;
+  Moadian profiles w/ environment+status+submission counts; recent submissions with
+  interpreted statuses (interpreter exists); link existing pages properly; system health +
+  version (`/health/version` exists).
+- **Every admin action audited** (who/when/what) — extend the existing audit pattern.
+- **PARTNER:** my-clients with per-client plan/Moadian status at a glance, earnings view,
+  clean new-client onboarding, consistent tokens; LIST functional gaps (big new features out
+  of scope).
+- Guides untouched by admin work (internal tool); merchant-facing changes update guides
+  in-commit. Gates as always; deploy needs api+frontend rebuild.
+- **Small polish item found during Phase-B QA (fold into the next window):** the dashboard
+  tax-estimate cards render raw fractional toman — e.g. «۲۴,۴۰۴,۳۶۶.۹۷۲۴۸ تومان» on
+  «ارزش افزوده (برآورد)» (P7, 390px shot `mj-02`). Round/format via the display helpers.
 
 _Written 2026-07-21. Read this + workspace CLAUDE.md §2/§4.6 before continuing._
 
