@@ -1,5 +1,51 @@
 # Ops Progress
 
+## MOADIAN D (PARTS 1–3) ship + STEP-0 access-message fix (2026-07-22) — DEPLOYED to dev
+Guarded dev deploy of the interrupted D ship, plus a founder-reported critical access bug.
+SHAs: **backend `ab7f76e`** (on the `c358002` D batch) · **frontend `c425a53`** (`50ff99c` STEP-0
++ `c425a53` harness spec, on `ac998f6`) · **ops `6f8b0aa`**. Migration **`mdser00009`** applied
+(`acraud00008 → mdser00009`); **counters byte-identical pre/post** — A2HP31=1784709096,
+A41XRD=1784564819 — so mdser00009 was a proven **no-op** and **دیباتک's counter (A41XRD) is
+untouched**. Pre-migration snapshot `backups/digitax-pre-md-d-step0-20260722-170642.sql.gz` (123M).
+New D routes verified live (401-gated, not 404): `/moadian/profile/fiscal-status`,
+`/admin/moadian/submissions/refresh-pending`, `/invoice-drafts/import-excel/limits`;
+`/health/version` reports `alembic_head=mdser00009`.
+
+- **STEP-0 root cause (headline) — hypothesis (a), CONFIRMED.** The نیک‌تجارت owner (محمد توکلی)
+  opening his OWN zero-total invoice INV-2026-000007 got «شما به این صورتحساب یا کسب‌وکار دسترسی
+  ندارید». Cause = an **entitlement gate with a wrong message**: نیک‌تجارت lacked `moadian_submission`,
+  so `require_feature` returned 403 `FEATURE_NOT_ENABLED` (a plan state) — but the frontend collapsed
+  EVERY 403 into one hard-coded access-denied string. **(b) membership shape and (c) tenant resolution
+  ruled out empirically**: the owner is a plain `owner`, and the invoice's tenant == his active
+  business. Moadian merchant access is **business-scope** (active_business_id) based, not role-based;
+  the merchant path had never been exercised before because all PART-0 sandbox proofs went through the
+  دیباتک **system-admin bypass** (`requesting_tenant_id=None`).
+- **Fix.** Frontend renders the backend's real message — module-not-active vs genuine access-denial
+  distinctly (pure, unit-tested `moadian-error-message.ts`). Backend gives each merchant-facing 403 its
+  OWN code + Persian message (`FEATURE_NOT_ENABLED` / `MOADIAN_INVOICE_ACCESS_DENIED` /
+  `MOADIAN_NO_ACTIVE_BUSINESS`) and kills two raw-English leaks (`MoadianAccessError`,
+  `require_moadian_read_access`). **+14 backend regression tests** (validate/standard-payload/submit/
+  lifecycle × roles/modes, each failure mode asserts its OWN distinct Persian message) **+7 FE unit
+  tests**.
+- **نیک‌تجارت `moadian_submission` GRANTED on dev** via the audited `/admin` flow
+  (`activated_via=admin_manual`, recorded in `admin_audit_log` + `tenant_entitlement_events`). The
+  plans-page «به‌زودی» for Moadian remains the **deliberate monetization state** until the real gateway
+  ships; per-business activation is the admin path. (Not added to fixtures — a reseed would clear it;
+  founder decision if durability is wanted.)
+- **Live proof on INV-2026-000007** (the SAME invoice): before grant → 403 `FEATURE_NOT_ENABLED`
+  (honest); after grant → validate `200` (`is_valid`, no blocking); merchant **sandbox submit → org
+  ACCEPTED** «ثبت شده — آزمایشی», taxid `A2HP31050B0006A607FE81`, serial `1784709096` (10-char, matches
+  `^[a-fA-F0-9]{10}$`, **no 0100504**), «آزمایشی» tag. Serial-fix (mdser00009 + epoch seed + guard)
+  proven live.
+- **D batch (PARTS 1–3) now live:** epoch serial seed + `_guard_serial` + 11-digit `tinb` resolution,
+  Excel caps (`MAX_EXCEL_IMPORT_ROWS/MB`) + `import-excel/limits`, `GET /moadian/profile/fiscal-status`
+  + `POST /admin/moadian/submissions/refresh-pending`, amber economic-code hint, per-type Excel samples.
+  D assessments: `docs/moadian/org_services_map.md`, `docs/moadian/pattern_assessment_md_d.md`,
+  `docs/monetization_assessment_md_d.md`.
+- **Gates:** backend **1183 pass / 7 known-baseline / 4 skip** (the 7 proven identical at baseline —
+  0 new failures); ruff+black clean; FE typecheck + build clean; FE unit **55**; **harness 9/9 local +
+  dev**. Captcha (Altcha) ON.
+
 ## MOADIAN D — PART 0 (2026-07-22) — SANDBOX connection fixed + all 4 subjects org-proven
 Founder-blocked leg, done live on dev. Full write-up: `docs/moadian/md_d_part0_sandbox_proof.md`.
 - **Root cause of the cockpit "proxy-settings error" (`proxy_unreachable`):** DNS, not proxy.
