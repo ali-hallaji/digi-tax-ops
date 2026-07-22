@@ -1,5 +1,33 @@
 # Ops Progress
 
+## MOADIAN D — PART 0 (2026-07-22) — SANDBOX connection fixed + all 4 subjects org-proven
+Founder-blocked leg, done live on dev. Full write-up: `docs/moadian/md_d_part0_sandbox_proof.md`.
+- **Root cause of the cockpit "proxy-settings error" (`proxy_unreachable`):** DNS, not proxy.
+  The Iran egress host (`158.255.74.141:6543`, the `autossh -D 172.18.0.1:2080` socks5h endpoint)
+  **SERVFAILs on `sandboxrc.tax.gov.ir`**; the live host `tp.tax.gov.ir` already had an
+  `/etc/hosts` pin (`77.104.79.101`), sandbox had none → `ssh -D` closed the channel → 8.4 s hang.
+- **Fix (same pattern as live):** appended `77.104.79.60 sandboxrc.tax.gov.ir` to the egress
+  host `/etc/hosts` (IPs from Shecan `178.22.122.100`). NOT committed (network workaround).
+  After: sandbox via socks5h → HTTP 500 TLS-OK 0.5 s. **نیک‌تجارت connection test PASSES**
+  (fiscal ACTIVE, environment=sandbox, profile→approved).
+- **Org-proof chains (sandbox, real amounts, آزمایشی) — all accepted (ثبت شد):**
+  Chain A INV-2026-000005 اصلی→اصلاحی→ابطالی (`…FE39`/`…FE46`/`…FE55`);
+  Chain B INV-2026-000006 اصلی→برگشت از فروش (`…FE62`/`…FE77`, partial 1/3).
+  **برگشت از فروش org-proven for the first time.**
+- **CRITICAL code bug surfaced (ship-blocker, NOT yet fixed — awaiting founder GO):**
+  `send_service._next_inno` seeds a new fiscal memory's counter with `2` → first `inno` is
+  1,2,… → org 0100504 («سریال صورتحساب» must be `^[a-fA-F0-9]{10}$`). Every newly-connected
+  مؤدی's first invoices get rejected. Live دیباتک only works via a migration-seeded epoch counter.
+  Fix: seed new counters with epoch-seconds + a migration for existing `next_serial<1e9`.
+  (Worked around on dev by resetting نیک‌تجارت's counter to epoch.)
+- **Also:** org `tinb` (buyer economic code) wants `^\d{11}$` but CLAUDE.md §7.5 says کد اقتصادی
+  = 12 digits → founder decision needed (legal buyer economic code = 11-digit شناسه ملی).
+- **Dev data touched (reseed to restore §4.5):** نیک‌تجارت serial counter→epoch (keep, correct);
+  customer bb1c2625 economic_id→14003330003; INV-004 line sstid set; new INV-005/006 + 6 sandbox
+  submission rows; نیک‌تجارت profile→approved. **Tunnel is manual autossh → not reboot-persistent.**
+- **PARTS 1–5 (issuance UX overhaul, Excel caps, org-inquiry sweep, pattern & monetization
+  assessments) NOT started** — deferred per the 97% rule; resume in a fresh window.
+
 ## PHASE-1 CLOSURE — PARTS 5 & 6 (2026-07-22) — admin control room + partner polish, DEPLOYED to dev
 Final window of the closure batch. UI/IA on Opus, plumbing on Fable subagents; ui-ux-pro-max
 consulted. Additive migration only (`acraud00008` — global admin audit log); NO reseed.

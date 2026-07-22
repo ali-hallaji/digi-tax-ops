@@ -279,6 +279,45 @@ MOADIAN_PROXY_PASSWORD=                       # optional
   decision — see backlog «توپولوژی خروجی ایران برای مودیان در پروداکشن». TLS to
   the Tax Org stays end-to-end; the proxy only forwards bytes.
 
+#### Egress-host DNS pins (procedure — مقادیر در سرور, never in git)
+
+The dev api reaches Moadian through an SSH SOCKS tunnel to an **in-Iran egress
+host**; `socks5h://` resolves hostnames **on that host**. Its resolver SERVFAILs
+on `tax.gov.ir` names, so BOTH org hostnames are pinned in the egress host's
+`/etc/hosts` (MOADIAN D PART 0 root cause — a missing sandbox pin surfaced as
+`proxy_unreachable` in the cockpit):
+
+```
+<live-ip>     tp.tax.gov.ir          # LIVE کارپوشه
+<sandbox-ip>  sandboxrc.tax.gov.ir   # sandbox کارپوشه آزمایشی
+```
+
+IPs live only on the server (مقادیر در سرور — resolve fresh via an Iranian
+resolver such as Shecan `dig @178.22.122.100 <host> A` from the egress host).
+If the egress host is ever rebuilt, restore BOTH pins or sandbox/live legs fail
+with `proxy_unreachable` while the tunnel itself looks healthy. Verify a pin:
+`getent hosts tp.tax.gov.ir` / `getent hosts sandboxrc.tax.gov.ir` on the egress
+host, then through the tunnel from dev:
+`curl -sS -m 25 --socks5-hostname 127.0.0.1:2080 https://<host>/req/api/self-tsp/sync/GET_SERVER_INFORMATION -X POST -d '{}' -o /dev/null -w '%{http_code}\n'`
+(an HTTP `500` on the empty body means the org WAS reached — that's a PASS for
+connectivity).
+
+#### Tunnel restart (dev host → egress host)
+
+The container-facing SOCKS tunnel is launched **manually** on the dev host
+(NOT reboot-persistent — a systemd unit is on the pre-production checklist):
+
+```
+autossh -M 0 -f -N -D 127.0.0.1:2080 -D 172.18.0.1:2080 -p <egress-ssh-port> \
+  -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+  -o ExitOnForwardFailure=yes -o ConnectTimeout=10 -o BatchMode=yes \
+  root@<egress-host>
+```
+
+Host/port: مقادیر در سرور (see the running process: `ps aux | grep autossh`).
+Health check: `ss -tlnp | grep 2080` shows both binds; the `172.18.0.1` bind is
+the one containers reach (`MOADIAN_PROXY_URL=socks5h://172.18.0.1:2080`).
+
 ## Compose Config Validation
 
 Validate Compose before building or restarting services:

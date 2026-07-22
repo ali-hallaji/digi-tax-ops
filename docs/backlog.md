@@ -100,6 +100,15 @@ the proxy host is trusted with TLS-terminated traffic (it is NOT — the Moadian
 end-to-end to tp.tax.gov.ir; the proxy only forwards). Decide before MD-2 real submission
 goes live. `MOADIAN_PROXY_*` is currently for local/testing only.
 
+**Pre-production checklist additions (MOADIAN D STEP B, 2026-07-22):**
+- **systemd unit for the SOCKS tunnel** — the dev-host `autossh -D 172.18.0.1:2080`
+  tunnel is launched manually today and does NOT survive a reboot. Whatever prod
+  topology is chosen, the egress path must be supervised (systemd unit with
+  `Restart=always`, or equivalent), not a hand-run process.
+- **Egress-host DNS pins** — the egress host needs BOTH `/etc/hosts` pins
+  (`tp.tax.gov.ir` live + `sandboxrc.tax.gov.ir` sandbox); its resolver SERVFAILs
+  on these names. Procedure (no IPs in git): runbook § Egress-host DNS pins.
+
 ## Moadian private-key durability discipline (prod) — DOCUMENTED (2026-07-17)
 
 A wipe-first reseed (`reset_world.sh`) once destroyed a real, runtime-created Moadian
