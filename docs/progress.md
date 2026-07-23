@@ -1,5 +1,43 @@
 # Ops Progress
 
+## MOADIAN E — نوع دوم fix + submitted-state lock + serial audit + follow-ups (2026-07-23) — LOCAL, gates green
+Backend + frontend committed on `main`, gates green, **pending push + guarded dev deploy**.
+
+- **PART 1 (headline) — نوع دوم validation correctness.** Root cause: the standard validator +
+  preview converter derived the invoice نوع purely from `customer is not None`, ignoring the
+  persisted `moadian_type_override`. A نوع دوم invoice that merely carried a customer was forced
+  through نوع اول buyer-identity rules → the founder's «missing customer / buyer id» errors. Fix:
+  one pure override-aware resolver (`converter.resolve_effective_buyer_and_type`) is the single
+  source of (effective buyer, نوع); the validator gains a `moadian_type` param — strict buyer
+  identity for نوع اول, optional & never-blocking for نوع دوم (legacy-12 economic code still an
+  amber nudge). Threaded through submit + all validate/preview endpoints. 12 new unit tests.
+- **PART 2 — submitted-state persistence + lock.** BE: reject a duplicate اصلی for an
+  already-registered invoice (friendly → اصلاحیه/ابطال); `updated_at` (last-inquiry) on the row.
+  FE: once registered, the per-invoice panel shows the persisted state permanently (no
+  re-validation) — interpreted headline, copyable taxid/reference, env tag, «آخرین استعلام»,
+  «به‌روزرسانی وضعیت» + lifecycle actions — replacing the validate/submit CTA; stale copy fixed.
+- **PART 3 + ADDENDUM (PART 7) — serial warning triage with RC_DCPS.SN_V1.3 in hand.** The taxid
+  builder is CONFIRMED byte-exact vs the spec's three worked examples (now fixtures). Component
+  diff on real dev payloads: the taxid's embedded date/serial equal the body `indatim`/`inno`
+  EXACTLY — no mismatch. 1300501 appears on BOTH memories (دیباتک live + نیک‌تجارت sandbox) on
+  consecutive epoch serials and all such rows are `accepted` → it is an org-side serial
+  reconciliation, NOT an algorithm/component bug. Rendered as a calm non-blocking تذکر. Two
+  precise founder/org questions (body `inno` decimal-vs-hex encoding; fresh-memory expectation)
+  logged — NOT guessed. Full record: `docs/moadian/md_e_taxid_serial_audit.md`.
+- **PART 6.** (1) نیک‌تجارت keeps `moadian_submission` across reseeds (seed, idempotent, no key).
+  (2) Admin-token cockpit no longer 422-loops (`resolve_moadian_business_scope`). (3) BACKEND_SHA
+  build wiring already present in compose (`GIT_SHA:${BACKEND_SHA}`) + runbook exports it —
+  deploy must export it so `/health/version` reports the real sha (verify post-deploy).
+- **PARTS 4 & 5 — DEFERRED per the 97% rule + founder's own ambiguity-STOP rule.** الگوی ۴
+  (پیمانکاری) is spec-clean and implementation-ready (needs a `crn` migration + FE selector; the
+  sandbox proof is blocked on a کارپوشه-registered contract number). الگوی ۳ (طلا) is STOPPED:
+  the gold VAT base (`vam=((TAs*10)/100)+((Es*J)/100)`, and whether raw-gold `Es` is exempt) is
+  genuinely ambiguous → 5 accountant questions logged, do not guess. Both in
+  `docs/moadian/md_e_patterns_4_and_3.md`.
+- **Gates:** full backend suite 1124 pass / 7-baseline (FakeDBSession) / 81 skip; isolated pg
+  suite (rebuilt image) moadian+identity 412 pass / 6-baseline; ruff+black clean; FE typecheck 0 +
+  build green. **NO migration this batch.**
+
 ## MOADIAN D (PARTS 1–3) ship + STEP-0 access-message fix (2026-07-22) — DEPLOYED to dev
 Guarded dev deploy of the interrupted D ship, plus a founder-reported critical access bug.
 SHAs: **backend `ab7f76e`** (on the `c358002` D batch) · **frontend `c425a53`** (`50ff99c` STEP-0
