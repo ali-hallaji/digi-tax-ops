@@ -51,8 +51,41 @@ started, and add new items as they surface. It never goes stale.
   audit — coefficients stay admin-managed). nameTrade stays suppressed. (backend
   `b52663a` · frontend `b52663a`.)
 
-## Launch Batch 2 — landing page + SEO ⬜
-Public marketing site / landing page + SEO foundation.
+## Launch Batch 2 — landing + overflow + corrective-empirical + Excel + laws (DEPLOYED to dev 2026-07-25)
+Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICAL-TEST LAW
+(sandbox answers beat doc citations) + GRILL-ME LAW (hostile-test before DONE).
+- ✅ **Part 1 — text-overflow sweep.** Fixed the reported bug (a long stuffid name shattered
+  the items step): `min-w-0` on the items-step 1fr grid column. Also clamped the print-view
+  line cell, the header owner name (two-line + title), the Moadian org message + interpreted
+  chip (org-verbatim), and products/vendors table name cells. (frontend `e1f2dcf`.)
+- ✅ **Part 2 — corrective items EMPIRICAL verdict (headline).** Sandbox on نیک‌تجارت:
+  **ADD-line ACCEPTED** (taxid …916817), **REPLACE-sstid REJECTED** (taxid …916829); REMOVE +
+  qty/price already ACCEPTED (MOADIAN F). So the corrective wizard now shows the add-line form
+  (the old «نمی‌توان ردیف افزود» lock was a doc-guess the org disproved); existing-line sstid
+  stays locked with the org's behaviour as the stated reason. `docs/moadian/
+  corrective_experiments_2026-07.md` + `scripts/corrective_experiment.py`. (frontend `e1f2dcf`
+  · ops `7493780`.)
+- ✅ **Part 3 — Excel import sync.** Audit found the importer already handles نوع/الگوی‌پیمانکاری+crn/
+  unit/sstid and the samples are in sync; added «اصلی-only» to the import dialog + fixed the stale
+  «not implemented» contract line + documented the A–L schema. (frontend + backend-doc.)
+- ✅ **Part 6 — public landing + SEO.** `/` is now a public SSR marketing page (four merchant
+  questions + Moadian, outcome blocks, «شروع رایگان ۱۴ روزه» teaser, FAQ, footer + اینماد slot);
+  logged-in → «ورود به پنل»; deep capabilities hidden. SEO: per-route head + JSON-LD (Org+Software+
+  FAQ), robots.txt, sitemap.xml, webmanifest, theme-color; killed the __root duplicate-description
+  + Lovable placeholder OG. /app guard intact. Landing smoke spec. (frontend `87fef12`.)
+- 🔄 **Part 4 — chart-of-accounts default templates** (accountant suggestion). SCOUTED (model
+  `ChartAccount`, idempotent `ensure_*` builders in `accounting/application/chart.py`, coding
+  1x دارایی/2x بدهی/3x سرمایه/4x درآمد/5x هزینه, accountant-view `_gate`, `TaxConfigEvent`-style
+  audit). NOT built this turn — a picker (خدماتی/بازرگانی/تولیدی/پیمانکاری) seeding an additive,
+  preview-first, audited default tree per type is the next step. **Needs the founder's accountant
+  to bless the drafted trees.**
+- 🔄 **Part 5 — PDF re-mine.** `docs/moadian/pdf_remine_2026-07.md` created; the اینتاکد verdict is
+  restated definitively (absent from all documented org services). A full fresh end-to-end re-read
+  of every PDF is queued there.
+
+## Launch Batch 3 — partner panel v2 ⬜
+- Per-partner **admin-set commission %** (currently a single global/implicit rate).
+- **Two-tier referral commission** (referrer of a referrer earns).
 
 ## Launch Batch 3 — partner panel v2 ⬜
 - Per-partner **admin-set commission %** (currently a single global/implicit rate).
@@ -98,6 +131,9 @@ Public marketing site / landing page + SEO foundation.
 - **Payroll + insurance SKU** (حقوق و دستمزد + بیمه) — new module.
 - **Gold pattern** (الگوی سوم — طلا، جواهر و پلاتین) issuance.
 - **300-customer migration** — bulk import path for a real onboarding.
+- **Data-migration importer from Holoo / Sepidar / Chortkeh** — an Excel importer that maps
+  the common Iranian SME accounting exports (Holoo هلو, Sepidar سپیدار, Chortkeh چرتکه) into
+  DigiInvoice customers/products/opening balances, so a switching business brings its history.
 - **Issuance UX overhaul** — the invoice-builder experience redesign.
 - **Matrix rows E5–E7** — full UI walks of corrective-on-cancelled, second-open-corrective,
   and the «لغو سند» cancel-draft path (guard+test proven; UI walks deferred).
