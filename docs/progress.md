@@ -1,5 +1,43 @@
 # Ops Progress
 
+## MOADIAN F (2026-07-24) — TRUE editable اصلاحیه + pagination sweep + pattern findability — DEPLOYED to dev
+Founder's core complaint fixed: «صدور اصلاحیه» no longer submits an immediate no-edit
+corrective (which read like a cancellation). It now **creates an editable DRAFT copy
+linked to the original** (`corrective_of_invoice_id` + frozen `corrective_reference_taxid`),
+opens the normal wizard with only تعداد/مبلغ/تخفیف editable (نوع/الگو/خریدار/شناسهٔ کالا/نرخ
+مالیات locked with calm reasons, «افزودن ردیف» removed per RC_IITP §5-2 نکته ۲), then
+finalize → «ارسال» submits as **ins=2** with irtaxid; buyer omitted for referring subjects
+(جدول ۱۰ ردیف ۴). Bidirectional links both ways. Spec doc:
+`docs/moadian/md_f_corrective_spec.md`. Part 2: `/app/moadian` submissions + api-log
+server-paginated/searchable/filterable; ledger capped (`docs/pagination_sweep_md_f.md`).
+Part 3: نوع دوم shows read-only «الگو: فروش» + discoverability note; نوع اول builder shows
+the فروش/پیمانکاری selector; crn renamed «شمارهٔ قرارداد (ثبت‌شده در کارپوشه)».
+
+**Real-UI proof (HARD LAW, نیک‌تجارت sandbox):** built a 3-line نوع دوم original →
+org **ثبت شد** (taxid …D5) → «صدور اصلاحیه» → editable draft INV-000027 → changed qty 2→5,
+price 2M→2.5M, deleted line 3 → org **ثبت شد** as ins=2 (subject=2 accepted in DB) →
+bidirectional links verified. Blocked-case: «صدور اصلاحیه» disabled pre-registration and
+on «رد شد». F1/F2 pager+search+filters and F3/F4 findability walked. Matrix rows E1–E4,
+E8, F1–F4 ✅; E5–E7 guard+test level (see matrix). Screenshots in
+`qa-screens/matrix-walk-f/`.
+
+**Walk finding FIXED in-batch:** the corrective deep-copy dropped per-line amounts, so an
+UNEDITED copied line submitted with a **0 total** (understated اصلاحیه). Fixed to copy the
+original's amounts (**backend `33e3149`**); `*_pg` regression test added; real-UI re-proven
+on dev (unedited corrective line shows «۱۳,۲۰۰ ریال», not «۰»).
+
+**Follow-up (logged, needs accountant):** the نوع دوم corrective registers but the org
+returns a non-blocking تذکر that inp/inty are «خارج از الگو» (14007/14004) — we blank only
+the buyer for referring subjects; confirm whether to also blank inp/inty before changing
+the packet.
+
+SHAs deployed on dev: **backend `33e3149`** (F Part 1 `6d03b63` + F Part 2 `ba9a168` +
+copy-amount fix `33e3149`) · **frontend `3cfa988`** (F Parts 1–3 `e77f848`-era + cockpit
+pagination `9845446` + harness spec-02 fix `3cfa988`). Migration **`mfcorr00011`**
+(invoice_drafts.corrective_of_invoice_id + corrective_reference_taxid) applied +
+psql-verified on the first F deploy. Gates: harness **10/10 local**; backend **1241 pass /
+7 known-baseline**; ruff+black clean; typecheck clean. api **Up (healthy)** on `33e3149`.
+
 ## INVOICE FLOW INTEGRITY (2026-07-24) — DEPLOYED to dev; full matrix walked GREEN; 1300501 FIXED
 End-to-end issuance-journey batch on the founder's GO. **New HARD LAW encoded in
 `docs/invoice_flow_matrix.md`: a scenario counts as PROVEN only when walked through the

@@ -104,23 +104,23 @@ registered invoice; نوع/الگو/خریدار/شناسهٔ کالا/خدمت/
 
 | # | Scenario | Expected behavior | Proof | Status |
 |---|----------|-------------------|-------|--------|
-| E1 📱 | «صدور اصلاحیه» on a registered invoice | Confirm dialog explains the editable-draft flow → creates a DRAFT copy linked to the original → lands in the wizard with everything editable per spec | UI journey, نیک‌تجارت sandbox | pending |
-| E2 📱 | Corrective wizard locks | نوع/الگو/crn/customer/buyer locked with a reason; «افزودن ردیف» disabled; per-line شناسهٔ کالا/خدمت + نرخ مالیات locked; qty/price/discount editable | UI journey | pending |
-| E3 📱 | Edit + finalize + submit | Change qty on one line + price on another + delete a line → finalize → «ارسال» → org ACCEPTED as اصلاحی (ins=2, subject_fa=«اصلاحی») | UI journey, sandbox | pending |
-| E4 | Bidirectional timeline | Original shows «اصلاح شد → [شماره]»; corrective banners «اصلاحیهٔ [مرجع]» + مرجع link | UI journey | pending |
-| E5 | Blocked — corrective on cancelled | «صدور اصلاحیه» on a باطل‌شده invoice → friendly Persian refusal, no org call | UI/curl | pending |
-| E6 | Blocked — second open corrective | A 2nd «صدور اصلاحیه» while one draft is open → friendly «یک پیش‌نویس اصلاحیه باز است» | UI/curl | pending |
-| E7 | Cancel corrective draft | Cancelling the corrective DRAFT leaves the original untouched (no org footprint) | UI journey | pending |
-| E8 | Packet buyer-omit | The اصلاحی packet omits buyer identity (جدول ۱۰ ردیف ۴) — no 14xxx «خارج از الگو» تذکر from the buyer fields | wire-check | pending |
+| E1 📱 | «صدور اصلاحیه» on a registered invoice | Confirm dialog explains the editable-draft flow → creates a DRAFT copy linked to the original → lands in the wizard with everything editable per spec | UI journey, نیک‌تجارت sandbox | ✅ INV-000026 (ثبت شد) → صدور اصلاحیه → confirm («مرجع: …D5») → new draft INV-000027, steps navigable — E1/E2/E3-*.png |
+| E2 📱 | Corrective wizard locks | نوع/الگو/crn/customer/buyer locked with a reason; «افزودن ردیف» disabled; per-line شناسهٔ کالا/خدمت + نرخ مالیات locked; qty/price/discount editable | UI journey | ✅ no «شناسه مالیاتی» btn, no add-line form («…نمی‌توان ردیف جدید افزود RC_IITP §5-2»), نرخ مالیات read-only, qty/price/discount editable — E4a-*.png |
+| E3 📱 | Edit + finalize + submit | Change qty on one line + price on another + delete a line → finalize → «ارسال» → org ACCEPTED as اصلاحی (ins=2, subject_fa=«اصلاحی») | UI journey, sandbox | ✅ qty 2→5, price 2M→2.5M, deleted line 3 → org **ثبت شد** (taxid …E1, subject=2 accepted in DB). تذکر: org flags الگو/نوع «خارج از الگو» (non-blocking; see follow-up) — E4b/E6-*.png |
+| E4 | Bidirectional timeline | Original shows «اصلاح شد → [شماره]»; corrective banners «اصلاحیهٔ [مرجع]» + مرجع link | UI journey | ✅ original «این صورتحساب اصلاح شده است: INV-000027» ↔ corrective «اصلاحیهٔ INV-000026» + «مشاهدهٔ صورتحساب مرجع» — E7/E3-*.png |
+| E5 | Blocked — corrective on cancelled | «صدور اصلاحیه» on a باطل‌شده invoice → friendly Persian refusal, no org call | UI/curl | ⚠️ guard proven at code+test level (`_has_cancellation` in create_corrective; button enables ONLY on «ثبت شده» — proven disabled pre-registration & on «رد شد» INV-000025). Cancelled-invoice-specific UI walk not run this batch. |
+| E6 | Blocked — second open corrective | A 2nd «صدور اصلاحیه» while one draft is open → friendly «یک پیش‌نویس اصلاحیه باز است» | UI/curl | ⚠️ one-open guard live (409, unit-tested; relied on it during cleanup). Explicit 2nd-attempt UI walk not run this batch. |
+| E7 | Cancel corrective draft | Cancelling the corrective DRAFT leaves the original untouched (no org footprint) | UI journey | ⚠️ re-verify draft discarded (DB delete) left original INV-000023 untouched + re-correctable; UI «لغو سند» path not walked this batch. |
+| E8 | Packet buyer-omit | The اصلاحی packet omits buyer identity (جدول ۱۰ ردیف ۴) — no 14xxx «خارج از الگو» تذکر from the buyer fields | wire-check | ✅ unit-tested (test_corrective_f: buyer omitted for ins 2/3/4, original keeps buyer); org returned NO buyer-field تذکر on the نوع دوم corrective. |
 
 ## F — Pagination / findability (MOADIAN F Parts 2–3)
 
 | # | Scenario | Expected behavior | Proof | Status |
 |---|----------|-------------------|-------|--------|
-| F1 📱 | /app/moadian submissions | Paginated + searchable (سند/taxid/ارجاع) + status/environment filters + calm count | UI journey | pending |
-| F2 | /app/moadian api-log | Paginated with prev/next | UI journey | pending |
-| F3 📱 | Pattern findability — نوع اول | الگو selector visible, پیمانکاری selectable, crn field «شمارهٔ قرارداد (ثبت‌شده در کارپوشه)» appears | UI journey | pending |
-| F4 📱 | Pattern findability — نوع دوم | Read-only «الگو: فروش» + visible note «الگوی پیمانکاری فقط برای نوع اول در دسترس است» | UI journey | pending |
+| F1 📱 | /app/moadian submissions | Paginated + searchable (سند/taxid/ارجاع) + status/environment filters + calm count | UI journey | ✅ «۲۹ ارسال · صفحه ۱ از ۲» pager + status & environment selects; search «9167E1» → «۱ ارسال» (server-side) — F1-*.png |
+| F2 | /app/moadian api-log | Paginated with prev/next | UI journey | ✅ «سوابق ارتباط» «صفحهٔ ۱ از ۴» prev(disabled)/next |
+| F3 📱 | Pattern findability — نوع اول | الگو selector visible, پیمانکاری selectable, crn field «شمارهٔ قرارداد (ثبت‌شده در کارپوشه)» appears | UI journey | ✅ builder (نوع اول): فروش/پیمانکاری segmented selector renders; «الگوهای دیگر» dialog confirms «پیمانکاری فعال است»; crn label renamed. (Create page shows read-only line intentionally.) |
+| F4 📱 | Pattern findability — نوع دوم | Read-only «الگو: فروش» + visible note «الگوی پیمانکاری فقط برای نوع اول در دسترس است» | UI journey | ✅ read-only «الگو: فروش» + note «الگوی پیمانکاری فقط برای «نوع اول» در دسترس است…» on create + builder — F4-*.png |
 
 ## Proof artifacts
 
@@ -141,8 +141,10 @@ the REGISTERED rate and zero out via 100% discount).
 5. D2: internal rows leaked a «مودیان: ارسال‌نشده» chip — chip is tax_reportable-only now.
 6. Returns dialog swallowed the backend guidance (full-return→ابطال etc.) — rendered inline now.
 7. Body `inno` decimal↔hex — org parses it AS HEX vs the taxid serial; hex adopted (kills 1300501).
+8. **Corrective deep-copy dropped per-line amounts (F Part 1)** — `create_corrective_draft_for_tenant` copied qty/price/discount but not `line_subtotal`/`line_vat_amount`/`line_total`, and `_recalculate_totals` only SUMS the (then-0) stored per-line totals. A copied line recomputed only when individually edited, so an UNEDITED line in a corrective submitted with a **0 amount** (understated اصلاحیه). Fixed: copy the original's already-correct per-line amounts (commit `33e3149`). `*_pg` regression test added (FakeDBSession bypassed this path). Real-UI re-proven on dev: a fresh corrective's unedited line shows «۱۳,۲۰۰ ریال», not «۰» — E4c-FIX-*.png.
 
 ## Follow-ups (logged, not this batch)
+- **Corrective «خارج از الگو» تذکر (Moadian spec).** The نوع دوم corrective REGISTERED («ثبت شد») but the org returned a non-blocking تذکر that «الگوی صورتحساب» (inp) and «نوع صورتحساب» (inty) are «خارج از الگو» (codes 14007/14004). Our packet blanks only the BUYER for referring subjects (ins 2/3/4, جدول ۱۰ ردیف ۴); the org's ideal appears to also omit inty/inp on a corrective. Non-blocking today; confirm the exact referring-subject field set with the accountant before blanking inty/inp (avoid speculative packet changes). Same class as the existing 14xxx «خارج از الگو» return notices.
 - Print-view header shows the Gregorian issue date («۲۰۲۶-۰۷-۲۴») — should be Jalali.
 - The admin payload PREVIEW shows the raw legacy `tinb` while the wire substitutes the 11-digit شناسه ملی — align the preview with `_buyer_tinb`.
 - Excel-imported drafts with out-of-FY dates import fine but need a date fix before the wizard can save — consider an import-time hint.
