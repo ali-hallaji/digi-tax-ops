@@ -22,36 +22,34 @@ started, and add new items as they surface. It never goes stale.
 
 ---
 
-## Launch Batch 1 — accountant correctness + sellable pricing + payments + profile (IN PROGRESS 2026-07-24)
-- 🔄 **Part 0** — this LAUNCH_ROADMAP.md (founder-ordered permanent tracker).
-- ⬜ **Part 1 — Cheque ↔ bank-account law** (accountant-mandated). Cheques get a REQUIRED
-  `account_id` FK to treasury accounts; وصول credits the linked account, پاس debits it,
-  برگشتی moves nothing (money moves ONLY at وصول/پاس — the locked lifecycle). Legacy
-  NULL-account cheques get a soft «نیاز به انتخاب حساب» state (never invent an account).
-  Form «حساب بانکی» becomes a required select (empty-state → one-tap add bank account →
-  return with state). Journal entries reflect the account. **Headline proof:** create
-  bank account → received cheque → وصول → balance visibly up on حساب‌های من + report;
-  issued پاس → down.
-- ⬜ **Part 2 — Hybrid pricing + admin price control.** Current module prices = BASE
-  ECONOMY tier; usage ceiling on top. Admin edits EVERY SKU price (effective-from +
-  audit; no retroactive change to paid terms). Monthly «اسناد» metering per business
-  (finalized invoices + purchases + returns = trial-cap definition); per-plan included
-  volume (`BASE_PLAN_INCLUDED_DOCS_PER_MONTH`, `MOADIAN_INCLUDED_SUBMISSIONS_PER_MONTH`,
-  env+admin-editable). Calm over-cap: 80% heads-up, 100% «ارتقا یا بستهٔ افزایشی» prompt on
-  NEW-doc creation (reads/reports never lock); overage packs via checkout. Per-business
-  admin overrides (audited). Plans page = professional tiering («تا X سند در ماه»). Usage
-  card «X از Y سند». ui-ux-pro-max consulted.
-- ⬜ **Part 3 — Multi-gateway adapter** (env-switched). `GatewayAdapter` interface behind
-  the current checkout; adapters: simulated (default), Zarinpal, Zibal. Idempotent
-  server-side verify; failed/cancelled → friendly plans state; entitlement activates ONLY
-  after verify. Renewal reminders deep-link to checkout. Ships complete + unit-tested
-  against recorded response shapes; prints the exact env lines the founder sets on creds.
-  *(97%: may resume with notes.)*
-- ⬜ **Part 4 — Moadian profile enrichment.** Fetch/refresh org-sourced profile fields in
-  cockpit «پروفایل مؤدی» (read-only org values + timestamp) alongside local overridable
-  copies (amber «فقط در دیجی‌اینویس اعمال می‌شود» note; never silently overwrite; show diff
-  on divergence). اینتاکد/coefficient: surface ONLY if a documented org service returns it;
-  otherwise state honestly. *(97%: may resume with notes.)*
+## Launch Batch 1 — accountant correctness + sellable pricing + payments + profile (DEPLOYED to dev 2026-07-25)
+- ✅ **Part 0** — this LAUNCH_ROADMAP.md.
+- ✅ **Part 1 — Cheque ↔ bank-account law.** `account_id` REQUIRED at create for both
+  directions (the FK + وصول/پاس money-movement already existed — the gap was optional-at-
+  create + received never collecting it). Free-text bank name replaced by a required
+  «حساب بانکی» select on the «افزودن چک» dialog AND the settlement dialog; empty-state →
+  add bank account. Legacy NULL-account cheques get a «نیاز به انتخاب حساب» badge + a
+  same-step account pick at وصول/پاس (no invented accounts, NO migration — column stays
+  nullable). Tests + contract doc. (SHAs backend `e8d9770` · frontend `2efc308`.)
+- ✅ **Part 2 — Hybrid pricing + metering (core).** Monthly «سند» metering (finalized
+  invoices + purchases + returns, current Jalali month) vs an included volume
+  (`BASE_PLAN_INCLUDED_DOCS_PER_MONTH`=200 env default, per-business admin override via
+  tenant_plan_limits). merchant plan payload gains `document_allowance`; DocumentUsageCard
+  «X از Y سند» on the plans page with ok/near(≥80%)/over(≥100%) states + upgrade CTA; reads
+  never lock. Hard cap `require_document_capacity` at invoice finalize is FLAG-GATED
+  (`DOCUMENT_CAP_ENFORCED`, default OFF — measure-first). (backend `64a36ba`.) **Follow-ups
+  (below):** overage-pack consumable purchase; admin price effective-from + history; full
+  ui-ux-pro-max plans redesign; dashboard usage card.
+- ✅ **Part 3 — Multi-gateway adapter.** ZibalGateway added behind the existing
+  PaymentGateway Protocol + get_gateway() factory (sim default · Zarinpal · Zibal);
+  `PAYMENT_GATEWAY=zibal` + `ZIBAL_MERCHANT_ID`, no call-site change. Callback route
+  normalizes BOTH Zarinpal/sim (`Authority`+`Status`) and Zibal (`trackId`+`success`)
+  return shapes. Unit-tested vs recorded Zibal bodies. (backend `51b1081`.)
+- ✅ **Part 4 — Moadian profile enrichment.** Cockpit «پروفایل مؤدی» card surfaces org
+  economicCode/nationalId READ-ONLY + last-refresh, an amber divergence note vs the local
+  copy, and the HONEST line that the org returns no اینتاکد/coefficient (exhaustive PDF
+  audit — coefficients stay admin-managed). nameTrade stays suppressed. (backend
+  `b52663a` · frontend `b52663a`.)
 
 ## Launch Batch 2 — landing page + SEO ⬜
 Public marketing site / landing page + SEO foundation.
@@ -89,6 +87,14 @@ Public marketing site / landing page + SEO foundation.
 ---
 
 ## Post-launch backlog (explicitly NOT pre-launch)
+- **Batch 1 Part 2 follow-ups:** overage-pack consumable SKU «بستهٔ افزایش سند» (needs a
+  quota/credit model — the entitlement model is boolean, so a consumable pack doesn't fit
+  yet; the over-cap prompt currently points to «ارتقا»); admin per-SKU price effective-from
+  + price-history table (admin already edits every price with a shallow audit); full
+  ui-ux-pro-max plans-page tiering redesign; dashboard usage card; turning
+  `DOCUMENT_CAP_ENFORCED` on once pricing is finalized.
+- **Batch 1 Part 3 follow-up:** live sandbox rehearsal of Zarinpal/Zibal once merchant
+  creds arrive; renewal-reminder deep-link polish.
 - **Payroll + insurance SKU** (حقوق و دستمزد + بیمه) — new module.
 - **Gold pattern** (الگوی سوم — طلا، جواهر و پلاتین) issuance.
 - **300-customer migration** — bulk import path for a real onboarding.
