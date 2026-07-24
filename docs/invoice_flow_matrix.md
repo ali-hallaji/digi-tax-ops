@@ -97,6 +97,31 @@ proven at 390px; the rest desktop.
 | D1 | Internal create/edit/finalize/print | Zero Moadian UI (no نوع line, no validate/submit, no buyer-identity text) at every step | UI sweep | ✅ zero Moadian UI (honest clarifier note only) |
 | D2 | Internal invoice list + detail | No Moadian status column/filter leakage for internal docs | UI sweep | ✅ fixed this batch (chip was leaking) — D2-*.png |
 
+## E — Editable اصلاحیه (MOADIAN F, RC_IITP §5-2)
+
+Spec: `docs/moadian/md_f_corrective_spec.md`. Corrective = editable deep-copy of a
+registered invoice; نوع/الگو/خریدار/شناسهٔ کالا/خدمت/نرخ مالیات frozen; submit auto ins=2.
+
+| # | Scenario | Expected behavior | Proof | Status |
+|---|----------|-------------------|-------|--------|
+| E1 📱 | «صدور اصلاحیه» on a registered invoice | Confirm dialog explains the editable-draft flow → creates a DRAFT copy linked to the original → lands in the wizard with everything editable per spec | UI journey, نیک‌تجارت sandbox | pending |
+| E2 📱 | Corrective wizard locks | نوع/الگو/crn/customer/buyer locked with a reason; «افزودن ردیف» disabled; per-line شناسهٔ کالا/خدمت + نرخ مالیات locked; qty/price/discount editable | UI journey | pending |
+| E3 📱 | Edit + finalize + submit | Change qty on one line + price on another + delete a line → finalize → «ارسال» → org ACCEPTED as اصلاحی (ins=2, subject_fa=«اصلاحی») | UI journey, sandbox | pending |
+| E4 | Bidirectional timeline | Original shows «اصلاح شد → [شماره]»; corrective banners «اصلاحیهٔ [مرجع]» + مرجع link | UI journey | pending |
+| E5 | Blocked — corrective on cancelled | «صدور اصلاحیه» on a باطل‌شده invoice → friendly Persian refusal, no org call | UI/curl | pending |
+| E6 | Blocked — second open corrective | A 2nd «صدور اصلاحیه» while one draft is open → friendly «یک پیش‌نویس اصلاحیه باز است» | UI/curl | pending |
+| E7 | Cancel corrective draft | Cancelling the corrective DRAFT leaves the original untouched (no org footprint) | UI journey | pending |
+| E8 | Packet buyer-omit | The اصلاحی packet omits buyer identity (جدول ۱۰ ردیف ۴) — no 14xxx «خارج از الگو» تذکر from the buyer fields | wire-check | pending |
+
+## F — Pagination / findability (MOADIAN F Parts 2–3)
+
+| # | Scenario | Expected behavior | Proof | Status |
+|---|----------|-------------------|-------|--------|
+| F1 📱 | /app/moadian submissions | Paginated + searchable (سند/taxid/ارجاع) + status/environment filters + calm count | UI journey | pending |
+| F2 | /app/moadian api-log | Paginated with prev/next | UI journey | pending |
+| F3 📱 | Pattern findability — نوع اول | الگو selector visible, پیمانکاری selectable, crn field «شمارهٔ قرارداد (ثبت‌شده در کارپوشه)» appears | UI journey | pending |
+| F4 📱 | Pattern findability — نوع دوم | Read-only «الگو: فروش» + visible note «الگوی پیمانکاری فقط برای نوع اول در دسترس است» | UI journey | pending |
+
 ## Proof artifacts
 
 Walked 2026-07-24 on dev (backend `257fc23`, frontend `a8d24e2`): screenshots in
