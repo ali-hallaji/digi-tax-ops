@@ -1,5 +1,53 @@
 # Ops Progress
 
+## INVOICE FLOW INTEGRITY (2026-07-24) — DEPLOYED to dev; full matrix walked GREEN; 1300501 FIXED
+End-to-end issuance-journey batch on the founder's GO. **New HARD LAW encoded in
+`docs/invoice_flow_matrix.md`: a scenario counts as PROVEN only when walked through the
+REAL UI journey — engine-level calls are supporting evidence, never the proof.** SHAs
+deployed on dev: **backend `257fc23`** (`1721b1a` readiness-resolver, `42116f8` پیمانکاری,
+`2ce2a49` hex-inno, `257fc23` crn-finalize-gate) · **frontend `a8d24e2`** (`97b8c35` trap
+kill, `b451bf4` پیمانکاری FE, `9e1a125`+`0d54c3f`+`646605c` spec+races, `a8d24e2` walk
+fixes) · ops matrix/docs. Migration **`crnpat00010`** (invoice_drafts.moadian_pattern +
+moadian_contract_number) applied + psql-verified; snapshot
+`backups/digitax-pre-invoiceflow-20260724-125217.sql.gz` (123M).
+- **Part 2 (founder's blocker) FIXED**: the wizard hard-trapped every customerless
+  tax_reportable draft at the مشتری step (`handleGoToStep` ignored the override); gate
+  removed, `MoadianTypeControl` now lives on the مشتری step with LIVE 1↔2 persist,
+  one-tap «ادامه بدون مشخصات خریدار» (zero fields → straight toward finalize), proactive
+  finalize explainer. Backend `evaluate_invoice_readiness` now mirrors
+  `resolve_effective_buyer_and_type` (consistency-tested): نوع دوم never blocks on buyer;
+  explicit نوع اول without buyer blocks WITH both escape paths. Harness spec 10 encodes
+  the journey permanently.
+- **Part 4 — 1300501 KILLED (root cause was OURS)**: controlled experiment (3 identical
+  sandbox invoices) — decimal inno → accepted+1300501 (even on a fresh counter region);
+  the taxid's own 10-HEX serial component as body inno → accepted with NO warning. The
+  org parses `inno` AS HEX against the taxid serial (the RC_TICS doc example shows
+  decimal — doc and org disagree; org wins). Mappers now emit `f"{serial:010X}"`;
+  proven clean on every subsequent sandbox row AND on the LIVE دیباتک smoke. Record:
+  `docs/moadian/md_e_taxid_serial_audit.md` §4 — item CLOSED (fixed, not org noise).
+- **Part 5 — پیمانکاری (الگوی ۴) COMPLETE (org proof founder-blocked)**: migration +
+  `map_type1_pattern4` (= pattern-1 body + inp=4 + mandatory crn), validator codes,
+  per-invoice فروش/پیمانکاری selector (نوع اول only) + crn input with the کارپوشه hint,
+  Excel col L + updated samples, guide S1-14/16. crn is a FINALIZE blocker (walk finding
+  — validate-only discovery stranded a locked draft). A ready pattern-4 draft
+  «C15 — پیمانکاری بدون قرارداد» sits on dev نیک‌تجارت: once the founder registers a
+  contract number in the sandbox کارپوشه, enter it in the wizard's crn field and submit.
+- **Part 3 — matrix walked, EVERY row green** (39 rows: A1-A12, B1-B10, C1-C15, D1-D2;
+  shots `qa-screens/matrix-walk/`): incl. LIVE zero-total on دیباتک
+  (`A41XRD050B2006A5E4C576`, «ثبت شد» بدون تذکر — first-ever clean دیباتک row; an earlier
+  vra=0 attempt was org-rejected «نرخ … منطبق نیست» → zero-total tests must keep the
+  sstid's REGISTERED rate and zero via 100% discount), sandbox اصلی/اصلاحی/ابطالی chain,
+  partial برگشت (accepted; full-return correctly steered to ابطال), bulk 2/2, Excel
+  per-type import, FEATURE_NOT_ENABLED honesty, D2 purity. Walk found+fixed 6 more bugs
+  (stale readiness explainer, finalize/convert deciding on stale cache, D2 chip leak,
+  returns-dialog swallowed guidance, crn stranding, hex-inno) — list + follow-ups in the
+  matrix doc.
+- **Gates**: backend 1231+ pass / 7 known baseline (proven identical at clean HEAD) /
+  ruff+black clean; FE typecheck 0 + build + unit 55/55; **harness 10/10 LOCAL + 10/10
+  dev** (new spec 10 included); captcha ON throughout. Dev drift: walk invoices on
+  نیک‌تجارت + experiment clones «آزمایش ۱۳۰۰۵۰۱…» + A2HP31 counter +10M (safe, ascending)
+  + 2 new test customers — a reseed clears all (دیباتک's key auto-preserved).
+
 ## MOADIAN E — نوع دوم fix + submitted-state lock + serial audit + follow-ups (2026-07-23) — LOCAL, gates green
 Backend + frontend committed on `main`, gates green, **pending push + guarded dev deploy**.
 

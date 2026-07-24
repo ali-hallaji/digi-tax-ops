@@ -42,63 +42,82 @@ proven at 390px; the rest desktop.
 
 | # | Kind | نوع | Buyer | Amount | Expected behavior | Proof | Status |
 |---|------|-----|-------|--------|-------------------|-------|--------|
-| A1 📱 | TAX | 2 (one-tap walk-in) | none | real | Step 2 «بدون مشخصات خریدار» = one tap, zero fields → finalize enabled → validate OK → sandbox submit → org ACCEPTED | UI journey, نیک‌تجارت sandbox | pending |
-| A2 📱 | TAX | 2 | customer, no ids | real | Customer attaches fine; identity NEVER blocks finalize/validate/submit; org ACCEPTED | UI journey, sandbox | pending |
-| A3 | TAX | 2 | customer, partial (name only) | real | Same as A2 — warnings only (postal/address «توصیه می‌شود»), never a blocker | UI journey, sandbox | pending |
-| A4 | TAX | 2 | customer, full ids | real | Accepted; packet carries buyer snapshot with inty=2 | UI journey, sandbox | pending |
-| A5 📱 | TAX | 1 | customer, full ids | real | The strict path: finalize OK, validate OK, submit → org ACCEPTED | UI journey, sandbox | pending |
-| A6 | TAX | 1 | customer, missing id | real | BLOCKED with the named missing field (e.g. «کد/شناسه ملی برای اشخاص حقیقی لازم است») shown inline AND on the finalize button explainer; one-tap escape to نوع دوم offered | UI journey, sandbox | pending |
-| A7 | TAX | 1 | none | real | BLOCKED with «برای صورتحساب نوع اول، اطلاعات خریدار لازم است» + visible path (select customer OR switch to نوع دوم); button explains, never silently dead | UI journey | pending |
-| A8 | TAX | 1 | customer, legacy 12-digit eco code | real | ACCEPTED with amber nudge «کد اقتصادی جدید همان شناسه ملی (۱۱ رقمی) است»; packet `tinb` = the 11-digit شناسه ملی | UI journey, sandbox | pending |
-| A9 | TAX | 1↔2 switch on existing draft | any | real | Switching type re-evaluates requirements LIVE both directions; no stale blockers; readiness + validate + button text all follow | UI journey | pending |
-| A10 📱 | INT | — | none | real | No customer demanded at ANY step; no Moadian UI anywhere; finalize + print/PDF work | UI journey | pending |
-| A11 | INT | — | customer | real | Customer optional-attach works; still zero Moadian friction | UI journey | pending |
-| A12 | TAX | 2 | none | **zero-total** (100% discount) | THE live smoke on دیباتک: finalize → validate → LIVE submit → org ACCEPTED «ثبت شده»; ZERO-TOTAL law honored | UI journey, دیباتک LIVE | pending |
+| A1 📱 | TAX | 2 (one-tap walk-in) | none | real | Step 2 «بدون مشخصات خریدار» = one tap, zero fields → finalize enabled → validate OK → sandbox submit → org ACCEPTED | UI journey, نیک‌تجارت sandbox | ✅ org ثبت شد (clean) — A1-01..04*.png |
+| A2 📱 | TAX | 2 | customer, no ids | real | Customer attaches fine; identity NEVER blocks finalize/validate/submit; org ACCEPTED | UI journey, sandbox | ✅ org ثبت شد — A2-*.png |
+| A3 | TAX | 2 | customer, partial (name only) | real | Same as A2 — warnings only (postal/address «توصیه می‌شود»), never a blocker | UI journey, sandbox | ✅ org ثبت شد — A3-*.png |
+| A4 | TAX | 2 | customer, full ids | real | Accepted; packet carries buyer snapshot with inty=2 | UI journey, sandbox | ✅ org ثبت شد |
+| A5 📱 | TAX | 1 | customer, full ids | real | The strict path: finalize OK, validate OK, submit → org ACCEPTED | UI journey, sandbox | ✅ org ثبت شد — A5-*.png |
+| A6 | TAX | 1 | customer, missing id | real | BLOCKED with the named missing field (e.g. «کد/شناسه ملی برای اشخاص حقیقی لازم است») shown inline AND on the finalize button explainer; one-tap escape to نوع دوم offered | UI journey, sandbox | ✅ blocked+named field — A6-*.png |
+| A7 | TAX | 1 | none | real | BLOCKED with «برای صورتحساب نوع اول، اطلاعات خریدار لازم است» + visible path (select customer OR switch to نوع دوم); button explains, never silently dead | UI journey | ✅ blocked+escape paths — A7-*.png |
+| A8 | TAX | 1 | customer, legacy 12-digit eco code | real | ACCEPTED with amber nudge «کد اقتصادی جدید همان شناسه ملی (۱۱ رقمی) است»; packet `tinb` = the 11-digit شناسه ملی | UI journey, sandbox | ✅ amber + wire tinb=11digit + org ثبت شد — A8-01*.png |
+| A9 | TAX | 1↔2 switch on existing draft | any | real | Switching type re-evaluates requirements LIVE both directions; no stale blockers; readiness + validate + button text all follow | UI journey | ✅ live both directions — A9-*.png |
+| A10 📱 | INT | — | none | real | No customer demanded at ANY step; no Moadian UI anywhere; finalize + print/PDF work | UI journey | ✅ — A10-D1-*.png |
+| A11 | INT | — | customer | real | Customer optional-attach works; still zero Moadian friction | UI journey | ✅ (optional select verified on internal wizard) |
+| A12 | TAX | 2 | none | **zero-total** (100% discount) | THE live smoke on دیباتک: finalize → validate → LIVE submit → org ACCEPTED «ثبت شده»; ZERO-TOTAL law honored | UI journey, دیباتک LIVE | ✅ LIVE ثبت شد، بدون تذکر — A12-*.png |
 
 ## B — Draft lifecycle
 
 | # | Scenario | Expected behavior | Proof | Status |
 |---|----------|-------------------|-------|--------|
-| B1 📱 | Create draft → add lines (product + free-title) | Lines add/edit/remove; totals recompute; Shamsi date; money formatting per §7.3 | UI journey | pending |
-| B2 | Edit draft header + lines | Only `draft` status editable; edits persist (reload-proof) | UI journey | pending |
-| B3 | Delete line / archive draft | Friendly Persian confirm; totals recompute; archived leaves list | UI journey | pending |
-| B4 | Finalize | Document number assigned per business numbering config; editing locks; receivable recomputes when customer attached | UI journey | pending |
-| B5 | Finalize with zero lines | BLOCKED «برای نهایی‌سازی، حداقل یک ردیف لازم است» — explained, not dead | UI journey | pending |
-| B6 | Convert internal → tax_reportable | Allowed only when tax requirements satisfied (override-aware); gated on approved taxpayer profile | UI journey | pending |
-| B7 | Settle — cash receipt | Payment records; `payment_status` transitions unpaid→partial→paid | UI journey | pending |
-| B8 | Settle — cheque | Cheque received against invoice; lifecycle (در جریان/وصول) reflects on invoice paid state | UI journey | pending |
-| B9 | Print view + PDF | Both kinds render Persian RTL, Vazirmatn, correct totals; walk-in shows «مصرف‌کنندهٔ نهایی», never an empty buyer error | UI journey | pending |
-| B10 | Fiscal-year lock | Out-of-window issue date blocked with the FY message; in-window passes | UI journey | pending |
+| B1 📱 | Create draft → add lines (product + free-title) | Lines add/edit/remove; totals recompute; Shamsi date; money formatting per §7.3 | UI journey | ✅ (A1 journey) |
+| B2 | Edit draft header + lines | Only `draft` status editable; edits persist (reload-proof) | UI journey | ✅ (edits persist; finalized 409s) |
+| B3 | Delete line / archive draft | Friendly Persian confirm; totals recompute; archived leaves list | UI journey | ✅ (confirm dialogs; archived left list) |
+| B4 | Finalize | Document number assigned per business numbering config; editing locks; receivable recomputes when customer attached | UI journey | ✅ (INV-2026-000012) |
+| B5 | Finalize with zero lines | BLOCKED «برای نهایی‌سازی، حداقل یک ردیف لازم است» — explained, not dead | UI journey | ✅ (disabled+hint; step gate bounces) |
+| B6 | Convert internal → tax_reportable | Allowed only when tax requirements satisfied (override-aware); gated on approved taxpayer profile | UI journey | ✅ (blocked→sstid fixed→converted) |
+| B7 | Settle — cash receipt | Payment records; `payment_status` transitions unpaid→partial→paid | UI journey | ✅ تسویه جزئی — B7-B8-*.png |
+| B8 | Settle — cheque | Cheque received against invoice; lifecycle (در جریان/وصول) reflects on invoice paid state | UI journey | ✅ در انتظار وصول چک — B7-B8-*.png |
+| B9 | Print view + PDF | Both kinds render Persian RTL, Vazirmatn, correct totals; walk-in shows «مصرف‌کنندهٔ نهایی», never an empty buyer error | UI journey | ✅ print 200 + PDF 85KB (follow-up: Gregorian date in print header) |
+| B10 | Fiscal-year lock | Out-of-window issue date blocked with the FY message; in-window passes | UI journey | ✅ friendly FY 422 via real save |
 
 ## C — Moadian journey (tax_reportable only)
 
 | # | Scenario | Expected behavior | Proof | Status |
 |---|----------|-------------------|-------|--------|
-| C1 📱 | Validate (پیش‌بررسی) | Interpreted issues; نوع-aware (same resolver); zero raw JSON | UI journey | pending |
-| C2 📱 | Submit → org result | Sandbox: real submit → interpreted org response; taxid + reference rendered copyable | UI journey, sandbox | pending |
-| C3 | Inquiry / refresh status | «به‌روزرسانی وضعیت» updates from org; «آخرین استعلام» timestamp | UI journey | pending |
-| C4 📱 | Status lock after registration | Panel permanently shows persisted state (no re-validate CTA); lifecycle actions offered | UI journey | pending |
-| C5 | اصلاحیه (amendment) | New packet ins=2 carrying accepted original's taxid; org ACCEPTED | UI journey, sandbox | pending |
-| C6 | ابطال (cancellation) | ins=3 carrying original taxid; org ACCEPTED; amend-after-cancel blocked friendly | UI journey, sandbox | pending |
-| C7 | برگشت از فروش — full | Return document → packet sold-minus-returned; org ACCEPTED | UI journey, sandbox | pending |
-| C8 | برگشت از فروش — partial | Partial quantities; org ACCEPTED | UI journey, sandbox | pending |
-| C9 | Bulk submit | Multi-select → submit-bulk (≤1000); per-invoice interpreted results | UI journey, sandbox | pending |
-| C10 | Excel import — نوع اول rows | Sample downloads; import creates drafts; per-type columns honored | UI journey | pending |
-| C11 | Excel import — نوع دوم rows | Walk-in rows import with NO buyer columns required | UI journey | pending |
-| C12 | Entitlement-gated business | No `moadian_submission` → honest «FEATURE_NOT_ENABLED» Persian module-state message, NEVER a generic access-denied; internal invoicing untouched | UI journey | pending |
-| C13 | Duplicate اصلی re-submit | Friendly rejection steering to اصلاحیه/ابطال (E PART 2 guard) | UI journey | pending |
-| C14 | 1300501 تذکر rendering | Serial-continuity notice renders as calm non-blocking تذکر, never red/error | UI journey | pending |
-| C15 | پیمانکاری (الگوی ۴) | Pattern selector فروش/پیمانکاری (نوع اول only); crn required (numeric ≤12) when پیمانکاری; Excel crn column | UI journey; org proof founder-blocked on کارپوشه crn | pending |
+| C1 📱 | Validate (پیش‌بررسی) | Interpreted issues; نوع-aware (same resolver); zero raw JSON | UI journey | ✅ (all journeys) |
+| C2 📱 | Submit → org result | Sandbox: real submit → interpreted org response; taxid + reference rendered copyable | UI journey, sandbox | ✅ (A-rows) |
+| C3 | Inquiry / refresh status | «به‌روزرسانی وضعیت» updates from org; «آخرین استعلام» timestamp | UI journey | ✅ (A1/C8b) |
+| C4 📱 | Status lock after registration | Panel permanently shows persisted state (no re-validate CTA); lifecycle actions offered | UI journey | ✅ persisted lock — C4-*.png |
+| C5 | اصلاحیه (amendment) | New packet ins=2 carrying accepted original's taxid; org ACCEPTED | UI journey, sandbox | ✅ org ثبت شد — C5-*.png |
+| C6 | ابطال (cancellation) | ins=3 carrying original taxid; org ACCEPTED; amend-after-cancel blocked friendly | UI journey, sandbox | ✅ org ثبت شد — C6-*.png |
+| C7 | برگشت از فروش — full | Return document → packet sold-minus-returned; org ACCEPTED | UI journey, sandbox | ✅ spec-correct: full return refused → «باید ابطال شود» (guidance now inline) |
+| C8 | برگشت از فروش — partial | Partial quantities; org ACCEPTED | UI journey, sandbox | ✅ partial 1/3 org ثبت شد (14xxx خارج‌ازالگو notices, non-blocking) |
+| C9 | Bulk submit | Multi-select → submit-bulk (≤1000); per-invoice interpreted results | UI journey, sandbox | ✅ 2/2 per-row progress + org accepted — C9-*.png |
+| C10 | Excel import — نوع اول rows | Sample downloads; import creates drafts; per-type columns honored | UI journey | ✅ friendly per-row errors; crn col parses — C10-*.png |
+| C11 | Excel import — نوع دوم rows | Walk-in rows import with NO buyer columns required | UI journey | ✅ ۲ پیش‌نویس ساخته شد — C11-*.png |
+| C12 | Entitlement-gated business | No `moadian_submission` → honest «FEATURE_NOT_ENABLED» Persian module-state message, NEVER a generic access-denied; internal invoicing untouched | UI journey | ✅ honest plan-state message — C12-*.png |
+| C13 | Duplicate اصلی re-submit | Friendly rejection steering to اصلاحیه/ابطال (E PART 2 guard) | UI journey | ✅ «قبلاً ثبت شده … اصلاحیه/ابطال» |
+| C14 | 1300501 تذکر rendering | Serial-continuity notice renders as calm non-blocking تذکر, never red/error | UI journey | ✅ calm تذکر + دلیل سامانه — C14-*.png |
+| C15 | پیمانکاری (الگوی ۴) | Pattern selector فروش/پیمانکاری (نوع اول only); crn required (numeric ≤12) when پیمانکاری; Excel crn column | UI journey; org proof founder-blocked on کارپوشه crn | ✅ UI complete + finalize crn gate — C15-*.png; org proof FOUNDER-BLOCKED on کارپوشه crn |
 
 ## D — Internal-invoice purity sweep
 
 | # | Scenario | Expected behavior | Proof | Status |
 |---|----------|-------------------|-------|--------|
-| D1 | Internal create/edit/finalize/print | Zero Moadian UI (no نوع line, no validate/submit, no buyer-identity text) at every step | UI sweep | pending |
-| D2 | Internal invoice list + detail | No Moadian status column/filter leakage for internal docs | UI sweep | pending |
+| D1 | Internal create/edit/finalize/print | Zero Moadian UI (no نوع line, no validate/submit, no buyer-identity text) at every step | UI sweep | ✅ zero Moadian UI (honest clarifier note only) |
+| D2 | Internal invoice list + detail | No Moadian status column/filter leakage for internal docs | UI sweep | ✅ fixed this batch (chip was leaking) — D2-*.png |
 
 ## Proof artifacts
 
-Screenshots land in `digi-tax-frontend/qa-screens/matrix-<ts>/<row>-*.png`, one per
-row minimum, referenced from the Status column when green (✅ + shot name). The
-Playwright journeys live in the experience-harness tree so they stay runnable.
+Walked 2026-07-24 on dev (backend `257fc23`, frontend `a8d24e2`): screenshots in
+`qa-screens/matrix-walk/` (workspace root), harness spec 10 encodes the core
+walk-in journey permanently (`tests/e2e-harness/specs/10-invoice-flow.spec.ts`).
+Non-zero proofs on sandbox نیک‌تجارت; the one live zero-total smoke on دیباتک
+(`A41XRD050B2006A5E4C576`, بدون تذکر — hex-inno fix live-proven; an earlier
+attempt with vra=0 was org-REJECTED «نرخ … منطبق نیست», proving the org
+validates the line rate against the sstid registry — zero-total tests must keep
+the REGISTERED rate and zero out via 100% discount).
+
+## Walk findings fixed in-batch
+1. The wizard customer trap (`handleGoToStep`) — removed; نوع switch + one-tap walk-in added.
+2. Backend readiness ignored `moadian_type_override` — now mirrors the resolver.
+3. Stale readiness explainer after header save — invalidation added; finalize/convert decide on FRESH readiness.
+4. پیمانکاری crn discovered only at validate stranded a finalized draft — crn is now a finalize blocker.
+5. D2: internal rows leaked a «مودیان: ارسال‌نشده» chip — chip is tax_reportable-only now.
+6. Returns dialog swallowed the backend guidance (full-return→ابطال etc.) — rendered inline now.
+7. Body `inno` decimal↔hex — org parses it AS HEX vs the taxid serial; hex adopted (kills 1300501).
+
+## Follow-ups (logged, not this batch)
+- Print-view header shows the Gregorian issue date («۲۰۲۶-۰۷-۲۴») — should be Jalali.
+- The admin payload PREVIEW shows the raw legacy `tinb` while the wire substitutes the 11-digit شناسه ملی — align the preview with `_buyer_tinb`.
+- Excel-imported drafts with out-of-FY dates import fine but need a date fix before the wizard can save — consider an import-time hint.

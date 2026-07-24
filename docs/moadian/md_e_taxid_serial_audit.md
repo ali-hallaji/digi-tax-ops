@@ -73,5 +73,39 @@ submissions must not be risked):**
    10-hex) avoid both 0100504 and 1300501? This tension (0100504 length vs 1300501 continuity)
    is the crux and is unresolved by RC_DCPS.SN.
 
-**Status: 1300501 renders as a calm non-blocking تذکر (interpreter updated); the definitive
-kill is blocked on the two founder questions above.**
+**Status (superseded by §4): 1300501 renders as a calm non-blocking تذکر (interpreter
+updated); the definitive kill was blocked on the two founder questions above.**
+
+## 4. CONTROLLED EXPERIMENT (2026-07-24) — ROOT CAUSE FOUND, FIXED
+
+Ran the exact controlled test §3 proposed, on sandbox نیک‌تجارت (A2HP31): three
+otherwise-identical invoices (cloned lines/buyer/type from the last accepted
+submission), differing ONLY in serial handling:
+
+| arm | body `inno` sent | serial value | org result |
+|---|---|---|---|
+| **A** control | `1784709098` (DECIMAL — the shipped behavior) | 1784709098 | **accepted + 1300501** |
+| **B** variable | `006A607FEB` (10-HEX — the taxid's own serial component, byte-sliced) | 1784709099 | **accepted, NO warning — «ثبت شد» clean** |
+| **C** fresh region | `1794709100` (DECIMAL, counter bumped +10M first) | 1794709100 | **accepted + 1300501** |
+
+**Verdict — answers §3's two questions empirically:**
+1. **YES — the org expects the body `inno` in the same 10-hex form as the taxid's
+   serial component.** It parses `inno` AS HEX and reconciles it against the
+   taxid; a decimal string never matches its own taxid, hence «سریال … منطبق
+   نیست» on every row. (Note the irony: the RC_TICS.IS p.20 worked example
+   prints the DECIMAL serial in the body — the doc example and the org's live
+   reconciliation disagree; the org wins.)
+2. **NO org-assigned starting value exists** — a brand-new counter region still
+   warns in decimal (arm C), so 1300501 was never about continuity or the
+   epoch-seed; it was pure representation.
+
+**ADOPTED:** `normalizer/patterns.py` now emits `inno = f"{serial:010X}"` (the
+`_inno_hex` helper) in both mappers — the body inno IS the taxid's serial slice,
+asserted by `test_body_inno_equals_taxid_serial_component`. The doc-example
+fixture records the deliberate divergence. Org acceptance of the hex form is
+proven (arm B accepted + registered). The 1300501 interpreter entry stays for
+historical rows. **Item CLOSED: fixed client-side, not org noise.**
+
+_Experiment drift on dev نیک‌تجارت: 3 finalized clones titled «آزمایش ۱۳۰۰۵۰۱ — …»
+(+1 unsubmitted from an aborted run) and the A2HP31 counter advanced +10M (safe:
+ascending). A reseed clears them._
