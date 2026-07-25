@@ -2137,3 +2137,41 @@ the backfill ran (**19/19 accounts internal**). `build --no-cache frontend` →
 - **Captcha / rate-limit end state on dev:** untouched — every harness login and
   both Kavenegar-grill OTP requests solved the real Altcha PoW through the real
   login page. `SMS_PROVIDER` on dev remains **console** (no key present).
+
+## Launch Batch 5.5 (2026-07-26) — Kavenegar prep + founder tweaks
+Scope landed HONESTLY: Part 0 minus the secret, plus all three founder tweaks.
+Parts 1–4 are NOT started and are itemised in LAUNCH_ROADMAP.
+
+- **Part 0 blocked on the key.** No `KAVENEGAR_API_KEY` exists anywhere (local /
+  backend / ops `.env`, `.deploy.env`, the dev server) and the batch instruction
+  carried the literal placeholder `<provided>`. Inventing a credential is not an
+  option, so the real-SMS proof is deferred to the founder pasting the key.
+  Everything secret-independent landed:
+  - **`.gitignore` gap CLOSED (real find):** `digi-tax-frontend/.gitignore` listed
+    only `.env`, so `.env.production` was committable — a real place a Kavenegar
+    key could have leaked. Now `.env.*` + `!.env.example`, verified per-file with
+    `git check-ignore`; no env file is tracked in any of the three repos.
+  - **Non-allowlisted behaviour verified + fixed.** Verified it is a SILENT
+    no-send: the allowlist suppresses delivery but the API still answers
+    `otp_sent`, so a real person outside the staged allowlist would see
+    «کد ارسال شد» and wait forever. `send_sms`'s status is now threaded back
+    through `_deliver_otp` → the OTP route, which returns `delivery_notice`
+    whenever nothing reached the phone AND there is no hint/dev echo. The login
+    page renders it as a calm amber note instead of the success toast. The copy
+    never leaks the reason (asserted in a test).
+- **Founder tweak 1 — spec 08.** It hard-coded «به‌زودی», which is a PRODUCTION
+  policy, not a code truth; on dev the Moadian SKU is deliberately sellable, so
+  the spec was red for a data reason. It now asserts the Moadian card is in a
+  coherent state the environment actually declares. Green on dev and in prod.
+- **Founder tweak 2 — auto-inquiry first poll.** Random 3–7s
+  (`MOADIAN_AUTO_INQUIRY_FIRST_POLL_MIN/MAX_SECONDS`) before attempt 1, then the
+  existing backoff. Four new tests: the window is respected, it is jittered (not a
+  constant), and the backoff still measures FROM THE SEND — a 4s jitter on a
+  5/15/45 schedule sleeps exactly `[4, 1, 10, 30]`, never stacking.
+- **Founder tweak 3 — header name only.** The role line is gone (role remains in
+  the account menu). Re-proved at 390px: `lines=1`, no role text, header 56px,
+  and 0px horizontal overflow on `/app`, `/app/customers`, `/app/invoices`.
+- **Verification.** Backend **1307 pass / 7 fail (documented baseline, zero new) /
+  4 skip**; ruff + black clean. Two exact-payload auth assertions updated for the
+  new `delivery_notice` key (intentional contract change). Frontend typecheck +
+  build clean. Harness **13 passed / 1 skipped** locally.

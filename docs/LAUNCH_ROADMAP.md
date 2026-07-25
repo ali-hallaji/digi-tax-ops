@@ -205,6 +205,45 @@ Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICA
   needs its own browser pass.
 - ⬜ **Part 4 — anti-confusion navigation pass: NOT STARTED.**
 
+## Launch Batch 5.5 — Kavenegar prep + founder tweaks (DEPLOYED to dev 2026-07-26)
+**Founder decisions recorded (permanent):**
+- **Moadian SKU stays SELLABLE on dev** — dev is the founder/accountant test bed and
+  they must be able to walk the real purchase. The «به‌زودی» state is a **PRODUCTION
+  policy**, driven by `module_prices.moadian_submission.active` (admin panel or a seed
+  flag), NOT by code. Harness spec 08 no longer hard-codes either state: it asserts the
+  Moadian card is in a coherent state that the environment actually declares, so the
+  same spec is honest-green on dev and in production.
+- **Auto-inquiry first poll is NOT immediate** — a random 3–7s wait
+  (`MOADIAN_AUTO_INQUIRY_FIRST_POLL_MIN/MAX_SECONDS`), then the existing backoff. The
+  org needs a moment to process a fresh packet, and the jitter stops a bulk send from
+  hitting inquiry in lockstep. The backoff still measures FROM THE SEND (asserted:
+  4s jitter → +1 → +10 → +30 for a 5/15/45 schedule).
+- **Header shows the NAME ONLY** — the role line («مالک» …) is gone; the role stays in
+  the account menu. Re-proved at 390px: one line, 0px overflow on 3 core pages.
+
+- 🔄 **Part 0 — Kavenegar activation: BLOCKED on the key itself.** No key exists in any
+  env (local, backend, ops, `.deploy.env`, the dev server) and none was supplied — the
+  batch instruction carried the literal placeholder `<provided>`. Everything that does
+  NOT need the secret landed:
+  - **`.gitignore` gap CLOSED** — `digi-tax-frontend/.gitignore` had only `.env`, so
+    `.env.production` was committable. Now `.env.*` + `!.env.example`; verified with
+    `git check-ignore` and confirmed no env file is tracked in any repo.
+  - **The non-allowlisted behaviour was VERIFIED and FIXED.** It is a *silent* no-send:
+    `SMS_ALLOWLIST` suppresses the send, the API still answers `otp_sent`, and a real
+    non-allowlisted person sees «کد ارسال شد» and waits forever for an SMS that is never
+    coming. The OTP response now carries `delivery_notice` when nothing was delivered,
+    and the login page shows the calm «ارسال پیامک در حال حاضر محدود است — لطفاً کمی
+    بعد دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.» instead of a false success. The
+    message deliberately never explains WHY (the allowlist is internal).
+  - Env lines + the allowlist-open one-liner are in the batch report.
+- ⬜ **Part 1 — party linkage: NOT STARTED.**
+- ⬜ **Part 2 — manual journal vouchers: NOT STARTED.**
+- ⬜ **Part 3 — separator rollout to the remaining ~45 inputs: NOT STARTED.**
+- ⬜ **Part 4 — anti-confusion navigation + the «ورود اطلاعات از نرم‌افزار قبلی»
+  coming-soon entry: NOT STARTED.** When it is built, the real importer stays BLOCKED on
+  the accountant's sample export files (هلو / سپیدار / حسابان) — a dedicated batch maps
+  customers/products/opening balances from the REAL formats. **No guessed mappings.**
+
 ## Launch Batch 3 — partner panel v2 ⬜
 - Per-partner **admin-set commission %** (currently a single global/implicit rate).
 - **Two-tier referral commission** (referrer of a referrer earns).
@@ -261,5 +300,5 @@ Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICA
 
 ---
 
-_Last updated: 2026-07-26 (Launch Batch 5 — official units, OTP bypass safety, live separators; Batch 4 pulled forward — mobile app shell, consistency pass,
+_Last updated: 2026-07-26 (Launch Batch 5.5 — Kavenegar prep, founder tweaks; Batch 5 — official units, OTP bypass safety, live separators; Batch 4 pulled forward — mobile app shell, consistency pass,
 server-side Moadian auto-inquiry; harness now 13 spec files / 14 tests)._
