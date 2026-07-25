@@ -1925,3 +1925,64 @@ document's human reference (invoice/cheque number, expense category).
   suspended→unsuspend→approved, left clean). Captcha/rate-limit end state:
   `AUTH_CAPTCHA_ENABLED=true` (OTP without solution ⇒ 400), `AUTH_RATE_LIMIT_ENABLED=true`
   (rapid attempts ⇒ 429), live Altcha challenge served over HTTPS, frontend serving.
+
+## Launch Batch 4 (2026-07-25) — mobile app shell + consistency + Moadian auto-inquiry
+Pulled forward from the roadmap. Judged on FEEL at 390px; every claim below is a
+real-UI measurement or a test, not a code read.
+
+- **Part 1 — mobile app shell (frontend `d416250`).** Re-measured the Batch-2
+  diagnosis on a production build and CORRECTED it: the «99px sideways scroll on
+  every /app page» was the dev-only «نسخهٔ آزمایشی» badge (98px). Production
+  document overflow was 0 — but the header's right cluster still took 338px of a
+  390px viewport and the owner name wrapped (`line-clamp-2`) inside a 56px bar.
+  Header rebuilt as one non-overflowable row (fixed start group + `min-w-0
+  flex-1` end group; the name is the only elastic item and truncates); name+role
+  on ONE line with the full text in `title`; theme / fiscal-year / quiet logout /
+  dev badge moved into `<AccountMenu>` below `sm`; sidebar trigger is 44×44.
+  REAL production overflows found and fixed by the sweep: `/app/invoices` 17px (a
+  three-button action row that did not wrap) and `/app` 58px at 320px (two KPI
+  columns whose ریال amounts cannot break). Mobile drawer now auto-closes on
+  navigation in all three shells via `useCloseMobileSidebarOnNavigate`.
+  Two silent CSS-cascade bugs: `SelectTrigger`'s `[&>span]:line-clamp-1`
+  overrode the fiscal-year prefix's `hidden` (145px at 390px, not the intended
+  ~60px), and `.pill`'s UNLAYERED `display:inline-flex` beats Tailwind's layered
+  `hidden`.
+- **Part 2 — consistency (frontend `d49a648`, partial).** ONE mobile dialog
+  baseline in `ui/dialog.tsx` (16px gutter, rounded at every width, max-h+scroll
+  so a footer can never fall below the fold) — measured on 4 real dialogs at
+  390px; the two intentionally full-screen mobile forms keep that intent
+  explicitly. RTL logical properties in `ui/dropdown-menu.tsx` so the radio/check
+  indicator sits on the leading edge. ONE `<MoadianEnvTag>` replacing six pasted
+  chips. GRILL FIND: the onboarding tour card placed «بعدی» at y=852 and «فهمیدم،
+  دیگر نشان نده» at y=881 on a 390×844 phone — both below the fold, so a
+  first-time merchant could neither advance nor dismiss it; now clamped to the
+  card's MEASURED height with an internal scroll.
+- **Part 3 — auto-inquiry (backend `a21b77c` · frontend `904c924`).** Migration
+  **`autoinq00013`** adds `moadian_submissions.auto_inquiry_state` +
+  `auto_inquiry_attempts` (additive, nullable/defaulted, no backfill). After every
+  send the server polls the org's استعلام itself (`5,15,45`s, own db session) until
+  a final status lands; all submit paths funnel through `submit_invoices`, so
+  اصلی/bulk/ابطالی/برگشتی/اصلاحیه are all covered. The panel shows «در حال دریافت
+  وضعیت از سامانه…» live and then the final interpreted state with NO user action;
+  on exhaustion the calm «وضعیت هنوز از سامانه دریافت نشده» plus the manual
+  «به‌روزرسانی وضعیت» fallback. No double-polling; idempotent with the manual
+  button. An api restart mid-poll reads as exhausted (never a spinner that cannot
+  resolve).
+- **Verification.** Backend **1287 pass / 7 fail (the documented FakeDBSession
+  baseline, zero new) / 4 skip** on the isolated `digitax_test` DB; ruff + black
+  clean. Frontend typecheck + build clean. Experience harness **14/14** local
+  (13 spec files — new `13-mobile-shell.spec.ts` hard-asserts
+  `scrollWidth <= clientWidth + 1` on three core pages, the one-line name, and
+  drawer auto-close). Real-UI proofs at 390px in `qa-screens/batch4/`: before/after
+  header, drawer open→navigate→closed, account menu (light + dark), the tour card
+  fitting, the auto-inquiry polling line, the per-row lifecycle status, and the
+  exhaustion fallback.
+- **Local QA hygiene.** The auto-inquiry proof ran with `MOADIAN_MODE=mock` and a
+  temporarily shortened backoff in `digi-tax-ops/.env`; the file was restored
+  byte-for-byte and every QA row (2 invoices, 3 submissions, 1 tax_item) deleted —
+  verified 0 remaining. The LIVE sandbox (نیک‌تجارت) proof runs on dev, which owns
+  the Iran-egress tunnel.
+- **Follow-ups logged (roadmap Batch 4 Part 2 follow-up):** card-padding rhythm
+  (`p-4`/`p-5`/`p-6` across 167 `rounded-2xl border bg-card` sites), table→card at
+  390px (tables scroll correctly but carry no visible swipe affordance), and ~28
+  hand-rolled empty states that bypass `<EmptyState>`.

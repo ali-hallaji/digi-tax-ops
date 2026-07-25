@@ -104,27 +104,60 @@ Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICA
   hard-asserts the tags AND that the asset really returns 200 `image/png`. Closes the last SEO
   to-do from Part 6.
 
-## Launch Batch 3 — partner panel v2 ⬜
-- Per-partner **admin-set commission %** (currently a single global/implicit rate).
-- **Two-tier referral commission** (referrer of a referrer earns).
+## Launch Batch 4 — app shell + consistency + auto-inquiry (pulled forward, DEPLOYED to dev 2026-07-25)
+- ✅ **Part 1 — the mobile app shell (headline).** **The Batch-2 diagnosis was re-measured on a
+  production build and CORRECTED:** the 99px sideways scroll on every `/app` page was the
+  **dev-only «نسخهٔ آزمایشی» badge** (98px). In production the document did NOT overflow — but the
+  right cluster still occupied **338px of a 390px viewport**, i.e. one element away from breaking,
+  and the owner name was `line-clamp-2` (wrapping to two lines inside a 56px bar). Rebuilt the
+  header as ONE row that cannot overflow: a fixed-width start group + a `min-w-0 flex-1` end group
+  whose only elastic item (the name) truncates; the name+role render on ONE line («علی حلاجی ·
+  مالک») with the full text in `title`; theme, fiscal-year, the quiet logout and the dev badge
+  leave the mobile bar for `<AccountMenu>` (`sm:hidden` rows); the sidebar trigger is a real
+  44×44 touch target. **Real production overflows the sweep DID find and fix:** `/app/invoices`
+  (17px — a three-button action row that did not wrap) and `/app` at 320px (58px — two KPI columns
+  whose ریال amounts have no break opportunity). **Mobile drawer auto-closes on navigation**
+  (`useCloseMobileSidebarOnNavigate`, wired into all three shells: /app, /admin, /partner); ESC and
+  the backdrop already worked. Two silent CSS-cascade bugs found by the grill: the fiscal-year
+  switcher's `hidden sm:inline` prefix was overridden by `SelectTrigger`'s `[&>span]:line-clamp-1`
+  (145px instead of ~60px at 390px), and `.pill` sets an UNLAYERED `display:inline-flex` that beats
+  Tailwind's layered `hidden`. (frontend `d416250`.)
+- ✅ **Part 2 — consistency sweep (partial, see the follow-up).** ONE mobile dialog baseline in
+  `ui/dialog.tsx` for all 32 dialogs (16px gutter instead of an edge-to-edge slab, rounded at
+  EVERY width — it was `sm:rounded-lg`, so phones got square corners — and a `max-h`+scroll cap so
+  a tall dialog can never push its footer below the fold); the two deliberately full-screen mobile
+  forms (customers/products) keep that intent explicitly. RTL logical properties in
+  `ui/dropdown-menu.tsx` (`ps-8`/`start-2`/`ms-auto`) so the check/radio indicator sits on the
+  LEADING edge next to its label instead of the far side. ONE `<MoadianEnvTag>` replacing six
+  copy-pasted «آزمایشی»/«زنده» chips. **Grill find + fix:** the onboarding tour card positioned
+  itself by TOP with a hardcoded 180px height guess and no bottom clamp — on a 390×844 phone
+  «بعدی» landed at y=852 and «فهمیدم، دیگر نشان نده» at y=881, both below the fold, so a
+  first-time merchant could neither advance nor dismiss the tour. Now clamped against the card's
+  measured height. (frontend `d49a648`.)
+- ✅ **Part 3 — auto-inquiry after every submission.** The server now polls the org's استعلام by
+  itself (backoff `5,15,45`s, own db session, survives closing the page) until a FINAL status
+  lands — single, bulk rows, lifecycle docs, returns and correctives all funnel through
+  `submit_invoices`, so one hook covers every path. State is PERSISTED
+  (migration **`autoinq00013`**: `auto_inquiry_state` + `auto_inquiry_attempts`, additive, no
+  backfill) so «در حال دریافت وضعیت از سامانه…» → the final interpreted state survives a reload,
+  and a poll interrupted by an api restart reads as `exhausted` instead of spinning forever. On
+  exhaustion the panel shows the calm «وضعیت هنوز از سامانه دریافت نشده» and the manual
+  «به‌روزرسانی وضعیت» button stays as the founder-explicit fallback. No double-polling (in-process
+  guard + a DB re-check before each org call); idempotent with the manual button (a final status
+  closes the auto state, and the next tick makes NO org call). Bulk follows every row with ONE
+  business-scoped read every 4s, never one request per row. (backend `a21b77c` · frontend
+  `904c924`.)
+- ⬜ **Part 2 follow-up (explicitly not done today):** card-padding rhythm is still drifted —
+  `rounded-2xl border bg-card` appears with `p-4` (35×), `p-5` (78×), `p-6` (54×). Normalising 167
+  call sites is a mass edit with real regression risk and reads as a redesign, so it is a
+  standalone task with its own screenshot pass. Same for table→card at 390px (tables scroll
+  correctly inside `overflow-x-auto` but carry no visible «swipe» affordance) and the ~28
+  hand-rolled empty states that bypass `<EmptyState>`.
 
 ## Launch Batch 3 — partner panel v2 ⬜
 - Per-partner **admin-set commission %** (currently a single global/implicit rate).
 - **Two-tier referral commission** (referrer of a referrer earns).
 - **Revenue-stream dashboard** for monthly partner payout (what each partner is owed).
-
-## Launch Batch 4 — global UI consistency sweep ⬜
-- Header **two-line owner name** (long names wrap correctly).
-- **Mobile sidebar** must NOT auto-close on navigation.
-- **Flaky mobile top bar** — **now precisely diagnosed (Batch 2 Part 4 grill).** The header's
-  right cluster `src/routes/_app.tsx:244` (`flex items-center gap-1.5`) measures **437px inside a
-  390px viewport**, so EVERY `/app/*` page scrolls sideways by **99px** with no dialog open —
-  measured on `/app/customers` and `/app/accounting/chart`. It is not dialog-related (dialogs sit
-  correctly at x=0, w=390). Likely fix: `min-w-0` on that container + let the business-switcher
-  label truncate. NOTE the local measurement includes the dev-only «نسخه آزمایشی» badge
-  (`import.meta.env.MODE !== "production"`), so re-measure on a production build before sizing
-  the fix.
-- App-wide consistency pass (tokens, RTL, dialog footers, empty states).
 
 ---
 
@@ -173,4 +206,5 @@ Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICA
 
 ---
 
-_Last updated: 2026-07-25 (Launch Batch 2 Parts 4/5/7 landed — CoA templates, PDF re-mine finalised, OG image)._
+_Last updated: 2026-07-25 (Launch Batch 4 pulled forward — mobile app shell, consistency pass,
+server-side Moadian auto-inquiry; harness now 13 spec files / 14 tests)._
