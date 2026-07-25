@@ -2175,3 +2175,27 @@ Parts 1–4 are NOT started and are itemised in LAUNCH_ROADMAP.
   4 skip**; ruff + black clean. Two exact-payload auth assertions updated for the
   new `delivery_notice` key (intentional contract change). Frontend typecheck +
   build clean. Harness **13 passed / 1 skipped** locally.
+
+### Batch 5.5 — dev deploy (2026-07-26)
+Snapshot taken first (`backups/digitax-pre-batch55-*.sql.gz`). compose v2 only.
+Pulls: backend `0ea2810` · frontend `09df7c6` · ops `fab6f6a`. Pruned images +
+build cache (never volumes). `build --no-cache api` → up -d → `alembic upgrade
+head` (already at `otpbypass00014`; **no new migration in this batch**) →
+`build --no-cache frontend` → force-recreate.
+- **Stale-image guard:** the first frontend build was run WITHOUT exporting
+  `FRONTEND_SHA`, so `/version.json` returned `{"sha":"unknown"}` and the guard was
+  unusable. Caught it, verified the deploy behaviourally first (the dev production
+  build already showed the name-only header), then rebuilt WITH the SHA:
+  `/version.json` now returns `09df7c66…` = the pushed frontend SHA.
+  **Runbook lesson: always `export FRONTEND_SHA=$(git -C ../digi-tax-frontend rev-parse HEAD)`
+  in the SAME shell as the build.**
+- **Live-API verification:** `OTPRequestResponse.delivery_notice` PRESENT in the
+  running OpenAPI; first-poll window reports `3.0 - 7.0 s`; `SMS_PROVIDER=console`
+  with no key (unchanged — Part 0 is blocked on the credential).
+- **Preflight:** 22 PASS, zero FAIL.
+- **Harness on dev: 13 passed / 1 skipped — GREEN.** This is the first green dev
+  run since Batch 3: spec 08 previously went red on the dev-vs-local Moadian SKU
+  divergence, and per the founder's decision it now asserts the state the
+  environment declares rather than hard-coding «به‌زودی».
+- **Captcha / rate-limit:** untouched and ON — every harness login solved the real
+  Altcha PoW through the real login page.
