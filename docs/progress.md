@@ -1986,3 +1986,44 @@ real-UI measurement or a test, not a code read.
   (`p-4`/`p-5`/`p-6` across 167 `rounded-2xl border bg-card` sites), table→card at
   390px (tables scroll correctly but carry no visible swipe affordance), and ~28
   hand-rolled empty states that bypass `<EmptyState>`.
+
+### Batch 4 — dev deploy (2026-07-25)
+Snapshot `backups/digitax-pre-batch4-20260725-1844.sql.gz` (123 MB) taken FIRST.
+compose **v2** only. Pulls: backend `a21b77c` · frontend `d49a648` · ops `66dd2a3`.
+`docker image prune -af` + `builder prune -af` (never volumes) freed 6 GB → 25 G
+free. `docker compose build --no-cache api` → up -d → `alembic upgrade head`
+(`coatpl00012 → autoinq00013`, `current` prints `autoinq00013 (head)`) → psql
+`\d moadian_submissions` CONFIRMS both new columns exist (never trusting
+`alembic current` alone). `docker compose build --no-cache frontend` →
+`up -d --force-recreate --no-deps frontend`. Postgres/redis untouched.
+- **Deploy-verification (stale-image guard):** `/version.json` returns
+  `d49a648…` = the pushed frontend SHA, and the LIVE OpenAPI (not the build log)
+  reports `auto_inquiry_state` PRESENT on all three Moadian schemas.
+- **Preflight:** all green (compose, env, DB-name match, no orphan DB, services).
+- **Smoke:** health/db green. Its CORS step FAILS as documented — the script
+  hardcodes `Origin: http://127.0.0.1:8080` while the server correctly allows only
+  `https://dev.digiinvoice.ir`; the same preflight with the real origin returns
+  **200**. Pre-existing script bug (already logged on the 2026-07-11 deploy), not a
+  regression. Script fix still outstanding.
+- **Harness on dev: 12 passed / 1 flaky (03 holding, green on retry) / 1 FAILED.**
+  Local was 14/14 on the same commit. The failure is `08-p7-checkout` at
+  `getByRole("button", {name:"به‌زودی"})` — and the cause is DATA, not code:
+  `module_prices.moadian_submission.active` is **`false` locally** but **`true` on
+  dev**, and `pricing.py` derives `coming_soon = price_row and not price_row.active`.
+  With the module sellable on dev the «به‌زودی» button legitimately does not render,
+  so the spec's hard assertion cannot pass there. Batch 4 touched the header,
+  dialogs, dropdown, tour and Moadian submission status — nothing on the plans page.
+  **Founder decision needed:** either the Moadian SKU should stay unsellable
+  («به‌زودی») and dev's flag is wrong (`UPDATE module_prices SET active=false WHERE
+  feature='moadian_submission'`), or it IS sellable now and the spec must assert the
+  real state instead. NOT changed unilaterally — it is a monetization flag.
+  The three Batch-4-relevant specs (13 mobile-shell, 09 moadian, 10 invoice-flow)
+  pass on dev in isolation: **3/3**.
+- **Production-build proof on dev @390px:** `/app`, `/app/customers`,
+  `/app/invoices` all measure `scrollWidth - clientWidth = 0px`; the header shows
+  «سارا کریمی · مالک» on ONE line with the bell badge and no dev badge.
+  Shot: `qa-screens/batch4/batch4-DEV-header-390.png`.
+- **Captcha / rate-limit end state on dev:** untouched by this deploy —
+  `AUTH_CAPTCHA_ENABLED=true`, `AUTH_RATE_LIMIT_ENABLED=true` (the harness solved
+  the real Altcha PoW through the real login page on every one of its 14 logins,
+  which is itself the proof that captcha is ON).
