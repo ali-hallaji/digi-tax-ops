@@ -2027,3 +2027,69 @@ free. `docker compose build --no-cache api` → up -d → `alembic upgrade head`
   `AUTH_CAPTCHA_ENABLED=true`, `AUTH_RATE_LIMIT_ENABLED=true` (the harness solved
   the real Altcha PoW through the real login page on every one of its 14 logins,
   which is itself the proof that captcha is ON).
+
+## Launch Batch 5 (2026-07-26) — official units + OTP bypass safety + live separators
+Parts 1–2 were the MUST-land launch blockers; both landed. Part 3 landed its
+bounded slice (3.3); Parts 3.1/3.2/4 are NOT started and are itemised in
+LAUNCH_ROADMAP so nothing is silently dropped.
+
+- **Part 1 — official units (backend `8567b92` · frontend `adf125e`).** The
+  founder's PDF was at `~/Downloads/RC_UMGS_ST_V1_18.pdf`, not the stated repo
+  path; copied into `docs/moadian/` and transcribed. All **102** rows now ship as
+  `digi-tax-backend/data/moadian/rc_umgs_st_v1_18_units.csv` (public org data, so
+  git is fine). Cross-check: 102 rows, 102 unique numeric codes, no empty titles,
+  and every founder spot-value matches (عدد=1627 · کیلوگرم=164 · متر=165 ·
+  ساعت=16103 · نفر-ماه=16134). Imported local + dev with the existing
+  `python -m app.cli.import_tax_units`; `tax_units` went 0 → 102.
+  The product form's auto-upgrade already existed; what was missing was
+  usability — 102 options in a plain `<Select>` — so it is now a searchable
+  combobox matching title OR code, with Persian digits normalised («۱۶۱۰۳» →
+  ساعت). The «نیاز به انتخاب واحد رسمی» soft-flag needed no code: `_validate_units`
+  skips on an empty catalog and activates now that it is populated. The three
+  Excel samples had column J («کد واحد رسمی») EMPTY in every data row; they now
+  carry real codes, verified against the CSV, via the committed
+  `scripts/fill_sample_unit_codes.py`.
+- **Part 2 — OTP bypass safety (backend `16633eb` · frontend `eb482fd`).** The
+  Kavenegar API KEY is genuinely absent — searched local/backend/ops `.env`,
+  `.deploy.env`, the dev server `.env`, HANDOFF, quality_plan and the runbook; all
+  of them consistently describe it as still awaited. The TEMPLATE is settled
+  (`digiotp`). The PROVIDER was already fully wired by earlier work, so this batch
+  built the safety net that must exist BEFORE a key is pasted in:
+  migration **`otpbypass00014`** adds `users.otp_delivery_bypass`, backfilled TRUE
+  for every existing row (real OTP has never been on ⇒ every account today is a
+  test account; failing this way costs one audited admin click, the other way
+  texts a stranger). `send_sms(..., force_console=True)` short-circuits BEFORE
+  `get_provider()`, so no kavenegar client is ever built for a seeded number, and
+  the row is audited `status="bypass"` with a readable token preview. The
+  on-screen hint now requires the per-user flag — the env flag alone is no longer
+  enough. Both seeders flag every account they touch. Admin toggle «حساب داخلی» on
+  the user detail, audited in Persian.
+  **GRILL (SMS_PROVIDER=kavenegar + a fake key, real login page, real Altcha):**
+  internal `0912***1001` → `notification_log` status **bypass**/provider console
+  with the token readable, `otp_hint` returned, code visible on screen; a
+  non-internal `0912***4567` → status **failed**/provider **kavenegar** (the real
+  send was attempted and failed on the fake key), no hint, nothing on screen.
+  13 unit tests cover both directions plus the mocked Verify/Lookup request shape.
+  **Pre-existing bug found + fixed:** `/admin/users/$userId` was unreachable —
+  `_admin.admin.users.tsx` acted as a layout with no `<Outlet/>`, so the entire
+  user-detail page never rendered; converted to `.index.tsx` to match
+  `businesses`/`my-clients`.
+- **Part 3.3 — live separators (frontend `fbbab7b`).** `DecimalInput` formatted
+  only on blur. It now regroups every keystroke, caret-safe (the caret is replaced
+  after the same number of DIGITS it preceded). Grill: fast typing `25000000` →
+  «۲۵,۰۰۰,۰۰۰» live; mid-number backspace kept the caret at the right digit;
+  paste `123456789` → «۱۲۳,۴۵۶,۷۸۹»; `1234.5` → «۱,۲۳۴.۵»; Persian paste `۹۸۷۶۵۴`
+  → «۹۸۷,۶۵۴»; messy `12,34,5` → «۱۲,۳۴۵». Storage still emits ASCII decimal.
+  NOTE: `DecimalInput` is used by only the 7 invoice-line fields — the other ~45
+  money inputs still hand-roll the blur-only pattern and are a logged follow-up.
+- **Verification.** Backend **1300 pass / 7 fail (the documented FakeDBSession
+  baseline, zero new) / 4 skip**; ruff + black clean. Four tests were updated for
+  the intentional contract change (admin payload gained a key; the send_sms spy
+  gained a kwarg; the hint fixture needs the new flag; the secret-leak guard now
+  checks for a leaked six-digit CODE rather than the substring "otp", which the
+  new boolean field name innocently contains). Frontend typecheck + build clean.
+  Harness **13 passed / 1 skipped** locally.
+- **Local QA hygiene.** The Kavenegar grill ran with a temporary
+  `SMS_PROVIDER=kavenegar` + fake key + `DEV_LOGIN_OTP_HINT=true` in
+  `digi-tax-ops/.env`; the file was restored byte-for-byte (verified
+  `SMS_PROVIDER = console`, key unset) and the QA invoice draft deleted.
