@@ -2093,3 +2093,47 @@ LAUNCH_ROADMAP so nothing is silently dropped.
   `SMS_PROVIDER=kavenegar` + fake key + `DEV_LOGIN_OTP_HINT=true` in
   `digi-tax-ops/.env`; the file was restored byte-for-byte (verified
   `SMS_PROVIDER = console`, key unset) and the QA invoice draft deleted.
+
+### Batch 5 — dev deploy (2026-07-26)
+Snapshot `backups/digitax-pre-batch5-20260725-2109.sql.gz` (123 MB) taken FIRST.
+compose **v2** only. Pulls: backend `09b8923` · frontend `fbbab7b` · ops `c217350`.
+Pruned images + build cache (never volumes) → 24 G free. `build --no-cache api` →
+up -d → `alembic upgrade head` (`autoinq00013 → otpbypass00014`, `current` prints
+`otpbypass00014 (head)`) → psql `\d users` CONFIRMS `otp_delivery_bypass` exists and
+the backfill ran (**19/19 accounts internal**). `build --no-cache frontend` →
+`up -d --force-recreate --no-deps`. Postgres/redis untouched.
+- **A second api rebuild was needed mid-deploy:** the Dockerfile copied only
+  `app/ tests/ alembic/`, so the units CSV was not in the image and the import
+  failed with FileNotFoundError. Fixed properly (`COPY ./data /app/data`,
+  backend `09b8923`) rather than side-loading the file, so any future deploy can
+  re-run the import.
+- **Units on dev: 0 → 102**, spot-checked (عدد=1627 · کیلوگرم=164 · متر=165 ·
+  ساعت=16103 · نفر-ماه=16134). On the PRODUCTION build the product form shows the
+  searchable official picker: 103 items open (102 + «بدون واحد»), «کیلو» filters to
+  تن کیلومتر/کیلومتر/کیلووات ساعت/کیلوگرم.
+- **EMPIRICAL sandbox proof (headline).** A نیک‌تجارت (sandbox, approved) invoice
+  whose line carries `mu=1627` (عدد) was submitted through the REAL UI. Validation
+  raised NO unit issue; the org accepted it —
+  taxid `A2HP31050B2006AF916838`, reference `qCF4mIJjWugSOF0…`, and the org's own
+  inquiry body is `{"status":"SUCCESS","data":{"error":[],"warning":[],"success":true}}`
+  — an EMPTY error array and an EMPTY warning array, i.e. no unit complaint of any
+  kind. Batch 4's auto-inquiry resolved it hands-free (`auto_inquiry_state=done`,
+  1 attempt). The invoice is left in place as a deliberate sandbox artifact
+  («آزمون واحد رسمی — بچ ۵»), like the earlier corrective experiments.
+- **Deploy-verification (stale-image guard):** `/version.json` = `fbbab7b…` (the
+  pushed frontend SHA), and the LIVE OpenAPI reports both
+  `POST /admin/users/{user_id}/otp-bypass` and
+  `AdminUserDetailResponse.otp_delivery_bypass` PRESENT.
+- **Preflight:** 22 PASS, zero FAIL.
+- **Harness on dev: 13 passed / 1 failed.** The failure is `08-p7-checkout` at
+  «به‌زودی» — the SAME dev-vs-local data divergence reported after the Batch 4
+  deploy and still unresolved: `module_prices.moadian_submission.active` is `true`
+  on dev, `false` locally, and `coming_soon` is derived as
+  `price_row and not price_row.active`. Batch 5 touched units, OTP delivery and a
+  money input — nothing on the plans page. **Still the founder's call** (it is a
+  monetization flag): either Moadian stays unsellable and dev's flag is wrong
+  (`UPDATE module_prices SET active=false WHERE feature='moadian_submission'`), or
+  it is sellable and the spec must assert the real state.
+- **Captcha / rate-limit end state on dev:** untouched — every harness login and
+  both Kavenegar-grill OTP requests solved the real Altcha PoW through the real
+  login page. `SMS_PROVIDER` on dev remains **console** (no key present).
