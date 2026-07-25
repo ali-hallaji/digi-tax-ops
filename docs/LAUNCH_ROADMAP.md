@@ -7,7 +7,8 @@ started, and add new items as they surface. It never goes stale.
 
 > Rule of the road (workspace CLAUDE.md §2 + invoice_flow_matrix.md HARD LAW): proof =
 > real UI journeys on dev. Small commits per part. Guarded dev deploy at the end
-> (compose v2, `--no-cache`, alembic, psql-verify). Harness 10/10 local + dev.
+> (compose v2, `--no-cache`, alembic, psql-verify). Harness green local + dev
+> (12 spec files / 13 tests as of Batch 2 Part 4).
 
 ---
 
@@ -51,7 +52,7 @@ started, and add new items as they surface. It never goes stale.
   audit — coefficients stay admin-managed). nameTrade stays suppressed. (backend
   `b52663a` · frontend `b52663a`.)
 
-## Launch Batch 2 — landing + overflow + corrective-empirical + Excel + laws (DEPLOYED to dev 2026-07-25)
+## Launch Batch 2 — landing + overflow + corrective-empirical + Excel + CoA templates + re-mine (DEPLOYED to dev 2026-07-25)
 Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICAL-TEST LAW
 (sandbox answers beat doc citations) + GRILL-ME LAW (hostile-test before DONE).
 - ✅ **Part 1 — text-overflow sweep.** Fixed the reported bug (a long stuffid name shattered
@@ -73,15 +74,35 @@ Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICA
   logged-in → «ورود به پنل»; deep capabilities hidden. SEO: per-route head + JSON-LD (Org+Software+
   FAQ), robots.txt, sitemap.xml, webmanifest, theme-color; killed the __root duplicate-description
   + Lovable placeholder OG. /app guard intact. Landing smoke spec. (frontend `87fef12`.)
-- 🔄 **Part 4 — chart-of-accounts default templates** (accountant suggestion). SCOUTED (model
-  `ChartAccount`, idempotent `ensure_*` builders in `accounting/application/chart.py`, coding
-  1x دارایی/2x بدهی/3x سرمایه/4x درآمد/5x هزینه, accountant-view `_gate`, `TaxConfigEvent`-style
-  audit). NOT built this turn — a picker (خدماتی/بازرگانی/تولیدی/پیمانکاری) seeding an additive,
-  preview-first, audited default tree per type is the next step. **Needs the founder's accountant
-  to bless the drafted trees.**
-- 🔄 **Part 5 — PDF re-mine.** `docs/moadian/pdf_remine_2026-07.md` created; the اینتاکد verdict is
-  restated definitively (absent from all documented org services). A full fresh end-to-end re-read
-  of every PDF is queued there.
+- ✅ **Part 4 — chart-of-accounts default templates** (accountant suggestion). «افزودن حساب‌های
+  پیش‌فرض» on the accountant-view chart page: picker (خدماتی/بازرگانی/تولیدی/پیمانکاری) →
+  PREVIEW («این حساب‌ها اضافه می‌شوند: …», writes nothing) → apply. **Additive only** — never
+  deletes/renames/re-codes; idempotency key is (parent, exact title) so a re-apply is a true
+  no-op and an archived template account is NOT resurrected; codes continue the existing scheme
+  (کل `15`/`16`/`54` under گروه, معین `1501`…). Audited via the new append-only
+  `chart_template_events` (migration **`coatpl00012`**), `TaxConfigEvent` discipline. Template
+  accounts are `is_system=false`, and `chart_admin` now lets a NON-system کل be renamed/archived,
+  so an additive template stays reversible (the seeded skeleton is frozen by `is_system`, not by
+  level). **GRILL found + fixed a real 500:** a double-tap fired two applies that allocated the
+  same codes → `uq_chart_accounts_tenant_code` violation as a raw 500 (gotcha #4/#13); fixed with
+  a per-tenant `pg_advisory_xact_lock` + an `IntegrityError`→friendly-409 guard, with a real
+  two-connection race test. Drafted trees for the founder's accountant:
+  `docs/accounting/coa_templates_for_accountant_review.md` — **still pending their blessing**, so
+  the picker shows «پیشنهادی — قابل ویرایش». Guide gains **S9-11**; S9-06 links it.
+- ✅ **Part 5 — PDF re-mine, all findings FINAL.** `scripts/remine_wire_probe.py` (read-only)
+  answered #3/#4/#6 on the نیک‌تجارت sandbox per the EMPIRICAL-TEST LAW:
+  **#3 حد مجاز فروش → CLOSED**, `GET_FISCAL_INFORMATION` returns exactly four keys and no
+  sales-limit field; **#6 article6Status → CLOSED**, absent from all 61 recorded inquiry
+  responses AND a fresh live inquiry; **#4 taxpayerStatus → WIRED** — our map already covered
+  every documented value, but the org answers an unknown economic code with an EMPTY body, which
+  we rendered as «نامشخص»; the response now carries `found` and the UI says «در سامانهٔ مودیان
+  یافت نشد». Nothing speculative wired. Table + verbatim wire evidence:
+  `docs/moadian/pdf_remine_2026-07.md`.
+- ✅ **Part 7 — real OG share image.** `public/og-image.png` (1200×630, brand teal + logo +
+  Vazirmatn, says only what the public landing says); absolute `og:image`/`twitter:image` +
+  width/height/alt on «/» and as a site-wide default in `__root.tsx`. Landing harness spec now
+  hard-asserts the tags AND that the asset really returns 200 `image/png`. Closes the last SEO
+  to-do from Part 6.
 
 ## Launch Batch 3 — partner panel v2 ⬜
 - Per-partner **admin-set commission %** (currently a single global/implicit rate).
@@ -95,7 +116,14 @@ Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICA
 ## Launch Batch 4 — global UI consistency sweep ⬜
 - Header **two-line owner name** (long names wrap correctly).
 - **Mobile sidebar** must NOT auto-close on navigation.
-- **Flaky mobile top bar** (intermittent layout/scroll issues).
+- **Flaky mobile top bar** — **now precisely diagnosed (Batch 2 Part 4 grill).** The header's
+  right cluster `src/routes/_app.tsx:244` (`flex items-center gap-1.5`) measures **437px inside a
+  390px viewport**, so EVERY `/app/*` page scrolls sideways by **99px** with no dialog open —
+  measured on `/app/customers` and `/app/accounting/chart`. It is not dialog-related (dialogs sit
+  correctly at x=0, w=390). Likely fix: `min-w-0` on that container + let the business-switcher
+  label truncate. NOTE the local measurement includes the dev-only «نسخه آزمایشی» badge
+  (`import.meta.env.MODE !== "production"`), so re-measure on a production build before sizing
+  the fix.
 - App-wide consistency pass (tokens, RTL, dialog footers, empty states).
 
 ---
@@ -105,6 +133,11 @@ Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICA
   ships the adapters; only env lines remain).
 - ⬜ **Kavenegar** template + API key — **CRITICAL launch blocker** (real OTP).
 - ⬜ **Accountant answers** (the questions blocking correct Moadian/tax behavior):
+  - **Chart-of-accounts default trees** (Batch 2 Part 4) — bless or correct the four drafted
+    trees in `docs/accounting/coa_templates_for_accountant_review.md` (five specific questions
+    are listed at the top of that doc). The feature is LIVE and safe either way; until they are
+    blessed the picker carries «پیشنهادی — قابل ویرایش», and removing that note is the only
+    code change their answer triggers.
   - **Referring-subject blank fields** — a نوع دوم اصلاحیه registers but the org returns a
     non-blocking تذکر that inp/inty are «خارج از الگو» (14007/14004). We blank only the
     buyer today; confirm the exact field set to blank on referring subjects (ins 2/3/4)
@@ -140,4 +173,4 @@ Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICA
 
 ---
 
-_Last updated: 2026-07-24 (created — Launch Batch 1 in progress)._
+_Last updated: 2026-07-25 (Launch Batch 2 Parts 4/5/7 landed — CoA templates, PDF re-mine finalised, OG image)._

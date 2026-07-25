@@ -1,5 +1,78 @@
 # Ops Progress
 
+## LAUNCH BATCH 2 — PARTS 4 & 5 (+OG image) (2026-07-25) — DEPLOYED to dev
+Closes Launch Batch 2. Both parts followed the standing laws: EMPIRICAL-TEST (the
+sandbox, not a doc citation, decided Part 5), GRILL-ME (hostile-testing found and fixed
+a real 500 in Part 4), and real-UI proof (harness spec 12).
+
+**Part 4 — chart-of-accounts default templates (the accountant's suggestion).**
+«افزودن حساب‌های پیش‌فرض» on the accountant-view chart page: picker
+(خدماتی/بازرگانی/تولیدی/پیمانکاری) → PREVIEW («این حساب‌ها اضافه می‌شوند: …», writes
+nothing) → apply. **Additive only** — never deletes, renames, or re-codes; the
+idempotency key is (parent, exact title), so a re-apply is a true no-op and a template
+account the merchant ARCHIVED is not resurrected. Codes continue the existing scheme
+(کل `15`/`16`/`54` under گروه; معین `1501`…). Audited through the new append-only
+`chart_template_events` (actor + the exact accounts each apply created; a no-op apply
+writes no row) — the `TaxConfigEvent` pattern. Template accounts are `is_system=false`,
+and `chart_admin` now keys rename/archive on `is_system` instead of level, so an
+additive template stays reversible while the seeded skeleton stays frozen.
+- **GRILL finding, fixed in-batch:** a double-tap fired two applies that read the same
+  chart and allocated the same codes → `uq_chart_accounts_tenant_code` violation as a
+  raw **500** (gotcha #4/#13, and the FakeDBSession harness would never have caught it).
+  Fixed with a per-tenant `pg_advisory_xact_lock` taken BEFORE the chart read (the
+  skeleton build races too) + an `IntegrityError`→friendly-409 guard. Proven by a real
+  two-connection race test, red before the fix and green after.
+- **Real-UI proof (HARD LAW):** بازرگانی نیک‌تجارت (09120001002, accountant view ON) —
+  picker shows the four types with counts + the «پیشنهادی — قابل ویرایش» note → بازرگانی
+  preview lists the additions → apply → the tree shows ۱۵ موجودی کالا (۱۵۰۱/۱۵۰۲),
+  ۱۶ دارایی‌های ثابت (۱۶۰۱–۱۶۰۳), ۴۱۰۲ فروش کالا, ۵۴ بهای تمام‌شدهٔ کالای فروش‌رفته
+  (۵۴۰۱/۵۴۰۲), ۵۳۰۷–۵۳۱۱ → re-apply says «چیزی برای افزودن نمانده» with the apply button
+  disabled → exactly one «موجودی کالا». A second template (خدماتی) then added ۴۱۰۳/۵۳۱۲–۵۳۱۵
+  **without** duplicating the shared دارایی‌های ثابت / آب،برق،گاز و تلفن / استهلاک branches.
+  Screenshots: `digi-tax-frontend/qa-screens/harness-2026-07-25T10-05-17/`.
+- **Drafted trees are NOT blessed yet:** `docs/accounting/coa_templates_for_accountant_review.md`
+  carries all four trees + five specific questions for the founder's accountant. Until they
+  answer, the picker shows «پیشنهادی — قابل ویرایش»; removing that note is the only code
+  change their answer triggers. Logged in the founder's parallel queue.
+- Guide: **S9-11** «افزودن حساب‌های پیش‌فرض بر اساس نوع کسب‌وکار»; S9-06 links it.
+
+**Part 5 — PDF re-mine wire-confirmations.** `scripts/remine_wire_probe.py` (read-only —
+submits nothing, so the ZERO-TOTAL rule is not in play) answered findings #3/#4/#6 on the
+نیک‌تجارت sandbox. Every row of the table is now FINAL:
+- **#3 حد مجاز فروش → CLOSED, unwired.** `GET_FISCAL_INFORMATION` returns exactly four keys
+  (`nameTrade`, `fiscalStatus`, `economicCode`, `nationalId`). No sales-limit field on the
+  wire — it exists only in prose + an SDK model the REST service does not populate.
+- **#6 article6Status → CLOSED, unwired.** Absent from all **61** recorded inquiry responses
+  (`moadian_submissions.inquiry_payload_json`) AND from a fresh live inquiry. The org only
+  ever returns uid/referenceNumber/status/fiscalId/packetType/data{success,error[],warning[]}.
+- **#4 taxpayerStatus → WIRED.** `TAXPAYER_STATUS_FA` already covered every documented value
+  (unmapped = NONE), but the probe surfaced a gap the doc never mentions: for an economic code
+  the org has no record of it answers **HTTP 200 with an EMPTY body**, which we rendered as
+  the ambiguous «نامشخص». The response now carries `found`; the buyer-inquiry card, the
+  customers form and both toasts say «در سامانهٔ مودیان یافت نشد». Tests pin the verbatim
+  sandbox bodies.
+- Nothing speculative wired — per the EMPIRICAL-TEST LAW, the wire said #3/#6 are not there.
+  Table + verbatim evidence: `docs/moadian/pdf_remine_2026-07.md`.
+
+**Also — real OG share image.** `public/og-image.png` (1200×630, brand teal + logo +
+Vazirmatn, no capability leaks) with absolute `og:image`/`twitter:image` + width/height/
+type/alt on «/» and as a site-wide default in `__root.tsx`. The landing harness spec now
+hard-asserts the tags and that the asset returns 200 `image/png`. Last Part 6 SEO to-do closed.
+
+**Pre-existing bug found while grilling (NOT fixed — handed to Batch 4):** the app header's
+right cluster `src/routes/_app.tsx:244` measures **437px inside a 390px viewport**, so every
+`/app/*` page scrolls sideways by **99px** with no dialog open (measured on `/app/customers`
+and `/app/accounting/chart`; dialogs themselves sit correctly at x=0, w=390). This is the
+«flaky mobile top bar» already on the Batch 4 list, now precisely diagnosed. The local
+measurement includes the dev-only «نسخه آزمایشی» badge, so re-measure on a production build
+before sizing the fix.
+
+**Gates:** backend **1268 pass / 7 known-baseline fail / 4 skip** (zero new) on the isolated
+`digitax_test` DB; ruff + black clean; frontend typecheck + build clean; harness **13/13
+green locally** (12 spec files). Migration **`coatpl00012`** applied and psql-verified
+(`\d chart_template_events` shows the table + `ix_chart_template_events_tenant`); three new
+routes confirmed in the live OpenAPI.
+
 ## MOADIAN F (2026-07-24) — TRUE editable اصلاحیه + pagination sweep + pattern findability — DEPLOYED to dev
 Founder's core complaint fixed: «صدور اصلاحیه» no longer submits an immediate no-edit
 corrective (which read like a cancellation). It now **creates an editable DRAFT copy
