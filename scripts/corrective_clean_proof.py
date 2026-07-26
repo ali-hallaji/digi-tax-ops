@@ -81,7 +81,7 @@ async def main() -> int:
             invoice_type="tax_reportable",
             status="draft",
             issue_date=date.today(),
-            moadian_type_override="2",
+            moadian_type_override=2,
         )
         db.add(draft)
         await db.flush()
