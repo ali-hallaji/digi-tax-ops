@@ -2186,6 +2186,44 @@ LAUNCH_ROADMAP.md; this entry records the state and the findings.
 - **Pre-existing, untouched:** a seeded custom expense category renders as the raw slug
   `utilities` instead of a Persian label.
 
+### Batch 5.6 — dev deploy (2026-07-26)
+Snapshot first (`backups/digitax-pre-batch56-20260726_080832.sql.gz`, 128 MB). compose v2
+only — the `docker-compose` name on the server is the STOP shim, verified by running it.
+Pulls: backend `99cf65c` · frontend `0762673` · ops `e81d318`. Pruned images + build cache
+(never volumes). `build --no-cache api` → `up -d api` → **`alembic upgrade head` applied
+BOTH `expparty00015` and `manaudit00016`** → psql-verified (`expenses` has party_type /
+customer_id / vendor_id; `manual_entry_events` exists) → `build --no-cache frontend` WITH
+`FRONTEND_SHA` exported in the SAME shell (the Batch 5.5 lesson) → force-recreate.
+- **Stale-image guard PASSED first time:** `/version.json` returns
+  `0762673a384c5e3f41696dd45c3e3c6700523539` = the pushed frontend SHA.
+- **Live-API verification** (the running OpenAPI, not the build log): `ExpenseResponse`
+  carries party_type/customer_id/vendor_id/party_missing; `ExpenseCreateRequest` accepts
+  the party fields and **no longer accepts `party_name`**; `PartyBalanceRowResponse`
+  carries settled_total + expense_total; `POST /accounting/entries` now takes
+  `date_from`/`date_to` (the FY lock).
+- **Preflight: 22 PASS, 0 FAIL.** All four services `Up (healthy)`.
+- **Harness on dev: 13 passed / 1 skipped — GREEN.**
+- **Captcha / rate-limit:** untouched and ON — a raw curl to `/auth/otp/request` was
+  correctly refused with «تأیید امنیتی ناموفق بود», and every harness login solved the real
+  Altcha PoW through the real login page.
+
+### Kavenegar — key is LIVE, but the founder's own number still cannot receive an SMS
+The founder supplied the key; it is in the local `.env` and the dev `.env` (both gitignored,
+and a `git grep` across all three repos confirms the key is in NO commit).
+Live in the running API: `SMS_PROVIDER=kavenegar`, key SET (88 chars), template `digiotp`,
+`SMS_ALLOWLIST=09120000000`.
+- **Proven safe without sending anything:** a non-allowlisted number is suppressed BEFORE
+  any network call — `status=suppressed, provider=kavenegar`. Nothing left the building.
+- **BLOCKER for the real-SMS proof:** `09120000000` is a seeded persona, and Batch 5's
+  migration `otpbypass00014` backfilled `otp_delivery_bypass = true` on every account that
+  existed then. That flag short-circuits BEFORE the provider is chosen, so the founder's
+  number is FORCED to console no matter what the allowlist says — the harness run confirms
+  it (`provider=console, status=bypass` for every persona OTP, with a real key present).
+  This is the safety law working exactly as designed; it just also blocks the one send we
+  want. **The founder's call, one click:** admin → کاربران → his user → turn «حساب داخلی»
+  OFF, then request an OTP from the real login page and confirm receipt. Nothing else has
+  to change. (Alternative: use a non-seeded number and add it to `SMS_ALLOWLIST`.)
+
 ## Launch Batch 5.5 (2026-07-26) — Kavenegar prep + founder tweaks
 Scope landed HONESTLY: Part 0 minus the secret, plus all three founder tweaks.
 Parts 1–4 are NOT started and are itemised in LAUNCH_ROADMAP.
