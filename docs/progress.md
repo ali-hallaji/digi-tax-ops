@@ -1,5 +1,64 @@
 # Ops Progress
 
+## PRE-PRODUCTION BATCH (2026-07-26) — NOT deployed; awaiting founder GO
+
+The production bring-up is no longer a document — it has been **run**, twice from
+scratch, on throwaway infrastructure beside the dev stack.
+
+**Rehearsal isolation (proven, not assumed).** Separate compose project, env file,
+host ports, network and volume. Dev's *resolved* compose config was captured before
+and after the compose change and diffed — **byte-identical** — and dev's containers
+never restarted through the whole exercise (postgres 14 h, redis 2 weeks). Preflight
+green afterwards, zero FAIL, including the orphan-DB check.
+
+**Eight runbook↔reality deviations, all fixed in-commit** (detail table in
+`docs/server_deploy_runbook.md` § Production bring-up checklist v3):
+1–3. `container_name`, `env_file` and host ports were hardcoded. The `env_file` one
+was dangerous: `-p` alone gives a second stack its own containers but still loads
+`.env`, so a "throwaway" stack would have written to the REAL database.
+4. **No CLI existed to create the first system-admin** — every seeder builds the demo
+world. Added `app/cli/create_admin.py` (password from env not argv, forced change at
+first login, `otp_delivery_bypass=false`, idempotent; grilled on re-run / weak
+password / bad mobile — one row, correct flags, refusals create nothing).
+5. `import_tax_units` needs a CSV path; the one in its own docstring does not exist.
+6. `BACKEND_SHA` was never exported — the API baked `git_sha: unknown`. The new prod
+smoke FAILS on that, and caught it on the first run.
+7. **Ordering bug that only a second clean run could expose:** `seed_commission_world`
+aborts with «no system admin found» on a virgin DB. Run 1 passed only because an admin
+had been created by hand first. Run 2 failed at exit 1 — admin now precedes backfills.
+8. `backup_db.sh` / `restore_db.sh` always targeted the DEFAULT project — on a
+two-stack host they would dump the WRONG database under the right filename.
+
+**Result:** steps 2–7 collapsed into `scripts/prod_bring_up.sh`; the third, fully
+clean run completed with **zero improvisation** (exit 0) and `scripts/prod_smoke.sh`
+went 8/8 green with both SHAs baked. Backup + restore rehearsed against the rehearsal
+stack (restore into a scratch DB showed exactly 1 user and 0 of everything else —
+the right shape for fresh production). Teardown verified complete (0 containers, 0
+volumes, 0 images, env + backups removed) and the server's git tree restored clean so
+the real deploy is a normal `git pull`.
+
+**Honest limit, documented rather than papered over:** the harness authenticates by
+reading the dev OTP from the API response. Production runs `DEBUG=false` with a real
+SMS provider, so **no automated spec can log in there**, and 14 of 15 harness specs
+are persona-dependent besides. The «prod smoke suite» is therefore `prod_smoke.sh` +
+exactly one spec (`11-landing`, selected BY PATH — `--grep landing` also matches
+`05-p5-admin` and fails on a personaless DB, proven during the rehearsal) + **one
+mandatory manual founder login with a real OTP**.
+
+**Part 1 — fresh-reference sandbox chain.** E5/E6/E7 walked in the real UI on a
+FRESH اصلی (INV-2026-000037) because sandbox records rotate; matrix rows now ✅ and
+rotation is canonical rule 8. Issued-cheque پاس walked: no money moved while «در
+جریان», then exactly −۲۵٬۰۰۰٬۰۰۰ on پاس (B8b). Grill fix: lifecycle block reasons were
+tooltip-only and unreachable on touch — now also inline.
+
+**Part 3 — closers.** Personas …1005/1006/1007 given the fixed password (founder-
+approved, credentials-only); all four generated artifacts regenerated from
+`world_fixtures.py`; login proven through the real page. Roadmap hygiene done — every
+remaining launch blocker is founder-owned.
+
+**Gates:** backend 1326 pass / 7 fail (the documented `FakeDBSession` baseline) / 4
+skip; ruff + black clean; frontend typecheck + build clean.
+
 ## LAUNCH BATCH 2 — PARTS 4 & 5 (+OG image) (2026-07-25) — DEPLOYED to dev
 Closes Launch Batch 2. Both parts followed the standing laws: EMPIRICAL-TEST (the
 sandbox, not a doc citation, decided Part 5), GRILL-ME (hostile-testing found and fixed

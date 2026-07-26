@@ -694,7 +694,67 @@ docker compose up -d api frontend && bash scripts/preflight.sh
 Renaming rather than dropping keeps an instant undo for as long as the disk
 allows. Drop `digitax_before_restore` only after the restored system is verified.
 
-## Production bring-up checklist (v2)
+## Production bring-up checklist (v3 — REHEARSED)
+
+> **v3 status: this checklist has been executed end-to-end on throwaway
+> infrastructure (PRE-PRODUCTION batch, 2026-07-26).** v2 was prose and had
+> never been run; rehearsing it surfaced eight places where migration morning
+> would have required improvisation. All eight are fixed below and steps 1–7 are
+> now a single script. The final clean run completed with **zero improvisation**
+> and a green prod smoke.
+>
+> **Do not hand-run steps 2–7.** Use:
+> ```bash
+> ADMIN_MOBILE=09xxxxxxxxx ADMIN_FIRST_NAME=<نام> ADMIN_LAST_NAME=<خانوادگی> \
+> ADMIN_PASSWORD='<strong, ≥10 chars>' bash scripts/prod_bring_up.sh
+> bash scripts/prod_smoke.sh
+> ```
+
+### What the rehearsal found (all fixed — do not re-discover these)
+
+| # | Finding | Fix |
+|---|---------|-----|
+| 1 | `container_name:` hardcoded on all 4 services — `COMPOSE_PROJECT_NAME` does NOT override it, so a second stack collides | `${STACK_PREFIX:-digi-tax}-*` in `docker-compose.yml` |
+| 2 | `env_file: .env` hardcoded — a second stack would load the FIRST stack's env and **write to its database** | `${STACK_ENV_FILE:-.env}` |
+| 3 | postgres/redis/api host ports hardcoded | `${POSTGRES_HOST_PORT}` / `${REDIS_HOST_PORT}` / `${API_HOST_PORT}` |
+| 4 | **No CLI existed to create the first system-admin.** Every seeder builds the demo world; production had no sanctioned path | new `app/cli/create_admin.py` |
+| 5 | `import_tax_units` documented with no argument — it requires a CSV path, and the path in its own docstring does not exist | real path is `data/moadian/rc_umgs_st_v1_18_units.csv` (baked into the image) |
+| 6 | `BACKEND_SHA` never exported — the API bakes `git_sha: unknown`, so backend deploy-verification by SHA is impossible. v2 named only `FRONTEND_SHA` | both exported in `prod_bring_up.sh`; `prod_smoke.sh` FAILS on `unknown` |
+| 7 | **Ordering bug:** `seed_commission_world` aborts with «no system admin found» on a virgin DB. Only a SECOND clean run exposes it — the first run passed only because an admin had been created by hand | admin creation moved BEFORE backfills |
+| 8 | `backup_db.sh` / `restore_db.sh` always target the DEFAULT compose project — on a two-stack host they back up the WRONG database under the right filename | both honour `PROJECT` / `STACK_ENV_FILE` |
+
+### Second stack on one host
+
+Both `STACK_PREFIX` and `STACK_ENV_FILE` must be set, together with `-p`:
+
+```bash
+PROJECT=<name> STACK_ENV_FILE=.env.<name> bash scripts/prod_bring_up.sh
+```
+
+Setting only `-p` is the dangerous half-measure: containers get project-scoped
+names but still load `.env`, i.e. the new stack quietly points at the old
+stack's `DATABASE_URL`.
+
+### The «prod smoke suite» (what CAN be verified automatically)
+
+`scripts/prod_smoke.sh` — liveness, both SHAs, alembic head, captcha refusal,
+no-OTP-in-response, unauthenticated 401 — plus **exactly one** harness spec:
+
+```bash
+pnpm harness --base-url <prod> tests/e2e-harness/specs/11-landing.spec.ts
+```
+
+Select it **by path**, never `--grep landing` — that also matches `05-p5-admin`
+(«/admin landing»), which needs personas and fails on a virgin database.
+
+**Why the suite is this short:** the harness authenticates by reading the dev
+OTP out of the API response. Production runs `DEBUG=false` with a real SMS
+provider, so the OTP never reaches any client — **no automated spec can log in
+on production**, and 14 of 15 specs are persona-dependent besides. The remaining
+gate is therefore human and **mandatory**: one founder login with a real OTP on
+a real handset. Do not declare a bring-up verified without it.
+
+---
 
 Everything that does NOT depend on the datacenter/DNS decision is actionable
 today; the steps that do are marked ⏸ and are the founder's call.
@@ -716,20 +776,40 @@ today; the steps that do are marked ⏸ and are the founder's call.
       proof (gotcha 3).
 
 **3 — Minimal seed (production has NO personas)**
-- [ ] Create the first system-admin user deliberately; do NOT run
-      `seed_realistic_world` (it is the demo world and requires a clean schema).
-- [ ] `python -m app.cli.import_tax_units` — the official RC_UMGS unit catalog.
+- [ ] `python -m app.cli.import_tax_units data/moadian/rc_umgs_st_v1_18_units.csv`
+      — the official RC_UMGS catalog (102 rows). The path argument is REQUIRED;
+      the one in the module's own docstring does not exist (rehearsal finding 5).
+- [ ] Create the first system-admin — `app.cli.create_admin`, added by the
+      rehearsal because no such command existed (finding 4):
+      ```bash
+      ADMIN_PASSWORD='<strong>' docker compose exec -T -e ADMIN_PASSWORD api \
+        python -m app.cli.create_admin --mobile 09xxxxxxxxx \
+        --first-name <نام> --last-name <خانوادگی>
+      ```
+      Password comes from the environment, never argv. The account is forced to
+      change it at first login and keeps `otp_delivery_bypass=false` (a real
+      admin receives a real OTP). Never run `seed_realistic_world` — that is the
+      demo world and it requires a clean schema.
 - [ ] Module prices / plan rows as the founder's pricing dictates.
 
 **4 — Backfills (one-time, see § One-time-per-environment BACKFILLS)**
 - [ ] `python -m app.cli.seed_commission_world` — no-op on a fresh DB, required
       the moment any referred revenue predates the accrual engine.
+      **Runs AFTER step 3's admin, never before** — it attributes its settings
+      row to a system admin and aborts on a virgin DB (rehearsal finding 7).
 
 **5 — Frontend**
-- [ ] `export FRONTEND_SHA=$(git -C ../digi-tax-frontend rev-parse HEAD)` in the
-      SAME shell as the build (Batch 5.5 lesson), then
-      `docker compose build --no-cache frontend`.
-- [ ] `curl localhost:3000/version.json` equals that SHA.
+- [ ] Export **BOTH** SHAs in the SAME shell as the builds — the API bakes its
+      own `GIT_SHA` too, and v2 named only the frontend one, so a production API
+      would have reported `git_sha: unknown` (rehearsal finding 6):
+      ```bash
+      export BACKEND_SHA=$(git -C ../digi-tax-backend rev-parse HEAD)
+      export FRONTEND_SHA=$(git -C ../digi-tax-frontend rev-parse HEAD)
+      ```
+- [ ] `docker compose build --no-cache frontend`.
+- [ ] `curl localhost:3000/version.json` equals `$FRONTEND_SHA`, and
+      `curl localhost:8000/health/version` equals `$BACKEND_SHA` — neither may
+      say `unknown`. `scripts/prod_smoke.sh` fails the run if either does.
 
 **6 — Verify before anyone is let in**
 - [ ] `bash scripts/preflight.sh` — zero FAIL.

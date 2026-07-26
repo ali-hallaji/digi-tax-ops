@@ -13,8 +13,16 @@ started, and add new items as they surface. It never goes stale.
 ---
 
 ## 🚦 Launch blockers (must clear before public launch)
-- ⬜ **Real OTP** (Kavenegar template + API key) — the single hardest launch blocker;
-  without real SMS, no real user can sign up. Founder's parallel queue.
+
+_As of the PRE-PRODUCTION batch (2026-07-26) every remaining item on this list is
+**founder-owned** — there is no engineering work left holding launch. Code-side
+readiness is proven: the production bring-up has been rehearsed end-to-end on
+throwaway infrastructure and reduced to two commands (§ runbook v3)._
+
+- 🔄 **Real OTP** — Kavenegar provider, API key and `digiotp` template are WIRED and
+  configured on dev (Batch 5.6). `SMS_ALLOWLIST=09120000000` still restricts delivery
+  to the founder's number. Remaining: founder confirms receipt of a real SMS, then
+  empties the allowlist for production. No code work left.
 - 🔄 **Real payment gateway** creds (Zarinpal/Zibal merchant approval) — checkout is
   simulated until then. Adapter ships launch-ready (Batch 1 Part 3); creds are env-only.
 - ⬜ **Iran datacenter / egress** decision (Moadian tp.tax.gov.ir is Iran-only; prod
@@ -353,6 +361,47 @@ The four parts deferred from 5.5, plus the Kavenegar key finally landing.
   with the reason each var matters plus an explicit «must NOT appear» list. Deploy
   runbook v2: an 8-step production bring-up checklist with the DNS/TLS/egress
   steps marked ⏸ pending the datacenter decision. (ops `6df6458`.)
+
+## PRE-PRODUCTION batch — rehearsed migration · E5–E7 · cheque پاس (2026-07-26)
+
+**Part 1 — fresh-reference sandbox chain + cheque.** Registered a FRESH اصلی on
+نیک‌تجارت (INV-2026-000037, ins=1 accepted, taxid `A2HP…876`) and walked the whole
+lifecycle on it, because sandbox records rotate. **E6**: a second «صدور اصلاحیه»
+while a draft is open → 409, no second draft, friendly «یک پیش‌نویس اصلاحیه برای این
+صورتحساب باز است — همان را تکمیل یا لغو کنید.» **E7**: deleting the corrective draft
+left the original نهایی‌شده/ثبت‌شده AND re-correctable (a new draft was created after).
+**E5**: ابطال accepted (ins=3, taxid `A2HP…882`, both legs `accepted` with NO error
+code — the referring-subject inp/inty drop holding), after which «صدور اصلاحیه» is
+disabled with «این صورتحساب باطل شده — صدور اصلاحیه مجاز نیست.» Matrix E5/E6/E7 now ✅
+and a standing **SANDBOX ROTATION LAW** was added as canonical rule 8: every lifecycle
+experiment registers its own fresh اصلی; a `0300601` on an old reference is expected
+rotation, not a regression. **B8b**: issued cheque #PASS-E8-001 (۲۵٬۰۰۰٬۰۰۰ on بانک
+ملت) moved NO money while «در جریان», then پاس شد → balance ۱٬۰۴۱٬۰۰۲٬۰۰۰ →
+۱٬۰۱۶٬۰۰۲٬۰۰۰, exactly −۲۵٬۰۰۰٬۰۰۰. Grill fix: the lifecycle block reasons lived only
+in tooltips, unreachable on touch — now also rendered as inline text (§8.4).
+
+**Part 2 — production migration REHEARSED (the headline).** Stood up a throwaway
+prod-shaped stack on the dev host (own project, env, ports, network, volume; dev's
+resolved compose config proven byte-identical and its containers never restarted),
+ran the runbook end-to-end, tore it down, and ran it again from nothing. **Eight
+findings, all fixed** — hardcoded `container_name` / `env_file` / ports (a second
+stack would have silently written to the FIRST stack's database), a **missing
+create_admin CLI**, an import command whose documented path does not exist, an
+unexported `BACKEND_SHA`, an **admin-before-backfill ordering bug that only the
+second clean run exposed**, and backup/restore scripts that always targeted the
+default project. Steps 2–7 are now one script (`prod_bring_up.sh`); verification is
+`prod_smoke.sh` + exactly one prod-safe harness spec. The final clean run completed
+with **zero improvisation** (exit 0) and 8/8 smoke green. Documented honestly: on a
+`DEBUG=false` stack no automated spec can log in, so one manual founder login with a
+real OTP is a mandatory, non-automatable gate. Runbook is now **v3 (REHEARSED)**.
+Teardown verified complete; dev preflight green afterwards.
+
+**Part 3 — closers.** The three password-less personas (…1005/1006/1007) now carry the
+fixed `Admin@12345` (founder-approved, credentials-only — identities and counts
+untouched); `world_fixtures.py`, `persona_logins.md`, `persona_fixtures.json` and the
+README table regenerated from the single source, and کامران سعیدی's login proven
+through the REAL login page (Altcha solved by the real widget). Roadmap hygiene: every
+remaining launch blocker is now founder-owned.
 
 ## Launch Batch 3 — partner panel v2 (DEPLOYED to dev 2026-07-26)
 - ✅ **Part 1 — COMMISSION MODEL, admin-controlled (headline).** Commission used to be

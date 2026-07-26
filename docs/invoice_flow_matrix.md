@@ -29,6 +29,15 @@ commit; any red row blocks the batch that produced it._
    gate, the Moadian validator, the preview, and the UI must all obey the SAME resolver.
 7. **ZERO-TOTAL law**: real (non-sandbox) test submissions are zero-total only
    (100% discount, نوع دوم walk-in). Non-zero proofs go to the نیک‌تجارت sandbox.
+8. **SANDBOX ROTATION LAW (standing, PRE-PRODUCTION batch)**: the نیک‌تجارت sandbox
+   PERIODICALLY DISCARDS its registered records. A taxid that the org accepted last
+   week can later fail with `0300601` («شماره مالیاتی مرجع یافت نشد») even though our
+   DB still holds it — the reference rotted on THEIR side, not ours. Therefore **every
+   lifecycle experiment (اصلاحیه / ابطال / برگشت) MUST register its OWN fresh اصلی in
+   the same session and refer to that**, never to a taxid from an earlier batch. A
+   `0300601` on an old reference is EXPECTED rotation, not a regression — do not spend
+   a debugging round on it; register a fresh اصلی and re-walk. (Cost us a full
+   Batch-3 experiment before the cause was understood.)
 
 Persona map for proofs: **نیک‌تجارت** `09120001002` (sandbox, non-zero allowed) ·
 **دیباتک** `09120000000` (live, zero-total smoke only) · demo «کاربر نمونه»
@@ -67,6 +76,7 @@ proven at 390px; the rest desktop.
 | B6 | Convert internal → tax_reportable | Allowed only when tax requirements satisfied (override-aware); gated on approved taxpayer profile | UI journey | ✅ (blocked→sstid fixed→converted) |
 | B7 | Settle — cash receipt | Payment records; `payment_status` transitions unpaid→partial→paid | UI journey | ✅ تسویه جزئی — B7-B8-*.png |
 | B8 | Settle — cheque | Cheque received against invoice; lifecycle (در جریان/وصول) reflects on invoice paid state | UI journey | ✅ در انتظار وصول چک — B7-B8-*.png |
+| B8b 📱 | Issued cheque پاس → balance DECREASES | A پرداختی cheque moves NO money while «در جریان»; on «پاس شد» the drawn-on account falls by exactly the cheque amount | UI journey | ✅ #PASS-E8-001 ۲۵,۰۰۰,۰۰۰ on بانک ملت: issued → balance UNCHANGED ۱,۰۴۱,۰۰۲,۰۰۰; confirm states «…از حساب «بانک ملت» برداشت می‌شود»; پاس شد → ۱,۰۱۶,۰۰۲,۰۰۰ (exactly −۲۵,۰۰۰,۰۰۰), row «پاس‌شده» + «لغو پاس» — cheque-pass-balance-decreased.png |
 | B9 | Print view + PDF | Both kinds render Persian RTL, Vazirmatn, correct totals; walk-in shows «مصرف‌کنندهٔ نهایی», never an empty buyer error | UI journey | ✅ print 200 + PDF 85KB (follow-up: Gregorian date in print header) |
 | B10 | Fiscal-year lock | Out-of-window issue date blocked with the FY message; in-window passes | UI journey | ✅ friendly FY 422 via real save |
 
@@ -108,9 +118,9 @@ registered invoice; نوع/الگو/خریدار/شناسهٔ کالا/خدمت/
 | E2 📱 | Corrective wizard locks | نوع/الگو/crn/customer/buyer locked with a reason; «افزودن ردیف» disabled; per-line شناسهٔ کالا/خدمت + نرخ مالیات locked; qty/price/discount editable | UI journey | ✅ no «شناسه مالیاتی» btn, no add-line form («…نمی‌توان ردیف جدید افزود RC_IITP §5-2»), نرخ مالیات read-only, qty/price/discount editable — E4a-*.png |
 | E3 📱 | Edit + finalize + submit | Change qty on one line + price on another + delete a line → finalize → «ارسال» → org ACCEPTED as اصلاحی (ins=2, subject_fa=«اصلاحی») | UI journey, sandbox | ✅ qty 2→5, price 2M→2.5M, deleted line 3 → org **ثبت شد** (taxid …E1, subject=2 accepted in DB). تذکر: org flags الگو/نوع «خارج از الگو» (non-blocking; see follow-up) — E4b/E6-*.png |
 | E4 | Bidirectional timeline | Original shows «اصلاح شد → [شماره]»; corrective banners «اصلاحیهٔ [مرجع]» + مرجع link | UI journey | ✅ original «این صورتحساب اصلاح شده است: INV-000027» ↔ corrective «اصلاحیهٔ INV-000026» + «مشاهدهٔ صورتحساب مرجع» — E7/E3-*.png |
-| E5 | Blocked — corrective on cancelled | «صدور اصلاحیه» on a باطل‌شده invoice → friendly Persian refusal, no org call | UI/curl | ⚠️ guard proven at code+test level (`_has_cancellation` in create_corrective; button enables ONLY on «ثبت شده» — proven disabled pre-registration & on «رد شد» INV-000025). Cancelled-invoice-specific UI walk not run this batch. |
-| E6 | Blocked — second open corrective | A 2nd «صدور اصلاحیه» while one draft is open → friendly «یک پیش‌نویس اصلاحیه باز است» | UI/curl | ⚠️ one-open guard live (409, unit-tested; relied on it during cleanup). Explicit 2nd-attempt UI walk not run this batch. |
-| E7 | Cancel corrective draft | Cancelling the corrective DRAFT leaves the original untouched (no org footprint) | UI journey | ⚠️ re-verify draft discarded (DB delete) left original INV-000023 untouched + re-correctable; UI «لغو سند» path not walked this batch. |
+| E5 📱 | Blocked — corrective on cancelled | «صدور اصلاحیه» on a باطل‌شده invoice → friendly Persian refusal, no org call | UI journey, sandbox | ✅ INV-000037 ابطال accepted (ins=3, taxid …882) → «صدور اصلاحیه» disabled, reason «این صورتحساب باطل شده — صدور اصلاحیه مجاز نیست.» No org call fired — E5-corrective-blocked-on-cancelled.png |
+| E6 📱 | Blocked — second open corrective | A 2nd «صدور اصلاحیه» while one draft is open → friendly «یک پیش‌نویس اصلاحیه باز است» | UI journey | ✅ 2nd attempt on INV-000037 → 409, stayed on the original, no 2nd draft, toast «یک پیش‌نویس اصلاحیه برای این صورتحساب باز است — همان را تکمیل یا لغو کنید.» — E6-second-corrective-blocked.png |
+| E7 📱 | Cancel corrective draft | Cancelling the corrective DRAFT leaves the original untouched (no org footprint) | UI journey | ✅ draft 98ade8a0 deleted via «حذف پیش‌نویس‌ها» (confirm states «اسناد نهایی‌شده حذف نمی‌شوند») → INV-000037 still نهایی‌شده/ثبت‌شده, and RE-correctable (new draft 09fe91bb created) — E7-cancel-corrective-draft-confirm.png |
 | E8 | Packet buyer-omit | The اصلاحی packet omits buyer identity (جدول ۱۰ ردیف ۴) — no 14xxx «خارج از الگو» تذکر from the buyer fields | wire-check | ✅ unit-tested (test_corrective_f: buyer omitted for ins 2/3/4, original keeps buyer); org returned NO buyer-field تذکر on the نوع دوم corrective. |
 
 ## F — Pagination / findability (MOADIAN F Parts 2–3)

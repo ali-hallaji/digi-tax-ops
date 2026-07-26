@@ -101,7 +101,7 @@
     "p3_member_admin": {
       "mobile": "09120001006",
       "name": "کامران سعیدی",
-      "password": null,
+      "password": "Admin@12345",
       "role": "member_admin",
       "businesses": [
         "پخش آریا (مدیر)"
@@ -118,7 +118,7 @@
     "p3_member_staff": {
       "mobile": "09120001007",
       "name": "نیلوفر رستمی",
-      "password": null,
+      "password": "Admin@12345",
       "role": "member_staff",
       "businesses": [
         "پخش آریا (کارمند)"
@@ -135,7 +135,7 @@
     "p4": {
       "mobile": "09120001004",
       "name": "زهرا محمدی",
-      "password": null,
+      "password": "Admin@12345",
       "role": "partner_approved",
       "businesses": [],
       "explore": "پنل همکار (داخل /admin): مشتریان من (۵ کسب‌وکار)، درآمد و تسویه، کد همکار HAM-TEST1",
@@ -164,7 +164,7 @@
     "p5": {
       "mobile": "09120001005",
       "name": "پویا اسدی",
-      "password": null,
+      "password": "Admin@12345",
       "role": "partner_pending",
       "businesses": [],
       "explore": "وضعیت «در حال بررسی» درخواست همکاری",
