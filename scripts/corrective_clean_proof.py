@@ -78,7 +78,7 @@ async def main() -> int:
         # ── 1. a fresh نوع دوم original (walk-in — no buyer identity needed) ──
         draft = InvoiceDraft(
             tenant_id=TENANT,
-            kind="tax_reportable",
+            invoice_type="tax_reportable",
             status="draft",
             issue_date=date.today(),
             moadian_type_override="2",
@@ -87,7 +87,8 @@ async def main() -> int:
         await db.flush()
         db.add(
             InvoiceDraftLine(
-                draft_id=draft.id,
+                invoice_draft_id=draft.id,
+                line_no=1,
                 tenant_id=TENANT,
                 free_line_title="کالای تست اصلاحیه",
                 tax_item_id=SSTID,
