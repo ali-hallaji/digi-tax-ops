@@ -39,6 +39,7 @@ from app.modules.invoice_drafts.application.services import (
     finalize_invoice_draft_for_tenant,
 )
 from app.modules.invoice_drafts.infrastructure.models import InvoiceDraft
+from app.modules.moadian.infrastructure.models import MoadianSubmission
 from app.modules.moadian.application import send_service as SS  # noqa: N812
 from app.modules.moadian.application.send_service import (
     create_corrective,
@@ -90,24 +91,34 @@ async def _run_one(db, label: str, original_id: str) -> dict:
     ).scalar_one()
     print(f"[{label}] finalized as {draft.document_number}")
 
-    res = await submit_invoices(db, tenant_id=TENANT, invoice_ids=[corr_id])
-    # submit_invoices returns a LIST of per-invoice submission dicts.
-    row = res[0] if isinstance(res, list) and res else res
-    sub_id = row.get("id") if isinstance(row, dict) else str(row)
-    await asyncio.sleep(8)
-    final = await refresh_submission(db, sub_id)
+    await submit_invoices(db, tenant_id=TENANT, invoice_ids=[corr_id])
+    # Read the submission back from the DB rather than trusting a return shape —
+    # the org verdict lives on the row and that is what we are here to record.
+    await asyncio.sleep(10)
+    sub = (
+        await db.execute(
+            select(MoadianSubmission)
+            .where(MoadianSubmission.invoice_id == corr_id)
+            .order_by(MoadianSubmission.created_at.desc())
+            .limit(1)
+        )
+    ).scalar_one()
+    try:
+        await refresh_submission(db, str(sub.id))
+        await db.refresh(sub)
+    except Exception as exc:  # noqa: BLE001 — the row already carries the verdict
+        print(f"[{label}] refresh note: {type(exc).__name__}")
+
+    payload = sub.inquiry_payload_json or sub.response_payload_json or {}
+    data = payload.get("data", payload) if isinstance(payload, dict) else {}
     return {
         "label": label,
         "document_number": draft.document_number,
-        "submission_id": str(sub_id),
-        "status": final.get("status"),
-        "taxid": final.get("taxid"),
-        "warnings": final.get("warnings") or final.get("org_warnings"),
-        "raw": {
-            k: final.get(k)
-            for k in ("interpreted", "org_message", "error_code", "data")
-            if final.get(k) is not None
-        },
+        "submission_id": str(sub.id),
+        "status": sub.status,
+        "taxid": sub.taxid,
+        "errors": data.get("error"),
+        "warnings": data.get("warning"),
     }
 
 
