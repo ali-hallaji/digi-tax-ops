@@ -399,6 +399,33 @@ bash scripts/preflight.sh
 Preflight validates Compose, required env, database consistency, container
 readiness, and API database env visibility.
 
+### One-time-per-environment BACKFILLS (after migrating, before the harness)
+
+A migration creates the columns; it does **not** always fill them. These are
+idempotent (safe to re-run) but must be run **once per environment** — including
+production on migration day — or the feature reads empty and looks broken.
+
+| backfill | when | command |
+|---|---|---|
+| **Partner commission accruals** (Batch 3) | any environment that had `referred_revenue_events` BEFORE `partner2t00017` | `docker compose exec api python -m app.cli.seed_commission_world` |
+
+**Why it matters:** commission stopped being derived-on-read and became snapshot
+accrual rows. Revenue that predates the engine has no accrual, so a partner's
+«درآمد و تسویه» and the admin settlement run would both show ZERO for real,
+already-earned money. The backfill uses each event's OWN date to resolve the rate,
+so it reproduces what the partner would have been told at the time — not today's
+rate. On dev it produced 6 accruals from 5 revenue events.
+
+> The same CLI also wires the demo two-tier link (HAM-TEST2 → HAM-TEST1). On a
+> production environment with no seeded personas that part is a no-op.
+
+Verify it landed:
+
+```bash
+docker compose exec postgres psql -U digitax -d digitax -c \
+  "SELECT count(*) FROM partner_commission_accruals;"
+```
+
 ## Start And Restart Sequence
 
 Use this order for a normal deployment:
