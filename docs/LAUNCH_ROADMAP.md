@@ -236,13 +236,81 @@ Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICA
     بعد دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.» instead of a false success. The
     message deliberately never explains WHY (the allowlist is internal).
   - Env lines + the allowlist-open one-liner are in the batch report.
-- ⬜ **Part 1 — party linkage: NOT STARTED.**
-- ⬜ **Part 2 — manual journal vouchers: NOT STARTED.**
-- ⬜ **Part 3 — separator rollout to the remaining ~45 inputs: NOT STARTED.**
-- ⬜ **Part 4 — anti-confusion navigation + the «ورود اطلاعات از نرم‌افزار قبلی»
-  coming-soon entry: NOT STARTED.** When it is built, the real importer stays BLOCKED on
-  the accountant's sample export files (هلو / سپیدار / حسابان) — a dedicated batch maps
-  customers/products/opening balances from the REAL formats. **No guessed mappings.**
+- ✅ **Part 1 — party linkage: DONE in Batch 5.6.**
+- ✅ **Part 2 — manual journal vouchers: DONE in Batch 5.6.**
+- ✅ **Part 3 — separator rollout: DONE in Batch 5.6.**
+- ✅ **Part 4 — anti-confusion navigation: DONE in Batch 5.6.** The
+  «ورود اطلاعات از نرم‌افزار قبلی» entry ships as a calm Settings placeholder; the real
+  importer stays BLOCKED on the accountant's sample export files (هلو / سپیدار /
+  حسابان) — a dedicated batch maps customers/products/opening balances from the REAL
+  formats. **No guessed mappings.**
+
+## Launch Batch 5.6 — party linkage · manual vouchers · separators · navigation (2026-07-26)
+The four parts deferred from 5.5, plus the Kavenegar key finally landing.
+
+- ✅ **Part 1 — PARTY LINKAGE ON MONEY RECORDS (headline).** «طرف حساب» on an expense
+  was FREE TEXT, so a salary paid to a real person was invisible to the party reports.
+  Migration **`expparty00015`** (additive, NOT backfilled) adds `party_type` +
+  `customer_id`/`vendor_id` with FKs, partial indexes and a CHECK that exactly one side
+  is set; `party_name` survives as the DISPLAY copy, denormalized from the party on write
+  and **no longer accepted from the client**, so the label can never disagree with the
+  link. The party is REQUIRED on a new expense (Persian 422 `PARTY_REQUIRED`) and resolves
+  ONLY inside the caller's tenant (the id is client-supplied — covered by a test).
+  Legacy rows keep their historic text with NULL FKs under a calm «نیاز به انتخاب طرف»
+  badge and reopen with the picker EMPTY, so editing one never blesses the old text.
+  ONE shared `<PartyPicker>` (searchable, SERVER-side search, inline «افزودن … جدید»)
+  serves both the expense dialog and the manual-payment dialog — which required a party
+  but offered no way to create one, i.e. an empty vendor list was a dead end mid-form.
+  **Accounting decision, stated:** the party-balances report gains `settled_total` +
+  `expense_total` as FLOWS beside the balance and deliberately NOT folded into it — an
+  expense carries a mandatory treasury account, so it is incurred AND paid in one act and
+  adding it to the payable would invent a debt that was never owed. Whether an expense
+  should ever move a party's مانده is an accountant decision, logged OPEN.
+  (backend `c794723` · frontend `79f8f12`, `1a4dc43`.)
+- ✅ **Part 2 — MANUAL JOURNAL VOUCHERS hardened.** The T4 سند دستی already existed
+  (create/edit/delete, balance validation, live Σ diff, «دستی» pill, regenerate-safe), so
+  this part closed the four gaps a grill found. **A real 500:** `entry_no` was
+  `max(entry_no)+1` under UNIQUE (tenant_id, entry_no), so a double-tapped «ثبت سند» or
+  two tabs raced and the loser's INSERT surfaced raw — the same class as the Batch 2
+  chart-template race. Now a per-tenant `pg_advisory_xact_lock` with an
+  IntegrityError→409 retry behind it, proven by a two-connection race test. **Audit**
+  (migration **`manaudit00016`**): create/edit/delete append a `manual_entry_events` row
+  with a full snapshot; `entry_id` carries NO FK so the trail outlives the سند, and the
+  row is written inside the caller's transaction so a rejected سند leaves no phantom
+  trail (asserted). **FY lock** on POST/PATCH. **Exports:** journal.csv/.xlsx gain the
+  «نوع» column — دستی vs خودکار had existed only as a UI pill. **Locked auto vouchers**
+  now say so: «این سند از [مبدأ] ساخته شده — برای تغییر، مبدأ را ویرایش کنید» + link.
+  (backend `99cf65c` · frontend `9457d90`.)
+- ✅ **Part 3 — SEPARATOR ROLLOUT COMPLETE.** All remaining hand-rolled blur-only money
+  inputs moved onto the live caret-safe `DecimalInput`: purchases/expenses (7), payments
+  (2), accounts (2), cheques, customers, vendors, products, settlement splits, return lump
+  sum, the سند دستی debit/credit cells, and four admin surfaces. The local
+  `formatAmountBlur`/`stripAmountFocus` pair is retired. Storage is unchanged — the
+  component still emits a clean ASCII decimal string, so every payload is byte-identical.
+  (frontend `87fef12`… see `87d0b80`, `1a4dc43`.)
+- ✅ **Part 4 — ANTI-CONFUSION NAVIGATION.** The findability walk found four real
+  problems: the FIRST sidebar group was «راه‌اندازی» (setup) yet held the daily selling
+  and buying work; «هزینه» had no menu entry at all (it hid in the second tab of «خرید و
+  هزینه»); «سند دستی» sat two levels deep; and nothing told a merchant which of the four
+  documents they wanted. Groups are now the questions being asked — خانه · فروش · خرید و
+  هزینه · پول و گزارش · نمای حسابدار · تنظیمات — with nothing removed and the two missing
+  entries added. `<NewDocumentMenu>` is ONE «سند جدید» button (sidebar + dashboard) asking
+  «چه اتفاقی افتاده؟» over فروش / خرید / هزینه / سند دستی حسابداری, each with the
+  plain-language tell that separates them; «سند دستی» appears only when the accountant
+  view is on. `/app/expenses` is a real deep-link (`?tab=expenses`, URL-driven so Back and
+  sharing work) and each tab states the خرید-vs-هزینه difference out loud. Guide gains
+  **S4-00** «سند فروش، خرید و هزینه — تفاوت و جای هرکدام» (starter #1). Settings gains the
+  calm «ورود اطلاعات از نرم‌افزار قبلی (هلو، سپیدار، حسابان…)» placeholder.
+  (frontend `84b546a`.)
+- ✅ **Part 5 — the grill's own findings, fixed** (`0762673`): the party picker asked for
+  `page_size=200` against a `MAX_PAGE_SIZE=100` server and 422'd on every open — fixed by
+  moving the search SERVER-side rather than shrinking the page; «خریدها» stayed highlighted
+  while «هزینه‌ها» was open (two entries, one path → the active state now reads the tab),
+  which then produced a duplicate React key; and the legacy badge wrapped to three lines at
+  390px.
+- **Test hygiene found on the way:** two SMS tests read ambient env and went red the moment
+  a real `KAVENEGAR_API_KEY` landed in `.env` — both now pin what they assert. One stale
+  payments assertion expected 204 from a route that has always returned 200 + {status,id}.
 
 ## Launch Batch 3 — partner panel v2 ⬜
 - Per-partner **admin-set commission %** (currently a single global/implicit rate).
@@ -300,5 +368,5 @@ Combined batch. **New standing laws** added to workspace CLAUDE.md §2: EMPIRICA
 
 ---
 
-_Last updated: 2026-07-26 (Launch Batch 5.5 — Kavenegar prep, founder tweaks; Batch 5 — official units, OTP bypass safety, live separators; Batch 4 pulled forward — mobile app shell, consistency pass,
+_Last updated: 2026-07-26 (Launch Batch 5.6 — party linkage, manual-voucher hardening, separator rollout complete, anti-confusion navigation; Batch 5.5 — Kavenegar prep, founder tweaks; Batch 5 — official units, OTP bypass safety, live separators; Batch 4 pulled forward — mobile app shell, consistency pass,
 server-side Moadian auto-inquiry; harness now 13 spec files / 14 tests)._

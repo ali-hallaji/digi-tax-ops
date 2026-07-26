@@ -2138,6 +2138,54 @@ the backfill ran (**19/19 accounts internal**). `build --no-cache frontend` →
   both Kavenegar-grill OTP requests solved the real Altcha PoW through the real
   login page. `SMS_PROVIDER` on dev remains **console** (no key present).
 
+## Launch Batch 5.6 (2026-07-26) — party linkage · manual vouchers · separators · navigation
+The four parts deferred from 5.5, all four landed. Full detail per part is in
+LAUNCH_ROADMAP.md; this entry records the state and the findings.
+
+- **Migrations:** `expparty00015` (expenses party FKs + CHECK, additive, NOT backfilled)
+  and `manaudit00016` (`manual_entry_events`, append-only, no FK on entry_id so the trail
+  outlives the سند). Both applied locally and psql-verified (`\d expenses` shows the two
+  FKs, the two partial indexes and `ck_expenses_party_shape`).
+- **Backend:** 1315 pass / 7 fail (the documented FakeDBSession baseline, zero new) /
+  4 skip; ruff + black clean. Five new integration tests (party linkage ×5) and three new
+  manual-voucher tests (numbering race with two real connections, audit trail across
+  create/edit/delete, and no phantom trail on a rejected سند).
+- **Frontend:** typecheck + build clean; eslint 511 → 474 (the migrated inputs removed
+  more than they added).
+- **Harness: 13 passed / 1 skipped locally — GREEN.**
+
+### Real-UI proof (the HARD LAW — walked on the real pages, not asserted from code)
+- **Part 1 headline:** «سند جدید» → «هزینه» → دسته «حقوق», مبلغ ۴۵,۰۰۰,۰۰۰ typed with LIVE
+  separators, party picker opened with the real customers+vendors, «رضا کارگر» typed and
+  created INLINE as a تأمین‌کننده, saved. The expenses register shows the new row with NO
+  badge while the two seeded legacy rows keep «نیاز به انتخاب طرف». مانده طرف‌حساب‌ها →
+  تأمین‌کنندگان → «رضا کارگر»: **بدهی شما ۰ ریال، هزینه ثبت‌شده ۴۵,۰۰۰,۰۰۰ ریال** — the
+  salary IS in the party report, as a flow, without inventing a debt.
+- **Part 2 headline:** سند دستی → کارمزد (۵۳۰۵) بدهکار ۱,۰۰۰ / بانک (۱۱۰۲) بستانکار ۱,۰۰۰
+  → «سند تراز است ✓» → ثبت. Voucher #40 renders with the «دستی» tag. Trial balance
+  (`balanced: true`) shows 5305 period_debit 1000 and 1102 period_credit 1000. journal.csv
+  carries the new «نوع» column with `دستی` on those rows. `manual_entry_events` has the
+  `created` row with the actor and payload total 1000 (psql-verified). An auto voucher
+  (فاکتور فروش) shows the locked note + «رفتن به مبدأ» and offers no edit/delete.
+- **Part 3:** live separators + CARET SAFETY proven per group — typing `12345678` into the
+  accounts opening balance gives `۱۲,۳۴۵,۶۷۸`, and inserting `9` after the second digit
+  gives `۱۲۹,۳۴۵,۶۷۸` with the caret at index 3, not jumped to the end. Same live
+  formatting verified on cheques, customers, vendors, products, payments and admin plans.
+- **Part 4:** `/app/expenses` deep-links to `?tab=expenses` with «هزینه‌ها» highlighted;
+  the intent router lists the four documents with their plain-language tells; 390px shows
+  0px horizontal overflow and the full drawer.
+
+### Known Risks / notes
+- **Seeded expenses stay legacy on purpose.** `seed_realistic_world` writes free-text party
+  names («موجر», «کارکنان»); they are NOT backfilled, so the demo world shows the
+  «نیاز به انتخاب طرف» state honestly. Creating 18 vendors to satisfy them would change
+  the frozen persona expectations.
+- **OPEN accountant decision:** whether an expense should ever move a party's مانده. Today
+  it does not (it is reported as a flow); the alternative — treating it as a purchase plus
+  an immediate settlement — nets to the same zero, so nothing is hidden either way.
+- **Pre-existing, untouched:** a seeded custom expense category renders as the raw slug
+  `utilities` instead of a Persian label.
+
 ## Launch Batch 5.5 (2026-07-26) — Kavenegar prep + founder tweaks
 Scope landed HONESTLY: Part 0 minus the secret, plus all three founder tweaks.
 Parts 1–4 are NOT started and are itemised in LAUNCH_ROADMAP.
