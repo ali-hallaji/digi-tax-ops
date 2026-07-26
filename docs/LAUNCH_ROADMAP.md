@@ -312,10 +312,48 @@ The four parts deferred from 5.5, plus the Kavenegar key finally landing.
   a real `KAVENEGAR_API_KEY` landed in `.env` — both now pin what they assert. One stale
   payments assertion expected 204 from a route that has always returned 200 + {status,id}.
 
-## Launch Batch 3 — partner panel v2 ⬜
-- Per-partner **admin-set commission %** (currently a single global/implicit rate).
-- **Two-tier referral commission** (referrer of a referrer earns).
-- **Revenue-stream dashboard** for monthly partner payout (what each partner is owed).
+## Launch Batch 3 — partner panel v2 (DEPLOYED to dev 2026-07-26)
+- ✅ **Part 1 — COMMISSION MODEL, admin-controlled (headline).** Commission used to be
+  DERIVED ON READ (`amount × the partner's CURRENT percent`), so the first rate change
+  would silently rewrite every figure a partner had ever been shown and «چقدر تیر بهش
+  بدهکار بودیم؟» became unanswerable. Migration **`partner2t00017`** replaces it with
+  real **snapshot accruals**: `partner_commission_accruals`, one row per (revenue event,
+  earning partner, tier), carrying the rate AS IT WAS. UNIQUE on that triple ⇒ replaying
+  revenue can never double-pay; written in the SAME transaction as the revenue event
+  (an accrual outliving a rolled-back payment would be money we never earned); a refund
+  **reverses** (status + reason), never deletes.
+  **TWO TIERS, exactly.** `parent_partner_profile_id` is the recruiter. The sub-partner
+  is NOT docked — tier 2 is paid by us on top. The «exactly two levels» rule is
+  ENFORCED: a partner who already has a recruiter cannot become one, and a partner with
+  children cannot be given a parent (both would open a third level).
+  **RATES:** global defaults in `partner_commission_settings` — append-only and
+  effective-dated, so a change is a new row and the old rate stays readable. Per partner,
+  `commission_percent` / `tier2_commission_percent` override from
+  `commission_effective_from` onward, so raising a rate mid-month does not retroactively
+  repay the first half. Every admin change lands in the ONE unified `admin_audit_log`.
+  (backend `60705a9`.)
+- ✅ **Part 2 — REVENUE DASHBOARDS (the «سر ماه پولش را بگیرد» promise).** Partner side:
+  the two tiers in the partner's own words («سطح ۱ — معرفی‌های خودتان» / «سطح ۲ —
+  معرفی‌های زیرمجموعه‌های شما») with the honest line «از سهم آن‌ها کم نمی‌شود»; a partner
+  who recruited nobody never sees the second card. «در انتظار تسویه» is a headline
+  number, months carry their tier-2 portion and can read «تسویهٔ ناقص», and per-client
+  rows carry a سطح ۲ tag so a tier-2 figure is always explainable. Admin side: a new
+  **/admin/settlements** — one page per Jalali month, per-partner tier-split totals,
+  exact pending vs settled, month stepper (URL-driven), «ثبت تسویه» with the owed amount
+  pre-filled, and an Excel export for the bank run. `admin_add_payout` now STAMPS the
+  accruals it covers with its `payout_id`, which is what makes pending-vs-settled EXACT
+  instead of inferred from a payout period overlapping a month.
+  (frontend `f587587`, `2631cd4`.)
+- ✅ **Part 3 — demo world + real-UI proof.** `seed_commission_world` (also called by the
+  full seeder) wires آرش رستمی (HAM-TEST2) as a sub-partner of خانم محمدی (HAM-TEST1),
+  gives her a 5% tier-2 rate, and runs the REAL accrual engine over every seeded revenue
+  event — the demo numbers come from the same code path production uses. Shipped as a
+  standalone CLI because a full reseed requires a wipe, and the wipe guard correctly
+  refuses while نیک‌تجارت holds a real Moadian key.
+- 🔄 **Part 4 — corrective referring-fields experiment: NOT RUN.** The sandbox
+  (tp.tax.gov.ir) is Iran-only and only reachable from the dev egress; it needs a
+  dedicated run on dev. The inp/inty «خارج از الگو» (14007/14004) nag therefore remains
+  on the accountant question list, unchanged.
 
 ---
 
@@ -368,5 +406,5 @@ The four parts deferred from 5.5, plus the Kavenegar key finally landing.
 
 ---
 
-_Last updated: 2026-07-26 (Launch Batch 5.6 — party linkage, manual-voucher hardening, separator rollout complete, anti-confusion navigation; Batch 5.5 — Kavenegar prep, founder tweaks; Batch 5 — official units, OTP bypass safety, live separators; Batch 4 pulled forward — mobile app shell, consistency pass,
+_Last updated: 2026-07-26 (Launch Batch 3 — partner panel v2: two-tier snapshot commission, settlement run; Batch 5.6 — party linkage, manual-voucher hardening, separator rollout complete, anti-confusion navigation; Batch 5.5 — Kavenegar prep, founder tweaks; Batch 5 — official units, OTP bypass safety, live separators; Batch 4 pulled forward — mobile app shell, consistency pass,
 server-side Moadian auto-inquiry; harness now 13 spec files / 14 tests)._

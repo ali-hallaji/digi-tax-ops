@@ -2138,6 +2138,70 @@ the backfill ran (**19/19 accounts internal**). `build --no-cache frontend` →
   both Kavenegar-grill OTP requests solved the real Altcha PoW through the real
   login page. `SMS_PROVIDER` on dev remains **console** (no key present).
 
+## Launch Batch 3 (2026-07-26) — partner panel v2: two-tier snapshot commission
+Full per-part detail in LAUNCH_ROADMAP.md. This entry records state, proof and findings.
+
+- **Migration `partner2t00017`:** `partner_commission_settings` (global defaults,
+  append-only + effective-dated), `partner_profiles` gains
+  `parent_partner_profile_id` / `tier2_commission_percent` /
+  `commission_effective_from` (+ a CHECK that nobody recruits themselves), and
+  `partner_commission_accruals` (snapshot rows, UNIQUE on (revenue event, partner,
+  tier), `payout_id` stamped at settlement). psql-verified.
+- **The model change that matters:** commission is no longer derived on read. It is
+  ACCRUED at the moment of the revenue with the rate snapshotted, so a later rate
+  change applies only to new revenue and can never rewrite a figure the partner was
+  already shown.
+- **Verification:** backend 1322 pass / 7 fail (documented FakeDBSession baseline, zero
+  new) / 4 skip; ruff + black clean. Seven new integration tests: both tiers accrue and
+  the sub-partner is not docked; a later rate change never rewrites history; replaying
+  revenue never double-pays; a refund reverses rather than deletes; the pyramid stops at
+  two levels (cycle + self-recruit refused); a payout stamps exactly the accruals it
+  covers and does NOT settle the recruiter's separate tier-2 debt; a suspended recruiter
+  earns nothing. Frontend typecheck + build clean.
+- **Harness: 14 passed / 1 skipped locally — GREEN**, including the new spec 14
+  (partner earnings must show both tier cards, the «از سهم آن‌ها کم نمی‌شود» promise, an
+  «در انتظار تسویه» figure, and 0px sideways scroll at 390px).
+
+### Real-UI proof (the HARD LAW — walked on the real pages)
+1. **Admin sets the rates.** /admin/partners/{زهرا} → «ویرایش درصدها» → سطح ۱ = ۲۲٪،
+   سطح ۲ = ۷٪ → ذخیره. The accrued totals did NOT move (۳,۱۵۰,۰۰۰ / ۵۰۰,۰۰۰) — the
+   snapshot proof, visible in a single screenshot alongside the new rates.
+2. **Partner sees both tiers.** 09120001004 → «درآمد و تسویه»: سطح ۱ ۳,۱۵۰,۰۰۰ تومان،
+   سطح ۲ ۵۰۰,۰۰۰ تومان (from آرش's referral), «در انتظار تسویه ۳,۶۵۰,۰۰۰», and the
+   تیر ۱۴۰۵ row tagged «شامل ۵۰۰,۰۰۰ تومان سطح ۲».
+3. **Admin marks the month paid.** /admin/settlements?jmonth=1405-04 → «ثبت تسویه» for
+   HAM-TEST1 (amount pre-filled ۳,۶۵۰,۰۰۰) → she flips to «تسویه‌شده» with مانده «—»
+   while آرش stays «در انتظار پرداخت» (a SEPARATE debt, correctly untouched).
+4. **Partner sees settled.** Back on her page: «در انتظار تسویه ۰», «تسویه‌شده
+   ۶,۳۵۰,۰۰۰» (+۳,۶۵۰,۰۰۰), تیر ۱۴۰۵ now green «تسویه‌شده», and the new payout in
+   «تسویه‌های انجام‌شده».
+
+### Founder login for the partner world
+**09120001004 — خانم محمدی (زهرا), کد HAM-TEST1.** NOTE: this persona has **no
+password** in `world_fixtures.py` (`"password": None`), so she logs in with **dev-OTP**,
+not `Admin@12345`. The workspace CLAUDE.md §4.6 line «Every persona logs in with
+Admin@12345 AND dev-OTP» does NOT hold for her — worth reconciling (either seed her a
+password or correct the doc). She lands on «مشتریان من» with 5 clients; «درآمد و تسویه»
+is where the two tiers live.
+
+### Defects this batch's own grill found and fixed
+- /admin/settlements ignored its `jmonth` query param — a link to a specific payment run
+  silently opened the current month. Now URL-driven.
+- The settlement amount prefill hung off Radix `onOpenChange`, which never fires for the
+  OPEN direction when a dialog opens by state, so the «pre-filled» promise silently did
+  not happen.
+- `tier1_source`/`tier2_source` reported «(پیش‌فرض)» whenever an override merely EQUALLED
+  the global. A partner deliberately set to the default number is still an override, and
+  mislabelling it would quietly change their rate the next time the global moved.
+
+### Known Risks / notes
+- **Backfill required on every existing environment.** Revenue events that predate this
+  engine have no accruals, so the earnings/settlement pages would read empty until
+  `backfill_accruals` runs (the CLI does it). Run it once per environment after migrating.
+- **Part 4 (corrective inp/inty experiment) NOT RUN** — the sandbox is Iran-only and
+  reachable only from the dev egress; it needs its own dev run. The 14007/14004 nag is
+  unchanged and stays on the accountant question list.
+
 ## Launch Batch 5.6 (2026-07-26) — party linkage · manual vouchers · separators · navigation
 The four parts deferred from 5.5, all four landed. Full detail per part is in
 LAUNCH_ROADMAP.md; this entry records the state and the findings.
