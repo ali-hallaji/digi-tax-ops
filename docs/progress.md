@@ -2138,6 +2138,90 @@ the backfill ran (**19/19 accounts internal**). `build --no-cache frontend` →
   both Kavenegar-grill OTP requests solved the real Altcha PoW through the real
   login page. `SMS_PROVIDER` on dev remains **console** (no key present).
 
+## FINISH-LINE batch (2026-07-26) — sandbox verdict · the school · sweep · production prep
+Per-part detail in LAUNCH_ROADMAP.md. This entry records proof, findings and
+what was deliberately NOT done.
+
+### Verification
+- Backend **1326 pass / 7 fail (documented FakeDBSession baseline, zero new) /
+  4 skip**; ruff + black clean. New: 4 referring-subject packet tests.
+- Frontend typecheck + build clean. **Harness 15 passed / 1 skipped — GREEN both
+  locally and on dev**, including new spec 15 (school).
+- Preflight on dev **22 PASS / 0 FAIL**. `/version.json` = `2180fd61…` first try.
+- **No migration this batch** — `alembic upgrade head` was a no-op, as expected.
+- Captcha + rate-limit untouched and ON.
+
+### Part 1 — the 14007/14004 verdict, and a Batch-3 correction
+My Batch-3 note that «MOADIAN_BASE_URL is empty on dev, so the sandbox is
+unreachable» was WRONG and is corrected here: the global var only feeds the LIVE
+leg; sandbox routing is per-tenant with its own default base URL. The نیک‌تجارت
+cockpit connection test passes from dev (`ok: true`, `fiscal_status: ACTIVE`,
+`environment: sandbox`, through the SOCKS egress; both org hostnames answer
+through the tunnel with the expected 500-on-empty-body).
+
+Experiment: two correctives differing ONLY in inp/inty →
+`[14007, 14004]` vs `[]`. Adopted for ins 2/3/4. Both variants also hit an
+unrelated `0300601` («شمارهٔ مالیاتی صورتحساب مرجع منطبق نیست»), identical across
+runs — so the comparison was controlled, but it is a real loose end: **the
+sandbox no longer recognises the OLD registered taxids** that MOADIAN F
+successfully corrected against, so its records appear to have rotated. Not
+reproduced on live. A corrective built on a stale sandbox reference will fail
+until re-issued against a freshly-registered original.
+
+### Part 2 — the school, and how it was checked
+`/app/guide/zero` + `/app/guide/zero/$lessonId`. Twelve lessons; per-business
+persisted progress (`digitax_school_progress_v1`, keyed by businessId — verified
+in storage). Content-accuracy law: all 12 DO and 12 SEE paths loaded in the
+running app and resolve 200; the two redirects (`/app/invoices`,
+`/app/expenses`) land exactly where their labels promise. Lessons 1 and 9 were
+followed literally — «برو به حساب‌های من» lands on /app/accounts with «افزودن
+حساب» present; «برو به هزینه‌ها» lands on the expenses TAB with «ثبت هزینه»
+present. 390px: 0px sideways scroll. Lesson 10 is the only accountant-language
+lesson and is labelled «برای کنجکاوها» with a skip-it line.
+
+**Grill finding in my own spec:** the five-questions phrase appears BOTH as the
+heading and as lesson 1's preview line, so a bare `getByText` was a strict-mode
+violation. The spec targets the heading now.
+
+### Part 3 — sweep: what is done, what is NOT
+| # | item | state |
+|---|---|---|
+| 1 | raw `utilities` category | ✓ «قبوض» via label map (no migration; seeder fixed too) |
+| 2 | زهرا password vs §4.6 | ✓ password seeded (founder-approved) + doc corrected |
+| 3 | accrual backfill in runbook | ✓ one-time-per-environment section with verification |
+| 4 | E5–E7 matrix rows | ⬜ **NOT WALKED** |
+| 5 | issued-cheque پاس | ⬜ **NOT WALKED** |
+| 6 | inventory-lite end-to-end | ✓ 0 → buy 10 → sell 3 → return 1 → **8** |
+
+**Why 4 and 5 were not done:** both need a long real-UI session, and Part 1's
+`0300601` finding means an E5–E7 walk on the sandbox would currently be testing
+against references the org no longer accepts — the walk would fail for a reason
+that has nothing to do with the guards being tested. They need a fresh
+registered original first (the clean-proof script in ops/scripts is written and
+90% there; it currently stops at the standard validator on a script-built
+invoice). Issued-cheque پاس is simply unstarted. Both stay open with no claim
+made about them.
+
+While correcting §4.6 I also found that **three other personas have no password**
+and are dev-OTP-only: 09120001005 (پویا اسدی), 09120001006 (کامران سعیدی),
+09120001007 (نیلوفر رستمی). The founder approved seeding زهرا only, so the others
+were left alone and are now NAMED in the contract instead of being silently
+misdescribed by the «every persona» line.
+
+### Part 4 — production prep
+`scripts/backup_db.sh` + `scripts/restore_db.sh`, `env.production.template`,
+runbook v2 checklist. The timer is installed AND proven on dev
+(`systemctl start` → `status=0/SUCCESS` → a real 123 MB dump on disk); the
+restore was REHEARSED into a scratch DB with real row counts, not assumed.
+`LC_ALL=C` is pinned in the backup script because the host's Persian locale was
+emitting Jalali digits into filenames.
+
+### Known Risks
+- **Sandbox reference rotation** (above) — blocks corrective walks until a fresh
+  original is registered.
+- **E5–E7 and issued-cheque پاس remain unproven** in the UI.
+- Production DNS/TLS/egress remain ⏸ on the datacenter decision.
+
 ## Launch Batch 3 (2026-07-26) — partner panel v2: two-tier snapshot commission
 Full per-part detail in LAUNCH_ROADMAP.md. This entry records state, proof and findings.
 

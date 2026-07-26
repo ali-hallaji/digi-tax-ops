@@ -312,6 +312,48 @@ The four parts deferred from 5.5, plus the Kavenegar key finally landing.
   a real `KAVENEGAR_API_KEY` landed in `.env` — both now pin what they assert. One stale
   payments assertion expected 204 from a route that has always returned 200 + {status,id}.
 
+## FINISH-LINE batch — sandbox verdict · the school · thread sweep · production prep (DEPLOYED to dev 2026-07-26)
+
+- ✅ **Part 1 — 14007/14004 CLOSED, empirically.** First, the Batch-3 claim that
+  «MOADIAN_BASE_URL is empty on dev» was CORRECTED: it only affects the LIVE leg;
+  sandbox routing is per-tenant with its own default. The نیک‌تجارت cockpit
+  connection test passes from dev (`ok: true`, `fiscal_status: ACTIVE`, via the
+  SOCKS egress; both org hostnames answer through the tunnel). Then the deferred
+  experiment: two otherwise-identical correctives differing ONLY in inp/inty —
+  present → `"warning": [14007, 14004]`, omitted → `"warning": []`. Adopted:
+  referring subjects (ins 2/3/4) now drop both from the EMITTED header while the
+  mapper still uses them to choose the pattern (an unsupported combination is
+  still refused — asserted). Write-up:
+  `docs/moadian/corrective_inp_inty_experiment_2026-07.md`; matrix follow-up
+  closed. (backend `2a3184b`.)
+- ✅ **Part 2 — «مدرسه — از صفر تا صد» (headline).** A DOING school, distinct in
+  kind from the existing conceptual one: twelve lessons that take the merchant's
+  own business from empty to a full picture. Each lesson is exactly three blocks —
+  چرا (two plain lines) · «حالا این را انجام بدهید» (ONE deep-linked action with
+  the control named) · «حالا اینجا را ببینید» (where the effect landed). Progress
+  is per-BUSINESS and persisted. Content-accuracy law honoured: all 24 links
+  loaded in the running app, lessons 1 and 9 followed literally.
+  (frontend `2180fd6`.)
+- ✅ **Part 3 — thread sweep (4 of 6 done, 2 deferred with reasons).**
+  ✓ raw `utilities` → «قبوض» (label map fixes existing rows with no migration).
+  ✓ زهرا محمدی (09120001004) seeded the fixed password (founder-approved) and
+    CLAUDE.md §4.6 corrected — three other personas remain dev-OTP-only and are
+    now named rather than misdescribed.
+  ✓ accrual backfill documented as a one-time-per-environment runbook step.
+  ✓ inventory-lite end-to-end re-verified: 0 → buy 10 → sell 3 → return 1 → **8**.
+  ⬜ **E5–E7 matrix rows NOT walked** — deferred, see progress.md.
+  ⬜ **Issued-cheque پاس** — deferred, see progress.md.
+- ✅ **Part 4 — production readiness (everything not needing the datacenter).**
+  Nightly `backup_db.sh` (7 daily + 4 weekly, dumps from inside the container to
+  the host, a <10 KB dump is renamed `.SUSPECT` rather than counted) installed as
+  a systemd timer on dev and PROVEN by a real triggered run. `restore_db.sh`
+  restores into a SCRATCH database and prints row counts — REHEARSED, not assumed
+  (123 MB dump → tenants 14 · users 19 · customers 327 · products 170 ·
+  invoice_drafts 842 · journal_entries 1633 · accruals 4). `env.production.template`
+  with the reason each var matters plus an explicit «must NOT appear» list. Deploy
+  runbook v2: an 8-step production bring-up checklist with the DNS/TLS/egress
+  steps marked ⏸ pending the datacenter decision. (ops `6df6458`.)
+
 ## Launch Batch 3 — partner panel v2 (DEPLOYED to dev 2026-07-26)
 - ✅ **Part 1 — COMMISSION MODEL, admin-controlled (headline).** Commission used to be
   DERIVED ON READ (`amount × the partner's CURRENT percent`), so the first rate change
@@ -406,5 +448,5 @@ The four parts deferred from 5.5, plus the Kavenegar key finally landing.
 
 ---
 
-_Last updated: 2026-07-26 (Launch Batch 3 — partner panel v2: two-tier snapshot commission, settlement run; Batch 5.6 — party linkage, manual-voucher hardening, separator rollout complete, anti-confusion navigation; Batch 5.5 — Kavenegar prep, founder tweaks; Batch 5 — official units, OTP bypass safety, live separators; Batch 4 pulled forward — mobile app shell, consistency pass,
+_Last updated: 2026-07-26 (FINISH-LINE — 14007/14004 closed empirically, «مدرسه — از صفر تا صد», thread sweep, production prep; Launch Batch 3 — partner panel v2: two-tier snapshot commission, settlement run; Batch 5.6 — party linkage, manual-voucher hardening, separator rollout complete, anti-confusion navigation; Batch 5.5 — Kavenegar prep, founder tweaks; Batch 5 — official units, OTP bypass safety, live separators; Batch 4 pulled forward — mobile app shell, consistency pass,
 server-side Moadian auto-inquiry; harness now 13 spec files / 14 tests)._
