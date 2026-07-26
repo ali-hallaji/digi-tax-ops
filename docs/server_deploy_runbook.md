@@ -619,6 +619,140 @@ Prices are admin-managed at `/admin/plans` («قیمت ماژول‌ها»), NOT
 with no published price shows «استعلام قیمت» to the merchant and cannot be bought
 online — that is the honest default, not a bug.
 
+## Automated backups (dev today, production on day one)
+
+`scripts/backup_db.sh` dumps the database from INSIDE the postgres container and
+writes a gzip to `backups/` on the HOST, so losing the container never loses the
+backups. Rotation is two-tier: **7 daily** + **4 weekly** (a Friday run is
+promoted to weekly). A dump under 10 KB is treated as a FAILED dump and renamed
+`.SUSPECT` rather than counted as a backup.
+
+```bash
+bash scripts/backup_db.sh          # safe to run by hand at any time
+```
+
+### systemd timer (nightly 02:30)
+
+```ini
+# /etc/systemd/system/digitax-backup.service
+[Unit]
+Description=DigiTax nightly database backup
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/usr/local/digi-tax-ops
+ExecStart=/usr/bin/env bash scripts/backup_db.sh
+```
+
+```ini
+# /etc/systemd/system/digitax-backup.timer
+[Unit]
+Description=Run the DigiTax backup nightly
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+```
+
+```bash
+systemctl daemon-reload && systemctl enable --now digitax-backup.timer
+systemctl list-timers digitax-backup.timer    # confirm the next run
+```
+
+### Restore — REHEARSED, not assumed
+
+A backup nobody has restored is a hope. `scripts/restore_db.sh` restores into a
+**scratch** database and prints row counts, so the procedure can be rehearsed on
+a live server without touching anything real:
+
+```bash
+bash scripts/restore_db.sh backups/digitax-daily-20260726_235412.sql.gz
+```
+
+Verified 2026-07-26 on the local stack — a 123 MB dump restored clean and
+reported: tenants 14 · users 19 · customers 327 · products 170 · invoice_drafts
+842 · journal_entries 1633 · partner_commission_accruals 4.
+
+The script REFUSES to target `digitax` or `postgres`. Restoring over live is a
+deliberate manual procedure, on purpose:
+
+```bash
+docker compose stop api frontend
+docker compose exec -T postgres psql -U digitax -d postgres \
+  -c "ALTER DATABASE digitax RENAME TO digitax_before_restore;"
+docker compose exec -T postgres psql -U digitax -d postgres \
+  -c "CREATE DATABASE digitax OWNER digitax;"
+gunzip -c <dump> | docker compose exec -T postgres psql -U digitax -d digitax
+docker compose exec api python -m alembic upgrade head   # dump may predate head
+docker compose up -d api frontend && bash scripts/preflight.sh
+```
+
+Renaming rather than dropping keeps an instant undo for as long as the disk
+allows. Drop `digitax_before_restore` only after the restored system is verified.
+
+## Production bring-up checklist (v2)
+
+Everything that does NOT depend on the datacenter/DNS decision is actionable
+today; the steps that do are marked ⏸ and are the founder's call.
+
+**1 — Server prep**
+- [ ] Docker Engine + the compose **v2** plugin (`docker compose version`).
+      NEVER install docker-compose v1 (workspace CLAUDE.md gotcha 14).
+- [ ] The three repos cloned side by side per § Required Directory Layout.
+- [ ] `cp env.production.template .env && chmod 600 .env`, then fill every
+      `CHANGE-ME`. Re-read the «must NOT appear» list at the bottom of it.
+- [ ] Fresh `MOADIAN_CRED_KEY` generated ON THIS HOST — never copied from dev.
+- [ ] `docker compose config -q` passes.
+
+**2 — First bring-up**
+- [ ] `docker compose up -d postgres redis` → both `(healthy)`.
+- [ ] `docker compose build --no-cache api` → `docker compose up -d api`.
+- [ ] `docker compose exec api python -m alembic upgrade head`.
+- [ ] psql-verify the schema really landed (`\dt`) — `alembic current` is not
+      proof (gotcha 3).
+
+**3 — Minimal seed (production has NO personas)**
+- [ ] Create the first system-admin user deliberately; do NOT run
+      `seed_realistic_world` (it is the demo world and requires a clean schema).
+- [ ] `python -m app.cli.import_tax_units` — the official RC_UMGS unit catalog.
+- [ ] Module prices / plan rows as the founder's pricing dictates.
+
+**4 — Backfills (one-time, see § One-time-per-environment BACKFILLS)**
+- [ ] `python -m app.cli.seed_commission_world` — no-op on a fresh DB, required
+      the moment any referred revenue predates the accrual engine.
+
+**5 — Frontend**
+- [ ] `export FRONTEND_SHA=$(git -C ../digi-tax-frontend rev-parse HEAD)` in the
+      SAME shell as the build (Batch 5.5 lesson), then
+      `docker compose build --no-cache frontend`.
+- [ ] `curl localhost:3000/version.json` equals that SHA.
+
+**6 — Verify before anyone is let in**
+- [ ] `bash scripts/preflight.sh` — zero FAIL.
+- [ ] `bash scripts/smoke_test.sh`.
+- [ ] `pnpm harness --base-url https://<prod>` GREEN. Harness personas do not
+      exist in production, so expect to run the LANDING + guard specs only —
+      note explicitly which specs were skipped and why.
+- [ ] Captcha + rate-limit ON (a raw curl to `/auth/otp/request` must be refused).
+- [ ] `SMS_ALLOWLIST` empty; send ONE real OTP to a founder-held number and
+      confirm receipt before opening signup.
+
+**7 — Backups on day one**
+- [ ] Install the systemd timer above; run `backup_db.sh` once by hand.
+- [ ] Rehearse `restore_db.sh` into a scratch DB and eyeball the row counts.
+
+**8 — ⏸ Pending the datacenter decision**
+- [ ] DNS A/AAAA records → the production host.
+- [ ] TLS (nginx + certbot, or the provider's terminator) and HTTPS redirect.
+- [ ] Moadian egress topology: an Iran-hosted host needs no proxy; otherwise
+      wire `MOADIAN_PROXY_*` and pin BOTH org hostnames (§ Egress-host DNS pins).
+- [ ] Add the first business to `MOADIAN_LIVE_BUSINESS_ALLOWLIST` only after a
+      zero-total live smoke passes (ZERO-TOTAL law).
+
 ## Rollback Notes
 
 Keep rollback simple:
