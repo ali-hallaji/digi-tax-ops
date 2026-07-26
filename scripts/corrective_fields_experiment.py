@@ -71,10 +71,11 @@ def patch_omit_inp_inty() -> None:
 
     async def wrapped(*args, **kwargs):
         data = await original(*args, **kwargs)
-        if int(data.get("ins") or 1) in _REFERRING:
-            data.pop("inp", None)
-            data.pop("inty", None)
-            print("   [variant] inp/inty removed from packet")
+        header = data.get("header", data)
+        if int(header.get("ins") or 1) in _REFERRING:
+            header.pop("inp", None)
+            header.pop("inty", None)
+            print(f"   [variant] inp/inty removed — header keys now: {list(header)}")
         return data
 
     SS.build_submission_payload = wrapped
