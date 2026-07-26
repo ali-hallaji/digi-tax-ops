@@ -16,6 +16,11 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# Multi-stack aware — see scripts/backup_db.sh.
+DC=(docker compose)
+[ -n "${PROJECT:-}" ] && DC+=(-p "$PROJECT")
+[ -n "${STACK_ENV_FILE:-}" ] && DC+=(--env-file "$STACK_ENV_FILE")
+
 DUMP="${1:?usage: restore_db.sh <dump.sql.gz> [target_db]}"
 TARGET="${2:-digitax_restore_check}"
 DB_USER="${POSTGRES_USER:-digitax}"
@@ -34,13 +39,13 @@ case "$TARGET" in
 esac
 
 echo "▶ recreating scratch database «${TARGET}»"
-docker compose exec -T postgres psql -U "$DB_USER" -d postgres \
+"${DC[@]}" exec -T postgres psql -U "$DB_USER" -d postgres \
   -c "DROP DATABASE IF EXISTS ${TARGET};" >/dev/null
-docker compose exec -T postgres psql -U "$DB_USER" -d postgres \
+"${DC[@]}" exec -T postgres psql -U "$DB_USER" -d postgres \
   -c "CREATE DATABASE ${TARGET} OWNER ${DB_USER};" >/dev/null
 
 echo "▶ restoring $(basename "$DUMP")…"
-gunzip -c "$DUMP" | docker compose exec -T postgres psql -U "$DB_USER" -d "$TARGET" \
+gunzip -c "$DUMP" | "${DC[@]}" exec -T postgres psql -U "$DB_USER" -d "$TARGET" \
   >/dev/null 2>/tmp/restore_err.log || {
     echo "✗ restore failed — last lines:" >&2
     tail -20 /tmp/restore_err.log >&2
@@ -48,7 +53,7 @@ gunzip -c "$DUMP" | docker compose exec -T postgres psql -U "$DB_USER" -d "$TARG
   }
 
 echo "▶ row counts in the restored copy:"
-docker compose exec -T postgres psql -U "$DB_USER" -d "$TARGET" -c "
+"${DC[@]}" exec -T postgres psql -U "$DB_USER" -d "$TARGET" -c "
 SELECT 'tenants' AS table, count(*) FROM tenants
 UNION ALL SELECT 'users', count(*) FROM users
 UNION ALL SELECT 'customers', count(*) FROM customers
@@ -60,4 +65,4 @@ ORDER BY 1;"
 
 echo
 echo "✓ restore rehearsal OK. Drop the scratch copy when done:"
-echo "  docker compose exec -T postgres psql -U ${DB_USER} -d postgres -c 'DROP DATABASE ${TARGET};'"
+echo "  "${DC[@]}" exec -T postgres psql -U ${DB_USER} -d postgres -c 'DROP DATABASE ${TARGET};'"

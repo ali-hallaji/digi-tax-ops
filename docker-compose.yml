@@ -1,3 +1,22 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SECOND-STACK CONTRACT (PRE-PROD rehearsal finding)
+#
+# Every default below reproduces the historical single-stack behaviour EXACTLY,
+# so an existing deployment sees no change. They exist so a SECOND, fully
+# isolated stack can run on the same host — which is how the production
+# bring-up is rehearsed, and how a staging box can sit beside production.
+#
+#   STACK_PREFIX       container-name prefix   (default digi-tax)
+#   STACK_ENV_FILE     env file the services load  (default .env)
+#   POSTGRES_HOST_PORT / REDIS_HOST_PORT / API_HOST_PORT / FRONTEND_PORT
+#
+# STACK_ENV_FILE is the load-bearing one: `container_name` ignores
+# COMPOSE_PROJECT_NAME, and a hardcoded `env_file: .env` would have pointed a
+# second stack's API at the FIRST stack's DATABASE_URL — i.e. a "throwaway"
+# environment quietly writing to the real database. Always set BOTH
+# `-p <project>` and STACK_ENV_FILE when starting a second stack.
+# See docs/server_deploy_runbook.md § Second stack on one host.
+# ─────────────────────────────────────────────────────────────────────────────
 x-backend-common: &backend-common
   build:
     context: ../digi-tax-backend
@@ -6,7 +25,7 @@ x-backend-common: &backend-common
       # Deploy-verification: baked into GET /health/version. The deploy exports
       # BACKEND_SHA=$(git -C ../digi-tax-backend rev-parse HEAD) before building.
       GIT_SHA: ${BACKEND_SHA:-unknown}
-  env_file: .env
+  env_file: ${STACK_ENV_FILE:-.env}
   networks:
     - digi-tax-network
   depends_on:
@@ -16,12 +35,12 @@ x-backend-common: &backend-common
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: digi-tax-postgres
-    env_file: .env
+    container_name: ${STACK_PREFIX:-digi-tax}-postgres
+    env_file: ${STACK_ENV_FILE:-.env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     networks:
       - digi-tax-network
     healthcheck:
@@ -36,9 +55,9 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: digi-tax-redis
+    container_name: ${STACK_PREFIX:-digi-tax}-redis
     ports:
-      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:${REDIS_HOST_PORT:-6379}:6379"
     networks:
       - digi-tax-network
     healthcheck:
@@ -49,9 +68,9 @@ services:
 
   api:
     <<: *backend-common
-    container_name: digi-tax-api
+    container_name: ${STACK_PREFIX:-digi-tax}-api
     ports:
-      - "8000:8000"
+      - "${API_HOST_PORT:-8000}:8000"
     volumes:
       # STUFFID catalog drop-folder (see data/stuffid/README.md). Read-write:
       # the boot importer reads archives; the admin upload endpoint saves new
@@ -80,8 +99,8 @@ services:
         http_proxy: ${FRONTEND_BUILD_HTTP_PROXY:-}
         https_proxy: ${FRONTEND_BUILD_HTTPS_PROXY:-}
         all_proxy: ${FRONTEND_BUILD_ALL_PROXY:-}
-    container_name: digi-tax-frontend
-    env_file: .env
+    container_name: ${STACK_PREFIX:-digi-tax}-frontend
+    env_file: ${STACK_ENV_FILE:-.env}
     environment:
       PORT: "3000"
     ports:

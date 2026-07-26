@@ -20,6 +20,14 @@ export LC_ALL=C
 
 cd "$(dirname "$0")/.."
 
+# Multi-stack aware (PRE-PROD rehearsal finding): a bare `docker compose exec`
+# always targets the DEFAULT project + .env, so on a host running two stacks
+# this script would happily dump the WRONG database under the right filename.
+# PROJECT / STACK_ENV_FILE select the stack; defaults reproduce old behaviour.
+DC=(docker compose)
+[ -n "${PROJECT:-}" ] && DC+=(-p "$PROJECT")
+[ -n "${STACK_ENV_FILE:-}" ] && DC+=(--env-file "$STACK_ENV_FILE")
+
 BACKUP_DIR="${BACKUP_DIR:-backups}"
 DB_USER="${POSTGRES_USER:-digitax}"
 DB_NAME="${POSTGRES_DB:-digitax}"
@@ -42,7 +50,7 @@ OUT="${BACKUP_DIR}/digitax-${TIER}-${STAMP}.sql.gz"
 echo "▶ dumping ${DB_NAME} → ${OUT}"
 # Fail the whole pipeline if pg_dump fails rather than writing a truncated .gz.
 set -o pipefail
-docker compose exec -T postgres pg_dump -U "$DB_USER" "$DB_NAME" | gzip > "$OUT"
+"${DC[@]}" exec -T postgres pg_dump -U "$DB_USER" "$DB_NAME" | gzip > "$OUT"
 
 # A dump that is suspiciously small is a failed dump wearing a filename.
 SIZE=$(stat -c%s "$OUT")
