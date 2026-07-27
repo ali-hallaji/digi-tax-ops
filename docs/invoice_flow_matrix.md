@@ -166,6 +166,27 @@ accepted is UNANSWERED — it needs a real contract number registered in the ن�
 Also: `0102004` came back as «توضیح این کد هنوز ثبت نشده است» — the unknown-code
 catalog should learn it.
 
+## H — الگوی سوم (طلا) — EMPIRICAL, 2026-07-28
+
+| # | Scenario | Expected | Proof | Status |
+|---|----------|----------|-------|--------|
+| H1 | gold invoice, exempt stuffid, sourced Ks formula | org verdict | REAL sandbox submission | ⛔ **REJECTED on KS — leg stopped** |
+
+Two fresh-reference submissions on نیک‌تجارت sandbox. Full record:
+`docs/moadian/gold_pattern3_sandbox_2026-07-28.md`.
+
+- `A2HP31050B5006AF9168A8` — made-up stuffid → «نرخ … (J) … با اطلاعات سامانه
+  منطبق نیست» (`0303301`). Proves `vra` must equal the stuffid's REGISTERED rate;
+  you cannot declare a line exempt by writing 0.
+- `A2HP31050B5006AF9168B2` — real exempt gold stuffid `2001584175153` →
+  `0204501` «مقدار فیلد «مبلغ مالیات بر ارزش افزوده(KS)» … از لحاظ قواعد
+  محاسباتی و منطقی معتبر نیست».
+
+`tcpbs` was never flagged. The rejection is ONE field: Ks/vam on an exempt line.
+Per the batch instruction the sourced formula is left in place and NOT guessed at;
+the open question is written up for the founder. The 1-ریال rounding question is
+consequently still unanswered — the org rejected the magnitude, not the last digit.
+
 ## Proof artifacts
 
 Walked 2026-07-24 on dev (backend `257fc23`, frontend `a8d24e2`): screenshots in
