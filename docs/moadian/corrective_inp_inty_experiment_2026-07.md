@@ -77,3 +77,40 @@ original. Not reproduced on live.
   `inp`/`inty` on referring subjects — the org answered.
 - The remaining referring-subject question (which OTHER fields to blank beyond the
   buyer) is untouched and stays with the accountant.
+
+---
+
+## Research cross-check (RESEARCH-APPLICATION batch, 2026-07-28)
+
+`docs/tax_research_1404.md` «سؤال ۸» reads the standard as requiring a referring
+invoice (اصلاحی / ابطالی / برگشت از فروش) to **match** the reference on نوع
+(`inty`) and الگو (`inp`):
+
+> «هر سه نوع … باید از نظر **نوع (`inty`)** و **الگو (`inp`)** دقیقاً مطابق
+> صورتحساب مرجع باشند»
+
+That is the opposite of what we ship. **Our behaviour stands, and no code
+changed**, because the two statements are not the same kind of claim:
+
+| | The research doc | Our implementation |
+|---|---|---|
+| Basis | Reading of the دستورالعمل | A controlled sandbox experiment |
+| Says | The referring doc must MATCH نوع/الگو | The referring doc must OMIT them |
+| Evidence | Doc text | Two otherwise-identical correctives: fields present → warnings **14007 + 14004**; fields omitted → **no warnings** |
+
+Both readings can be true at once, and probably are: the referring invoice's نوع
+and الگو must *be* the reference's — the org takes them **from the reference**,
+which is exactly why re-sending them in the payload is «خارج از الگو». "Must
+match" is a statement about the invoice; "must be omitted" is a statement about
+the packet. Our packet satisfies both.
+
+The research doc's own §«تعریف وضعیت فیلدها» supports this: a field marked
+«خارج از الگو» means «وجود یا عدم وجود مقدار تفاوتی ایجاد نمی‌کند و مقدار
+ثبت‌شده توسط سامانه دریافت نمی‌شود» — and it names error **۱۴۰۰۴** as exactly
+«فیلد نوع صورتحساب در الگوی ارسالی خارج از الگو است», which is the warning we
+observed and eliminated.
+
+**Standing rule (per the batch instruction):** the EMPIRICAL verdict wins. This
+note exists so nobody "corrects" the mapper back to sending `inp`/`inty` after
+reading the research doc. Change it only if a NEW sandbox submission contradicts
+the experiment — and record that submission here if it ever does.

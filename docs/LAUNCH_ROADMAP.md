@@ -467,6 +467,53 @@ matrix rows citing old taxids) — NOT DONE**, carried forward under the batch's
 rule. Nothing was half-built or left dangling; the resume plan is in
 `docs/PRIORITY_BATCH_STATE.md`.
 
+## RESEARCH-APPLICATION batch — the tax numbers stop being «برآوردی» (2026-07-28)
+
+Authority: `docs/tax_research_1404.md` (founder-supplied). Applied numbers with
+citations: **`docs/tax_numbers_applied_1404.md`**. State + resume plan:
+`docs/RESEARCH_IMPORTER_BATCH_STATE.md`.
+
+**Part 2.1 — TAX NUMBERS (headline).** The stored ماده ۱۳۱ مشاغل steps for 1404
+were **wrong by a factor of 4** — caps of ۲ و ۴ میلیارد ریال taken from an
+unofficial site and flagged برآوردی. Corrected to ۵۰۰م / ۱٬۰۰۰م at ۱۵/۲۰/۲۵٪,
+cited to بودجه ۱۴۰۴, and marked تأییدشده. A new `tax_parameters` table holds the
+scalar yearly numbers that never fitted a bracket list — ماده ۱۰۱ (۲ میلیارد),
+ماده ۸۴ (۲٫۸۸ میلیارد, display-only), سقف تبصره ۱۰۰ (۷۲۰ میلیارد), نرخ VAT (۱۰٪) —
+each with its citation, none hardcoded. ماده ۱۰۱ is now deducted before the
+brackets for INDIVIDUALS ONLY (۳ میلیارد ریال سود: ۶۷۵م → **۱۷۵م**؛ حقوقی
+unchanged). 101 and 84 are separate keys with separate labels so the commonest
+Persian-web confusion cannot happen silently, and the loader is exact-year — a
+year with no confirmed figure deducts NOTHING and says so. Backend `2676d73`.
+
+**Part 2.6 — GOLD الگوی سوم, engine landed.** `map_type1_pattern3` implements
+tcpbs/vam/adis/tsstam from the research formulas, proven by 9 tests against the
+research's own worked example: VAT falls on اجرت+حق‌العمل+سود only, never on the
+۲۳٬۵۹۸٬۰۰۰ of raw gold. The doc's «10» is treated as a RATE (it moved ۹٪→۱۰٪ in
+1404, ۱۲٪ proposed for 1405) and read from `vat_rate_general`; a missing
+parameter BLOCKS the submission rather than guessing. Backend `51a2aea`.
+**UI + sandbox proof NOT done** — a merchant cannot enter gold values yet.
+
+**Parts 2.2 / 2.4 / 2.5** — coefficients screen now points at intamedia.ir as the
+official اینتاکد source (frontend `1c29ded`); پیمانکاری chart gains حساب پیمان /
+کار گواهی‌شده / کارفرما–حساب پیمان (تولیدی already had its three); the
+referring-invoice discrepancy between the research and our sandbox verdict is
+recorded, with the empirical result standing and no code changed.
+
+**Part 1 — pricing: schema + procedure only.** `module_price_history`
+(back-filled), `effective_from`, and `document_quota_packs` (the overage pack
+modelled as a CONSUMABLE, not an entitlement) all exist, plus
+`docs/document_cap_flip_procedure.md`. The SKU is **not purchasable yet** —
+checkout wiring, usage-card headroom, admin history UI and plans polish remain.
+
+**Part 3 (importer) — NOT STARTED**, but the real sample files were parsed and
+**corrected the spec**: the تدبیر file is **OOXML/xlsx**, not BIFF, despite its
+`.xls` extension — so format sniffing must be by content. Also banked: the
+سپیدار payroll sheet is **one-sided** (debit-only, so a naive import yields an
+UNBALANCED voucher) and its headers use Arabic ك/ي, which will match nothing
+without normalization. Details in the state doc.
+
+**Part 4 (cleanup) — NOT STARTED.**
+
 ## Launch Batch 3 — partner panel v2 (DEPLOYED to dev 2026-07-26)
 - ✅ **Part 1 — COMMISSION MODEL, admin-controlled (headline).** Commission used to be
   DERIVED ON READ (`amount × the partner's CURRENT percent`), so the first rate change
