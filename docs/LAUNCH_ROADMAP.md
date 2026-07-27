@@ -434,9 +434,38 @@ focus() discarded by the following render; a raw unformatted price in the sugges
 — both fixed before commit. Backend contracts untouched; no new required field.
 Frontend `dbd9d2f`.
 
-**Parts 2–4 (UI consistency remainder · pricing leftovers · data-safety hardening 6/7/8)
-— NOT STARTED, carried forward** under the batch's own 97% rule (Steps 0–0.5 + Part 1
-must land; 2–4 resume with notes). Nothing was half-done and left in place.
+**Part 2 — UI CONSISTENCY.** `DataTable` responsive primitive: `/app/returns` rendered a
+560px-min table inside a 358px wrapper, so at 390px مبلغ + actions sat behind an
+unadvertised sideways swipe; same columns now render as a table from `sm` up and stacked
+cards below. Deliberately NOT applied to accounting matrices, where column alignment IS
+the information. payments/purchases stopped forking `EmptyState`'s markup (it gained
+`actionIcon`, the only reason forking had looked necessary). Dashboard padding went from
+four values to one surface tier plus two documented opt-outs; the scale is written down in
+`ui_padding_scale.md`, and the other ~200 sites were deliberately NOT swept — an
+unreviewable visual change across 104 files. Admin SMS log: raw English «bypass» leaked
+into an all-Persian table (now Persian safety states) and the time column showed date only,
+so all 20 rows read «۵ مرداد ۱۴۰۵» (JalaliDate gained an opt-in `withTime`).
+Frontend `da3958e`.
+
+**Part 4.1 — «سلامت داده».** Read-only `GET /admin/data-health` + admin panel: per-business
+counts of the four legacy soft-states (cheques without a bank account, expenses without a
+linked party, products without an official unit, draft lines without a شناسهٔ کالا/خدمت),
+worst first, deep-linking to the business. It never repairs a row — guessing a bank account
+or a party is exactly the invention that would corrupt real books. Backend `0e57164`.
+
+**Part 4.2 — crn پیمانکاری, EMPIRICAL and it changed the product.** A real pattern-4
+sandbox submission (taxid `A2HP31050B5006AF916898`) was rejected: «در مقدار وارد شده در
+فیلد «شناسه یکتا ثبت قرارداد فروشنده» الگو(`^\d{12}$`) رعایت نشده است» — code `0102004`.
+The org enforces FORMAT before it ever considers registration, and **our own UI was
+teaching the failure** (hint «حداکثر ۱۲ رقم» = at MOST 12; placeholder «مثال: 1001»).
+Now exactly-12 validation with a live counter and corrected copy. Matrix row **G1**.
+Still open: whether a well-formed but UNREGISTERED crn is accepted — needs one founder
+click in the نیک‌تجارت کارپوشه. Frontend `cf897a6`.
+
+**Part 3 (pricing leftovers) — NOT STARTED**, and **Part 4.3 (sandbox-rotation re-walk of
+matrix rows citing old taxids) — NOT DONE**, carried forward under the batch's own 97%
+rule. Nothing was half-built or left dangling; the resume plan is in
+`docs/PRIORITY_BATCH_STATE.md`.
 
 ## Launch Batch 3 — partner panel v2 (DEPLOYED to dev 2026-07-26)
 - ✅ **Part 1 — COMMISSION MODEL, admin-controlled (headline).** Commission used to be
