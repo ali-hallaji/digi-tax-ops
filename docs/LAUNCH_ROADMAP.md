@@ -19,10 +19,15 @@ _As of the PRE-PRODUCTION batch (2026-07-26) every remaining item on this list i
 readiness is proven: the production bring-up has been rehearsed end-to-end on
 throwaway infrastructure and reduced to two commands (§ runbook v3)._
 
-- 🔄 **Real OTP** — Kavenegar provider, API key and `digiotp` template are WIRED and
-  configured on dev (Batch 5.6). `SMS_ALLOWLIST=09120000000` still restricts delivery
-  to the founder's number. Remaining: founder confirms receipt of a real SMS, then
-  empties the allowlist for production. No code work left.
+- ✅ **Real OTP — PROVEN END-TO-END (PRIORITY batch, 2026-07-27).** A real login OTP for
+  `09120000000` was delivered through Kavenegar: `notification_log` row reads
+  `provider=kavenegar · status=sent · provider_ref=45334056 · template=digiotp`, i.e. the
+  provider API accepted it. `otp_delivery_bypass` is now **OFF** for the founder's user
+  (flipped via the audited admin path, `/admin/users/<id>` → «خارج کردن از حالت داخلی`»)
+  and stays off; all 16 personas remain bypassed. Body is NOT persisted for real sends and
+  the dev OTP hint is correctly withheld for this protected account.
+  Remaining before public launch: **empty `SMS_ALLOWLIST`** (env-only, founder's call —
+  today it is the blast-radius valve).
 - 🔄 **Real payment gateway** creds (Zarinpal/Zibal merchant approval) — checkout is
   simulated until then. Adapter ships launch-ready (Batch 1 Part 3); creds are env-only.
 - ⬜ **Iran datacenter / egress** decision (Moadian tp.tax.gov.ir is Iran-only; prod
@@ -402,6 +407,36 @@ untouched); `world_fixtures.py`, `persona_logins.md`, `persona_fixtures.json` an
 README table regenerated from the single source, and کامران سعیدی's login proven
 through the REAL login page (Altcha solved by the real widget). Roadmap hygiene: every
 remaining launch blocker is now founder-owned.
+
+## PRIORITY batch — real SMS proof · issuance UX overhaul (2026-07-27)
+
+**Step 0.5 — REAL SMS, PROVEN.** See the ✅ Real OTP blocker entry above:
+`provider=kavenegar · status=sent · provider_ref=45334056`. The two guards in front of any
+real send were also read in source and confirmed correctly ORDERED — `force_console`
+(`otp_delivery_bypass`) short-circuits before the provider is even chosen, and
+`is_allowed()` (allowlist) runs before `provider.send()`, so a non-allowlisted number can
+never reach Kavenegar. Honest gap: the `suppressed` half is not empirically proven,
+because every other account on dev is bypassed by the guard that sits IN FRONT of it.
+
+**Part 1 — ISSUANCE UX DEEP OVERHAUL (the long-owed flagship).** Decisions doc written
+FIRST from a real walk of the live app as three users:
+`digi-tax-ops/docs/issuance_ux_decisions.md` (9 pain points, 7 changes, and an explicit
+list of what deliberately does NOT change). Shipped: Enter-to-add from any field with the
+caret returning to the title; a real keyboard typeahead (↑↓/Enter/Esc) replacing the
+click-only candidate block; تخفیف/نرخ مالیات behind a disclosure with a chip that keeps a
+non-default value visible while collapsed; «تکرار آخرین ردیف»; «عنوان سند» made OPTIONAL
+with a derived «فاکتور فروش <تاریخ شمسی>»; and the شناسهٔ مالیاتی blocker moved from step
+۵ نهایی to the اقلام step where it can still be acted on.
+Measured (`pnpm bench`, committed): walk-in journey **33→18 keystrokes, 6→5 clicks**.
+Wall-clock deliberately NOT claimed — the two runs hit different targets, so the seconds
+differ by network latency alone. The grill caught two defects in my own new code (a
+focus() discarded by the following render; a raw unformatted price in the suggestion row)
+— both fixed before commit. Backend contracts untouched; no new required field.
+Frontend `dbd9d2f`.
+
+**Parts 2–4 (UI consistency remainder · pricing leftovers · data-safety hardening 6/7/8)
+— NOT STARTED, carried forward** under the batch's own 97% rule (Steps 0–0.5 + Part 1
+must land; 2–4 resume with notes). Nothing was half-done and left in place.
 
 ## Launch Batch 3 — partner panel v2 (DEPLOYED to dev 2026-07-26)
 - ✅ **Part 1 — COMMISSION MODEL, admin-controlled (headline).** Commission used to be
