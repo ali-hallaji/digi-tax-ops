@@ -1,3 +1,50 @@
+# CONTINUATION (2026-07-28) — read this first
+
+## Part A — GOLD: UI landed, sandbox verdict is a STOP
+
+The UI is complete and verified in the real UI on dev: الگوی ۳ selectable on نوع
+اول, the three gold fields render ONLY for gold, tcpbs auto-computed read-only,
+`crn` correctly hidden, goldsmith copy in place.
+
+**The org REJECTED our sourced formula.** Two fresh-reference sandbox submissions:
+- `A2HP31050B5006AF9168A8` → «نرخ … (J) … با اطلاعات سامانه منطبق نیست» — proves
+  `vra` must equal the STUFFID's registered rate.
+- `A2HP31050B5006AF9168B2` (real exempt stuffid `2001584175153`) → `0204501`
+  «مقدار فیلد «مبلغ مالیات بر ارزش افزوده(KS)» … از لحاظ قواعد محاسباتی و منطقی
+  معتبر نیست».
+
+Per the batch instruction the leg is STOPPED — no formula guessing. Full record +
+the single question the founder must ask:
+`docs/moadian/gold_pattern3_sandbox_2026-07-28.md`. `tcpbs` was never flagged; the
+1-ریال rounding question remains unanswered because the org rejected magnitude,
+not the last digit. **Do not present gold as usable to a goldsmith yet.**
+
+Bugs found and fixed on the way: the Moadian line loader dropped the gold trio
+before the mapper saw it (values stored, packet empty); `moadian_pattern` was
+`Literal[1,4]` and would have 422'd gold; the editor coerced the pattern to
+`=== 4 ? 4 : null` on load; the send card labelled a gold invoice «الگوی فروش».
+
+Also: gold needs a VAT rate for the CURRENT year, and only 1404 was seeded, so the
+first submit was blocked by my own exact-year guard. The legally-current ۱۰٪ now
+carries forward to 1405 marked **برآوردی** (the 1405 budget is not law; ۱۲٪ is a
+proposal). Only the rate carries — exemptions and the تبصره ۱۰۰ ceiling do NOT.
+
+## تبصره ۱۰۰ — RESOLVED by founder decision
+The ۱۵۰× base is the PRIOR year's ماده ۸۴: ۴٬۸۰۰٬۰۰۰٬۰۰۰ ریال × ۱۵۰ =
+۷۲۰٬۰۰۰٬۰۰۰٬۰۰۰ exactly. The research's apparent contradiction was comparing
+against the CURRENT year's ۲٫۸۸ میلیارد. Recorded in `source_note`; still stored as
+an absolute, never a live formula, because ماده ۸۴ is re-legislated annually.
+
+## Parts B, C, D — NOT STARTED in this continuation
+- **B — party interim voucher**: not begun.
+- **C — importer**: not begun. All banked findings below still stand and are the
+  right starting point (OOXML-with-.xls, one-sided payroll sheet, Arabic ك/ي).
+- **D — pricing wires + cleanup**: not begun.
+
+Everything below is the previous state doc, still accurate for B/C/D.
+
+---
+
 # RESEARCH-APPLICATION + IMPORTER BATCH — state (2026-07-28)
 
 Honest resume point. **Landed** and **not started** are both listed; nothing
