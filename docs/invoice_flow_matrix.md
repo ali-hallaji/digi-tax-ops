@@ -132,6 +132,40 @@ registered invoice; نوع/الگو/خریدار/شناسهٔ کالا/خدمت/
 | F3 📱 | Pattern findability — نوع اول | الگو selector visible, پیمانکاری selectable, crn field «شمارهٔ قرارداد (ثبت‌شده در کارپوشه)» appears | UI journey | ✅ builder (نوع اول): فروش/پیمانکاری segmented selector renders; «الگوهای دیگر» dialog confirms «پیمانکاری فعال است»; crn label renamed. (Create page shows read-only line intentionally.) |
 | F4 📱 | Pattern findability — نوع دوم | Read-only «الگو: فروش» + visible note «الگوی پیمانکاری فقط برای نوع اول در دسترس است» | UI journey | ✅ read-only «الگو: فروش» + note «الگوی پیمانکاری فقط برای «نوع اول» در دسترس است…» on create + builder — F4-*.png |
 
+## G — الگوی پیمانکاری (crn) — EMPIRICAL, PRIORITY BATCH 2026-07-27
+
+| # | Scenario | Expected behavior | Proof | Status |
+|---|----------|-------------------|-------|--------|
+| G1 | pattern-4 submission with a 4-digit crn | Org verdict, whatever it is | REAL sandbox submission | ✅ **REJECTED — and NOT for the reason we assumed.** |
+
+**Operation.** Fresh reference (rotation law): نوع اول + الگوی پیمانکاری, buyer
+«شرکت ساختمانی پارس», one line «خدمات اجرای سازه» with stuff-id `2330000013150`,
+`crn = 1001` (the value our own placeholder taught). Walked end-to-end through the
+real wizard on نیک‌تجارت **sandbox**, finalized, validated («بدون خطای مسدودکننده»),
+submitted.
+
+**Org verdict.** Accepted at submit — taxid `A2HP31050B5006AF916898`, reference
+`dp48VDL0qn0HovA3dNwkmb94v_CVL9YJzACcsw` — then **rejected at inquiry**, verbatim:
+
+> در مقدار وارد شده در فیلد «شناسه یکتا ثبت قرارداد فروشنده» الگو(`^\d{12}$`)
+> رعایت نشده است. — code **`0102004`**
+
+**What this settles.** The question was «will the org reject an UNREGISTERED crn?».
+It never got that far: the org enforces a **FORMAT** rule first — crn must be
+**exactly 12 digits**. Whether the contract is registered in کارپوشه is a separate
+question that can only be asked with a well-formed 12-digit number.
+
+**Product action (shipped in this batch).** Our UI was actively teaching the failure:
+the hint said «حداکثر ۱۲ رقم» (*at most* 12) and the placeholder was literally
+«مثال: 1001» — a value the org can never accept. Now: exactly-12-digit validation on
+the field with a live Persian counter, corrected hint, and a 12-digit placeholder.
+
+**Still open for the founder.** Whether a *well-formed but unregistered* crn is
+accepted is UNANSWERED — it needs a real contract number registered in the نیک‌تجارت
+کارپوشه. One click for the founder there, then re-run this row.
+Also: `0102004` came back as «توضیح این کد هنوز ثبت نشده است» — the unknown-code
+catalog should learn it.
+
 ## Proof artifacts
 
 Walked 2026-07-24 on dev (backend `257fc23`, frontend `a8d24e2`): screenshots in
