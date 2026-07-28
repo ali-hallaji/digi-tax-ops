@@ -1,0 +1,243 @@
+﻿<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>11880</WindowHeight>
+  <WindowWidth>25200</WindowWidth>
+  <WindowTopX>0</WindowTopX>
+  <WindowTopY>0</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s62">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Tahoma" ss:Size="8.25" ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s63">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Tahoma" ss:Size="8.25" ss:Color="#000000"/>
+   <Interior ss:Color="#F5F5F6" ss:Pattern="Solid"/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Sheet">
+  <Table ss:ExpandedColumnCount="4" ss:ExpandedRowCount="31" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultRowHeight="15">
+   <Column ss:Width="262.5" ss:Span="2" ss:AutoFit="0"/>
+   <Column ss:Index="4" ss:Width="263.25" ss:AutoFit="0"/>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">سرفصل</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">عنوان طبقه</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">اولويت نمايش</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">سيستمي</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">اندوخته قانوني</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">حقوق صاحبان سهام</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">بهاي تمام شده درآمد هاي عملياتي</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">سود و زياني - بهاي تمام شده</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">پرداختني هاي بلندمدت</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">بدهي هاي غير جاري</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">پرداختني هاي تجاري و ساير پرداختني ها</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">بدهي هاي جاري</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">پيش پرداخت ها</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">داراييهاي جاري</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">پيش دريافتها</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">بدهي هاي جاري</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">تسهيلات مالي بلند مدت</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">بدهي هاي غير جاري</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">داراييهاي ثابت مشهود</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">داراييهاي غير جاري</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">داراييهاي ثابت نامشهود</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">داراييهاي غير جاري</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">درآمد هاي عملياتي</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">سود و زياني - فروش خالص</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">دريافتني هاي بلند مدت</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">داراييهاي غير جاري</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">دريافتني هاي تجاري و ساير دريافتني ها</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">داراييهاي جاري</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">ذخاير</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">بدهي هاي جاري</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">ذخيره مزاياي پايان خدمت كاركنان</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">بدهي هاي غير جاري</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">ساير اندوخته ها</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">حقوق صاحبان سهام</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">ساير داراييها</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">داراييهاي غير جاري</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">ساير درآمد ها</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">سود و زياني - ساير درامد ها و هزينه هاي عملياتي ، فروش ، اداري عمومي</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">ساير درآمد ها و هزينه هاي غيرعملياتي</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">سود و زياني - ساير درامد ها و هزينه هاي غير عملياتي و مالي</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">سرمايه</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">حقوق صاحبان سهام</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">سرمايه گذاري هاي كوتاه مدت</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">داراييهاي جاري</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">5</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">سفارشات و اقلام در راه</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">داراييهاي جاري</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">سود انباشته</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">حقوق صاحبان سهام</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">سود سرمايه گذاري عملياتي</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">سود و زياني - سود حاصل از سرمايه گذاري هاي عملياتي</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">ماليات پرداختني</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">بدهي هاي جاري</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">موجودي مواد و كالا</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">داراييهاي جاري</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">موجودي نقد و بانك</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">داراييهاي جاري</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">6</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">هزينه ماليات بر درامد</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">سود و زياني - مالياتي</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">هزينه هاي فروش ، اداري عمومي</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">سود و زياني - ساير درامد ها و هزينه هاي عملياتي ، فروش ، اداري عمومي</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">هزينه هاي مالي</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String">سود و زياني - ساير درامد ها و هزينه هاي غير عملياتي و مالي</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="Boolean">1</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s62"><Data ss:Type="String"></Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String"></Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String"></Data></Cell>
+    <Cell ss:StyleID="s62"><Data ss:Type="String"></Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <Selected/>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>

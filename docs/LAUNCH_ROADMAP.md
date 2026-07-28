@@ -12,6 +12,33 @@ started, and add new items as they surface. It never goes stale.
 
 ---
 
+## 🎯 Positioning — who this is for (founder-set, 2026-07-28)
+
+**Target market: small merchants AND small-to-medium مودی companies
+(متوسط رو به پایین).** Not «فقط مغازه‌دار».
+
+The two audiences want different halves of the same product, and we have both:
+
+| | what they come for | what keeps them |
+|---|---|---|
+| صنف / merchant | فاکتور، مودیان، «چقدر فروختم، چقدر سود کردم» | simplicity, Persian, no jargon |
+| شرکت کوچک/متوسط | همان + **دفاتر و اسناد حسابداری** آمادهٔ تحویل به حسابدار | نمای حسابدار، تراز، دفتر روزنامه، حقوق و دستمزد |
+
+So **the accountant view is a SELLING POINT, not an advanced toggle**. Copy that
+implies a one-person shop under-sells us to exactly the companies that pay more
+and churn less. Landing, guide and school copy are audited against this.
+
+Consequences already applied:
+- landing title/description/hero name اصناف **و شرکت‌های کوچک**, and the hero
+  says the دفاتر are ready to hand to an accountant;
+- the FAQ answer about «نیاز به دانش حسابداری» now names what a company's
+  accountant actually gets;
+- **payroll (حقوق و دستمزد) moves from «future» to «building now»** — it is the
+  single most-asked capability from company-shaped customers and the thing that
+  makes us replaceable-by-Sepidar without it. Scope + state: § Payroll v1.
+
+---
+
 ## 🚦 Launch blockers (must clear before public launch)
 
 _As of the PRE-PRODUCTION batch (2026-07-26) every remaining item on this list is
