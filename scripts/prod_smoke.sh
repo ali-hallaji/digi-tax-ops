@@ -63,8 +63,14 @@ echo
 echo "2. Production security posture (these MUST hold before anyone is let in)"
 
 # Captcha on: a raw OTP request carrying no PoW must be refused.
+#
+# Probe a mobile that is NOBODY. 09120000000 is the founder's protected persona
+# and it is exactly the account `dev_login_otp_hint` is allowed to hint for, so
+# probing it tested the one number whose behaviour is deliberately special —
+# a green here said nothing about what a real visitor meets.
+PROBE_MOBILE=${PROBE_MOBILE:-09129999999}
 body=$(curl -s -X POST "$API/api/v1/auth/otp/request" \
-  -H 'Content-Type: application/json' -d '{"mobile":"09120000000"}')
+  -H 'Content-Type: application/json' -d "{\"mobile\":\"$PROBE_MOBILE\"}")
 if printf '%s' "$body" | grep -qi 'altcha\|captcha\|تأیید امنیتی'; then
   ok "captcha refuses a raw OTP request"
 else
@@ -72,10 +78,15 @@ else
 fi
 
 # DEBUG=false: no OTP may ever appear in an API response.
-if printf '%s' "$body" | grep -qi '"otp"\|"dev_otp"\|"code":[0-9]'; then
-  bad "an OTP-looking field appeared in the response — DEBUG is not off"
+#
+# The pattern used to be '"otp"' — which does NOT match `"otp_hint"`, the field
+# the API actually returns (schemas.py OtpRequestResponse.otp_hint). The one
+# leak this check exists to catch was the one shape it could not see. Match any
+# key that STARTS with otp, plus a bare numeric code.
+if printf '%s' "$body" | grep -qiE '"(dev_)?otp[a-z_]*"[[:space:]]*:[[:space:]]*"?[0-9]|"code"[[:space:]]*:[[:space:]]*"?[0-9]'; then
+  bad "an OTP-looking field appeared in the response — DEBUG/OTP-hint is not off: $(printf '%s' "$body" | head -c 160)"
 else
-  ok "no OTP echoed in the API response (DEBUG off)"
+  ok "no OTP echoed in the API response (DEBUG off, no otp_hint)"
 fi
 
 # Swagger auto-auth / docs exposure.

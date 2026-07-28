@@ -33,6 +33,11 @@ DB_USER="${POSTGRES_USER:-digitax}"
 DB_NAME="${POSTGRES_DB:-digitax}"
 KEEP_DAILY="${KEEP_DAILY:-7}"
 KEEP_WEEKLY="${KEEP_WEEKLY:-4}"
+# Ad-hoc «take a dump before I do something risky» files (digitax-pre-*). They
+# were rotated by NOTHING, so they accumulated until backups/ was 1.7 GB of
+# mostly-identical snapshots — the tier that actually filled the disk. Their
+# value decays within days of the batch they were taken for; keep a short tail.
+KEEP_ADHOC="${KEEP_ADHOC:-3}"
 
 mkdir -p "$BACKUP_DIR"
 
@@ -61,24 +66,35 @@ if [ "$SIZE" -lt 10000 ]; then
 fi
 echo "✓ ${OUT} ($(numfmt --to=iec "$SIZE" 2>/dev/null || echo "${SIZE}B"))"
 
+# prune <tier> <keep>  — tier "adhoc" means "everything that is not daily/weekly".
 prune() {
   local tier="$1" keep="$2"
   # shellcheck disable=SC2012 — filenames are ours and contain no newlines.
   local files
-  files=$(ls -1t "${BACKUP_DIR}"/digitax-"${tier}"-*.sql.gz 2>/dev/null || true)
+  if [ "$tier" = "adhoc" ]; then
+    files=$(ls -1t "${BACKUP_DIR}"/digitax-*.sql.gz 2>/dev/null \
+      | grep -vE '/digitax-(daily|weekly)-' || true)
+  else
+    files=$(ls -1t "${BACKUP_DIR}"/digitax-"${tier}"-*.sql.gz 2>/dev/null || true)
+  fi
   local n=0
   while IFS= read -r f; do
     [ -z "$f" ] && continue
     n=$((n + 1))
     if [ "$n" -gt "$keep" ]; then
-      echo "  · pruning $(basename "$f")"
-      rm -f "$f"
+      if [ -n "${DRY_RUN:-}" ]; then
+        echo "  · WOULD prune $(basename "$f") ($(du -h "$f" | cut -f1))"
+      else
+        echo "  · pruning $(basename "$f")"
+        rm -f "$f"
+      fi
     fi
   done <<< "$files"
 }
 
 prune daily "$KEEP_DAILY"
 prune weekly "$KEEP_WEEKLY"
+prune adhoc "$KEEP_ADHOC"
 
 echo "▶ current backups:"
 ls -1t "${BACKUP_DIR}"/digitax-*.sql.gz 2>/dev/null | head -20 | sed 's/^/  /'
