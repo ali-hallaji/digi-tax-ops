@@ -69,10 +69,16 @@ Untouched. Nothing half-built. Needs:
 3. Plans page final polish (tier presentation, included volumes, overage pack).
 4. Document the `DOCUMENT_CAP_ENFORCED` flip procedure (flag stays OFF).
 
-### PART 4.3 — sandbox rotation re-verification (NOT DONE)
-The matrix rows that cite OLD sandbox taxids were not re-walked against fresh
-references. Only the new G1 row used a fresh reference. This is a walk, not a code
-change: pick each row citing a pre-rotation taxid, register a fresh اصلی, re-walk.
+### PART 4.3 — sandbox rotation re-verification (DONE 2026-07-28)
+Re-walked the whole lifecycle chain on a brand-new اصلی — see
+`docs/invoice_flow_matrix.md` § I and `scripts/rotation_rewalk.py` (re-runnable).
+
+It was NOT just a walk: it surfaced two real rules and one product bug.
+  • a registered اصلاحیه SUPERSEDES the original — a later ابطال/برگشت must
+    reference the NEWEST version, and ours referenced the original, which the
+    org refuses with 0300601. Fixed in `_reference_submission`.
+  • an ابطال must be header-only; sending body/totals draws «خارج از الگو» on
+    every field.
 
 ### PART 4.2 follow-up — still open for the founder
 Whether a **well-formed but unregistered** 12-digit crn is accepted is UNANSWERED —

@@ -191,6 +191,41 @@ Also proven along the way: `vra` must equal the stuffid's REGISTERED rate
 (`0303301`) — you cannot declare a line exempt by writing 0 — and `vam` on an
 exempt-rate gold line is NON-zero, because it is the tax on the workmanship.
 
+## I — چرخهٔ عمر on a FRESH reference (PART 4.3 re-walk), 2026-07-28
+
+The lifecycle rows cited pre-rotation taxids, so they could no longer be
+reproduced — a rotated reference answers `0300601` to everything. Re-walked
+against a brand-new اصلی. Script: `scripts/rotation_rewalk.py`.
+
+| # | Operation | مرجع used | taxid | Org verdict |
+|---|---|---|---|---|
+| I1 | اصلی (fresh) | — | `A2HP31050B6006AF916994` | ✅ SUCCESS |
+| I2 | اصلاحیه | the fresh اصلی | `A2HP31050B6006AF9169A5` | ✅ SUCCESS |
+| I3 | برگشت از فروش | the **original** (now superseded) | `A2HP31050B6006AF9169B7` | ❌ `0300601` |
+| I4 | ابطال | the **original** (now superseded) | `A2HP31050B6006AF9169C3` | ❌ `0300601` |
+| I5 | ابطال, header-only | the **اصلاحیه** | `A2HP31050B6006AF9169D6` | ✅ SUCCESS |
+
+**Two rules this settles — both were product bugs waiting to happen.**
+
+1. **A registered اصلاحیه SUPERSEDES the original.** The org stops accepting the
+   original taxid as a مرجع (`0300601` «با اطلاعات سامانه منطبق نیست»); a later
+   ابطال/برگشت must reference the NEWEST registered version. I4 vs I5 is the same
+   cancellation, differing only in which taxid it points at.
+
+   Our `_reference_submission` picked the latest submission *for that invoice_id*
+   — but a corrective lives on its OWN draft, so the original's cancel path could
+   never see it and would have sent the superseded taxid. Fixed: the lookup now
+   follows `corrective_of_invoice_id` to the newest accepted اصلاحیه.
+
+2. **ابطال is header-only.** I4 carried the body and totals and drew «خارج از
+   الگو» on *every* line and total field (14022-14059); I5 sent `body: []` and
+   came back clean. The org re-fetches the content from the مرجع.
+
+`14007`/`14004` (inp/inty «خارج از الگو» on a referring subject) appear on every
+referrer and remain the known OPEN question recorded in
+`docs/moadian/corrective_inp_inty_experiment_2026-07.md` — warnings, not errors,
+and the packets register regardless.
+
 ## Proof artifacts
 
 Walked 2026-07-24 on dev (backend `257fc23`, frontend `a8d24e2`): screenshots in
