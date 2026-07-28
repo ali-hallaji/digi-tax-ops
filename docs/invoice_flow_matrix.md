@@ -166,26 +166,30 @@ accepted is UNANSWERED — it needs a real contract number registered in the ن�
 Also: `0102004` came back as «توضیح این کد هنوز ثبت نشده است» — the unknown-code
 catalog should learn it.
 
-## H — الگوی سوم (طلا) — EMPIRICAL, 2026-07-28
+## H — الگوی سوم (طلا) — EMPIRICAL, 2026-07-28 — **SOLVED**
 
 | # | Scenario | Expected | Proof | Status |
 |---|----------|----------|-------|--------|
-| H1 | gold invoice, exempt stuffid, sourced Ks formula | org verdict | REAL sandbox submission | ⛔ **REJECTED on KS — leg stopped** |
+| H1 | gold invoice, exempt stuffid, Ks half-up | org verdict | REAL sandbox submission | ⛔ `0204501` — rejected |
+| H2 | same invoice, **Ks TRUNCATED** (543,933) | org registers it | `A2HP31050B5006AF9168F4` | ✅ **SUCCESS** |
+| H3 | mixed exempt+taxable, discount, non-zero حق‌العمل; Ks summed then floored | org registers it | `A2HP31050B5006AF916936` | ✅ **SUCCESS** |
+| H4 | الگوی اول, VAT on a half Rial, truncated | org registers it | `A2HP31050B5006AF916957` | ✅ **SUCCESS** |
+| H5 | الگوی اول, fractional qty, Es truncated | org registers it | `A2HP31050B5006AF916969` | ✅ **SUCCESS** |
+| H6 | gold invoice built in the REAL UI → packet | identical to H2's body | dev, INV-2026-000041 | ✅ byte-for-value match |
 
-Two fresh-reference submissions on نیک‌تجارت sandbox. Full record:
-`docs/moadian/gold_pattern3_sandbox_2026-07-28.md`.
+Thirteen submissions, one variable at a time. Full verdict table and both accepted
+payloads verbatim: `docs/moadian/gold_pattern3_sandbox_2026-07-28.md`.
 
-- `A2HP31050B5006AF9168A8` — made-up stuffid → «نرخ … (J) … با اطلاعات سامانه
-  منطبق نیست» (`0303301`). Proves `vra` must equal the stuffid's REGISTERED rate;
-  you cannot declare a line exempt by writing 0.
-- `A2HP31050B5006AF9168B2` — real exempt gold stuffid `2001584175153` →
-  `0204501` «مقدار فیلد «مبلغ مالیات بر ارزش افزوده(KS)» … از لحاظ قواعد
-  محاسباتی و منطقی معتبر نیست».
+**What it settled.** The org re-derives every computed amount with integer
+arithmetic and TRUNCATES; our half-up rounding was the whole bug, and it governed
+الگوی اول too — any ordinary invoice whose VAT or line amount fell on half a Rial
+was being refused. The structure was right all along: one line per article, the
+gold quartet mandatory on EVERY line, `Is = Es + TAs − Gs`, and
+`Ks = ⌊TAs×goldRate/100 + Es×J/100⌋` (sum first, floor once).
 
-`tcpbs` was never flagged. The rejection is ONE field: Ks/vam on an exempt line.
-Per the batch instruction the sourced formula is left in place and NOT guessed at;
-the open question is written up for the founder. The 1-ریال rounding question is
-consequently still unanswered — the org rejected the magnitude, not the last digit.
+Also proven along the way: `vra` must equal the stuffid's REGISTERED rate
+(`0303301`) — you cannot declare a line exempt by writing 0 — and `vam` on an
+exempt-rate gold line is NON-zero, because it is the tax on the workmanship.
 
 ## Proof artifacts
 
