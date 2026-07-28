@@ -2492,3 +2492,100 @@ head` (already at `otpbypass00014`; **no new migration in this batch**) →
   environment declares rather than hard-coding «به‌زودی».
 - **Captcha / rate-limit:** untouched and ON — every harness login solved the real
   Altcha PoW through the real login page.
+
+---
+
+## Batch 5 — Competitive polish + درآمد + repositioning (2026-07-28/29)
+
+**Parts 0–3 landed. Parts 4 (barcode) and 5 (payroll) NOT started — see the resume
+note at the end.**
+
+### Part 0 — Repositioning (founder-set)
+Target market is officially small merchants **AND** small-to-medium مودی companies.
+`LAUNCH_ROADMAP.md` gained a «🎯 Positioning» section with the two-audience table;
+the landing page (title, description, OG alt, hero badge + paragraph, social chips,
+FAQ) now reads «اصناف و شرکت‌های کوچک» throughout — nothing says «فقط مغازه‌دار».
+
+### Part 1 — درآمد document (headline)
+New standalone income document mirroring هزینه field-for-field: categories
+(اجاره / کارمزد خدمات / سود بانکی / درآمد متفرقه, admin-extensible), required party,
+required treasury account, Jalali date + FY lock, live separators, same edit/delete
+rules. Chart gains «۴۳ سایر درآمدها» — deliberately NOT folded into فروش, which every
+VAT/quarterly report is built on. One interim-pattern voucher per document.
+
+Backend: `app/modules/incomes/*`, migration `rsch1404a004`, chart/journal/reports/
+treasury wired, 5 pg tests. Frontend: `lib/api/incomes.ts`,
+`components/digitax/incomes/income-register.tsx`, third tab on «خرید و هزینه»,
+«سند جدید» entry, guide scenario S4-09, school lessons 6 + 7.
+
+**Real-UI proof (dev, persona 09120001002):** rent ۱۸,۰۰۰,۰۰۰ + bank interest
+۱۲,۳۴۵,۰۰۰ registered through the real form →
+- treasury صندوق ۱۱۰,۰۲۴,۰۰۰ → ۱۲۲,۳۶۹,۰۰۰ (exact delta),
+- vouchers ۷۶/۷۷ balanced, posting Dr ۲۱۰۲ interim / Dr ۱۱۰۱ صندوق →
+  Cr ۴۳۰۱ اجاره / Cr ۲۱۰۲ interim — never touching ۴۱۰۱ فروش,
+- party ledger ۲۱۰۲۰۰۰۲: two legs, گردش ۱۸M each way, **مانده ۰**,
+- P/L «سایر درآمدها» line.
+Screenshots: `digi-tax-frontend/qa-screens/batch5-income-returns/`.
+
+### Part 2 — Returns findability
+«سند جدید» dropdown got `dir="rtl"` (it was the only one missing it, so `align="start"`
+computed LTR), plus برگشت از فروش / برگشت از خرید / درآمد intents. «ثبت برگشت» is now a
+row action in the purchases list (was reachable only from a view-dialog footer:
+5 taps + a scroll). The intent travels in the URL so the register names the errand
+instead of dropping the user on a plain list.
+
+**Measured at 390px:** «سند جدید» is above the fold on the dashboard; برگشت از خرید is
+now **4 taps** (سند جدید → برگشت از خرید → row ⋯ → ثبت برگشت) and walked end-to-end to a
+persisted return (مانده ۲,۶۴۰,۰۰۰ → ۰ after the VAT fix below).
+
+### Part 3 — Competitive quick wins
+- **Resumable drafts:** «ذخیره» → «ذخیره و ادامه بعداً» + a toast repeating the promise;
+  draft cards read «ادامهٔ تکمیل ←».
+- **8cm thermal receipt:** already shipped (`receipt_80mm`) and verified live — but the
+  walk exposed two customer-facing defects, fixed (below).
+- **Anti-confusion microcopy:** three-way برگشت/ابطال/اصلاحیه one-liners beside the
+  buttons themselves; inventory now says plainly it is a simple count, not a WMS.
+- **Landing:** «دادهٔ شما کجا می‌ماند» security/backup section — every claim backed by
+  the runbook or the code (nightly timer + 7 daily/4 weekly rotation, Fernet-encrypted
+  Moadian keys, per-tenant filtering, HTTPS). New public `/changelog` («تازه‌ها»)
+  rendered from in-repo markdown, parsed to React elements (never injected HTML).
+- **Guide:** group labels now mirror the sidebar 1:1 (was «خرید و پرداخت» vs the menu's
+  «خرید و هزینه»); pitfalls («نکات مهم») now show at EVERY level — they were
+  advanced-only, hiding the warnings from the beginner most likely to need them.
+
+### Defects found by the real-UI walk (all fixed, all now covered)
+1. **P/L «سایر درآمدها» never reached the client.** `ProfitLossResponse` had no
+   `other_income` field, so Pydantic silently dropped a line the `profit` already
+   contained — the visible rows did not sum to the visible سود, on screen and in the
+   XLSX/PDF/CSV export. The service-level test passed the whole time.
+   → schema field + export row + a test pinning every addend to the wire.
+2. **برگشت از خرید ignored per-line VAT.** A full return of a ۲,۴۰۰,۰۰۰ + ۱۰٪ purchase
+   left ۲۴۰,۰۰۰ payable: the merchant owed tax on goods they no longer had, and the
+   input-VAT credit was never reversed, **overstating اعتبار in the VAT report**. Cause:
+   a stale comment ("purchase lines carry no per-line VAT") untrue since A3.
+   → `_proportional_slice` on both, + 3 pg integration tests. The voucher's
+   `CODE_VAT_INPUT` leg already existed; it was being handed a zero.
+3. **Printed documents carried Gregorian dates and a retired brand.** The 80mm receipt
+   and both official layouts printed «2026-07-28» and «صادر شده توسط دیجی‌تکس».
+   → `to_jalali` + «دیجی اینویس» across invoice/return/report output. Seeded persona
+   names are the founder-locked contract and were left untouched. The print service had
+   **no test at all**; one now renders every layout.
+4. **Journal source-type «income» leaked raw English** and «رفتن به مبدأ» dead-ended on
+   the journal the reader came from. Expense had the same dead end (landed on the
+   خریدها tab). Both fixed.
+
+### Gates
+- Backend: **1390 passed**, 8 skipped, 7 known FakeDBSession baseline failures
+  (4 identity + 3 moadian) — +7 new tests over the 1383 baseline. ruff + black clean.
+- Frontend: typecheck + build clean.
+- Harness (local): **15 passed / 1 skipped — GREEN.**
+
+### Resume note — Parts 4 and 5 (next window)
+- **Part 4 — barcode scan via phone camera:** product «بارکد» field; camera button on the
+  invoice-line search and the products list; decode via a maintained JS lib
+  (license-checked); match by barcode then name; graceful fallback when the camera is
+  denied/absent; 390px proof with a fake media stream; barcode column in the Excel import.
+- **Part 5 — payroll v1:** design doc FIRST from the Sepidar reference, then personnel,
+  monthly payroll document, ماده ۸۴ salary tax (NEVER mixed with ماده ۱۰۱), admin-parametric
+  insurance rates, payslip PDF, ONE interim-pattern voucher, mark-paid, monthly report.
+  Sandbox/Moadian NOT involved.
