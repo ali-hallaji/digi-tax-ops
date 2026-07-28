@@ -97,10 +97,9 @@ Net effect, verified on dev through the real UI: a gold invoice built by a
 merchant produces a packet **byte-for-value identical** to the one the org
 registered (`A2HP31050B5006AF9168F4`).
 
-Still open (founder's call, logged not done): the invoice document keeps 4-decimal
-precision internally (`_q4`) while the org record is whole-Rial, so a non-gold PDF
-can still print ۱ ریال more VAT than the tax record holds. Changing it touches
-accounting/journals/reports.
+~~Still open: the document keeps 4-decimal precision while the org record is
+whole-Rial.~~ **CLOSED in the closing batch** — see the whole-ریال alignment
+section at the top.
 
 ## Part B — party interim voucher: **DONE**
 
@@ -149,9 +148,22 @@ received them from the merchant's previous software.
 
 Re-runnable proof: `scripts/ledger_import_proof.py` (run inside the api container).
 
-## Part D — pricing wires + cleanup: NOT STARTED
+## Part D — pricing wires + cleanup: **DONE in the closing batch**
 
-Unchanged from the previous state doc, and still the right resume point:
+- overage-pack checkout (consumable bypass + DocumentQuotaPack on payment +
+  pack_units snapshot + the SKU seeded) ✅
+- usage headroom on the card («۱۰۰ سند پلن + ۲۰۰ سند از بستهٔ خریداری‌شده») ✅
+- admin price-history: the table was back-filled and NEVER written to — every
+  change since was unrecoverable. `admin_set_price` now appends and
+  `GET /admin/module-prices/history` reads it ✅
+- plans copy for the pack (label, value copy, guide icon) ✅
+- prod_smoke false-greens: the OTP-leak grep could not match `otp_hint`, the one
+  field it exists to catch, and it probed the founder's protected persona ✅
+- server dumps: the ad-hoc `digitax-pre-*` tier was rotated by NOTHING. Added
+  KEEP_ADHOC (+ DRY_RUN) and applied it — 1.8 GB → 737 MB ✅
+- pre-rotation matrix re-walk → matrix § I, plus a real lifecycle bug fixed ✅
+
+The original resume list, for reference:
 
 1. `document_pack` SKU row + price (nothing is purchasable yet).
 2. Checkout: `_price_the_basket` rejects an already-entitled feature — a
