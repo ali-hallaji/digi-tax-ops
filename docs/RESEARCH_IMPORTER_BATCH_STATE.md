@@ -1,4 +1,54 @@
-# CONTINUATION 2 (2026-07-28) — read this first
+# CLOSING BATCH (2026-07-28) — read this first
+
+## Whole-ریال alignment — DONE (founder-approved)
+
+The document and the tax record are now the same numbers, to the ریال. Computed
+amounts truncate everywhere a document is made — invoice lines and totals,
+برگشت از فروش slices, expense VAT extraction, the print formatter and the
+on-screen money helper. Typed inputs keep their decimals (a per-gram gold price
+needs them); only DERIVED amounts land on whole Rials. Columns stay
+Numeric(20,4) and responses keep their «۳۷۵۰۰۰٫۰۰۰۰» shape, so no API moved.
+
+**Existing finalized documents were NOT rewritten** — they keep the amounts they
+were issued and submitted with. 14 legacy fractional journal lines (all from
+expenses) remain until those expenses are next edited.
+
+Proving it surfaced two more real defects, both fixed:
+- the PACKET disagreed with itself on a fractional discount — it emitted a
+  truncated `dis` but derived `adis` from the raw one, so a ۱۰۰٫۵ discount would
+  have shipped a self-inflicted `0204301`.
+- برگشت از فروش pro-rated as `amount × (returned/original)`, computing the ratio
+  first; 1/3 is not representable, so an exact third came out a ریال short.
+  Multiply-then-divide is exact, and a FULL return short-circuits to the
+  original amounts.
+
+Proof: `tests/modules/invoice_drafts/test_whole_rial_alignment.py` — the printed
+total IS the accepted org packet total on the exact odd-price invoice the sandbox
+rejected at half-up and registered at truncated.
+
+## Gold — the last click is walked
+
+الگوی سوم submitted from the REAL UI and registered by the org:
+**taxid `A2HP31050B6006AF916989`, «ثبت شد»**. The submit button was never
+entitlement-gated — it appears once «بررسی و اعتبارسنجی» passes, and that
+validation was itself checking a gold invoice at ۰٪ (it resolved no gold rate),
+so it reported all four amounts as mismatched. Fixed; the three
+validation/preview endpoints now resolve the rate like the send path does.
+
+الگوی سوم and الگوی چهارم are now marked SHIPPED through one set
+(`SUPPORTED_SPECIAL_PATTERNS`), so no surface can say «به‌زودی» for something a
+goldsmith can already send.
+
+## Lifecycle — re-walked on a fresh reference (matrix § I)
+
+Two rules settled, one of them a product bug that was waiting for a real
+merchant: a registered **اصلاحیه supersedes the original**, so a later
+ابطال/برگشت must reference the newest version (`0300601` otherwise — proven as an
+A/B on the same cancellation), and an **ابطال is header-only**.
+
+---
+
+# CONTINUATION 2 (2026-07-28)
 
 ## Part A — GOLD: **SOLVED**, and it was a one-ریال rounding bug
 
