@@ -33,9 +33,15 @@ Consequences already applied:
   says the دفاتر are ready to hand to an accountant;
 - the FAQ answer about «نیاز به دانش حسابداری» now names what a company's
   accountant actually gets;
-- **payroll (حقوق و دستمزد) moves from «future» to «building now»** — it is the
-  single most-asked capability from company-shaped customers and the thing that
-  makes us replaceable-by-Sepidar without it. Scope + state: § Payroll v1.
+- **payroll (حقوق و دستمزد) — SHIPPED v1 (Batch 5 Part 5, 2026-07-29).** It was
+  the single most-asked capability from company-shaped customers and the thing
+  that made us replaceable-by-Sepidar without it. Design doc:
+  `docs/payroll_v1_design.md`; state + real-UI proof in `docs/progress.md`.
+  The insurance rules are derived from the founder's own سپیدار export and the
+  generated voucher reconciles to that file's جمع row to the ریال.
+  **Open: the ۱۴۰۴ ماده ۸۵ salary steps need an accountant's confirmation** —
+  they ship «برآوردی» until then (design doc §10), and whether payroll becomes a
+  paid SKU is a founder call (ungated today).
 
 ---
 

@@ -2580,12 +2580,117 @@ persisted return (مانده ۲,۶۴۰,۰۰۰ → ۰ after the VAT fix below).
 - Frontend: typecheck + build clean.
 - Harness (local): **15 passed / 1 skipped — GREEN.**
 
-### Resume note — Parts 4 and 5 (next window)
-- **Part 4 — barcode scan via phone camera:** product «بارکد» field; camera button on the
-  invoice-line search and the products list; decode via a maintained JS lib
-  (license-checked); match by barcode then name; graceful fallback when the camera is
-  denied/absent; 390px proof with a fake media stream; barcode column in the Excel import.
-- **Part 5 — payroll v1:** design doc FIRST from the Sepidar reference, then personnel,
-  monthly payroll document, ماده ۸۴ salary tax (NEVER mixed with ماده ۱۰۱), admin-parametric
-  insurance rates, payslip PDF, ONE interim-pattern voucher, mark-paid, monthly report.
-  Sandbox/Moadian NOT involved.
+### Parts 4 and 5 — DELIVERED (2026-07-29)
+
+#### Part 5 — حقوق و دستمزد v1 (the headline)
+
+**Design doc committed BEFORE code:** `docs/payroll_v1_design.md`, written from the
+founder's own سپیدار export rather than from assumption.
+
+**The numbers are file-proven, not asserted.** `docs/import-samples/حقوق دستمزد سپيدار.xls`
+pins the insurance base exactly: ۲۰٪ and ۳٪ both reproduce **to the ریال** only from
+حقوق پایه + بن + حق تأهل, and the file's own جمع row reconciles. Two rules fall out and
+both are now pinned by tests that fail with the real numbers in the diff:
+- **حق اولاد is OUTSIDE the insurance base** (بن and حق تأهل are inside);
+- **rounding is TRUNCATION**, not half-up — a ۱-ریال half-up difference would have shown.
+
+**Not one tax constant in code.** Insurance is three `tax_parameters` keys (۷٪/۲۰٪/۳٪ —
+three, not one merged ۲۳٪, because سپیدار books ۲۰ and ۳ to two different accounts).
+مالیات حقوق reads a NEW `tax_tables` kind `article_84`, and `resolve_salary_exemption`
+reads ONLY the ماده ۸۴ key — the deliberate mirror of `resolve_business_exemption`, so
+the ۱۰۱/۸۴ confusion is unrepresentable in **both** directions.
+
+**⚠️ OPEN — accountant question.** The 1404 ماده ۸۵ salary steps are absent from
+`tax_research_1404.md`. They ship seeded with `is_estimated=true`, and every figure
+derived from them says «برآوردی» — on screen, in the report, and on the printed payslip.
+Confirming is one admin screen and zero code. Full list in the design doc §10.
+
+**Accounting.** ONE balanced سند per person per month onto the سپیدار 611xxx class mapped
+to 53xx (5302 حقوق reused; the rest allocated by a preferred-code + next-free fallback so
+they can never alias an existing custom category — and on the dev tenant they correctly
+landed at 5319–5325 rather than the preferred block). Credits to 2104 بیمه پرداختنی /
+2105 مالیات حقوق پرداختنی and to the employee's own تفصیلی under 2103, whose مانده is MEANT
+to survive until mark-paid emits the settlement سند. Only confirmed/paid runs reach the
+journal — a draft is a working sheet, not a document.
+
+**Money wiring** follows the «a document missing from this formula is a balance that
+silently lies» rule: treasury balances, cash-flow rows AND the pre-window seed, and the
+P/L — where payroll got its own wire field and export row, because a figure inside
+`profit` but absent from the rows is exactly the «سایر درآمدها» defect. Both fake-session
+tripwires fired as designed and now cover payroll.
+
+**Real-UI proof (local, persona 09120001002 «بازرگانی نیک‌تجارت»):** one employee, one
+month, end to end — پرسنل → سند مرداد ۱۴۰۵ → تأیید → فیش PDF → ثبت پرداخت → گزارش.
+- payslip PDF renders Persian RTL, Jalali «مرداد ۱۴۰۵», brand «دیجی اینویس», عدد به حروف,
+  the «برآوردی» strip, and correctly omits the employer share from the employee's own slip;
+- the voucher balances at **۶۲۹,۴۱۳,۰۵۸ — the exact جمع row of the founder's سپیدار file**,
+  reproduced through our own chart;
+- mark-paid drains بانک ملت and closes the employee's ledger to **مانده ۰**;
+- P/L `payroll_cost` = ۶۲۹,۴۱۳,۰۵۸ and the visible rows sum to the visible سود.
+
+#### Part 4 — بارکد via the phone camera
+
+`products.barcode` (migration `rsch1404a005`), UNIQUE per (tenant, barcode) via a partial
+index — per-business, not global, because two shops sharing an EAN-13 is normal while one
+shop holding it twice is what makes a scan ambiguous. Free text on purpose: in-house
+Code-128 labels must work.
+
+Matching is **barcode-FIRST, then name**, and an exact barcode is an exact match so the
+invoice line fills itself instead of offering a picker. Excel import gains column P.
+
+Decoder: `@zxing/browser` (MIT) + `@zxing/library` (Apache-2.0) — both permissive, both
+published within the last month; `html5-qrcode` rejected as unmaintained (2023) and
+QR-first where retail needs EAN-13/8. **Lazy-loaded, verified in the build output:** it
+lands in its own 452 kB chunk and is ABSENT from the main bundle.
+
+Fallbacks are the feature: denied / no camera / not-HTTPS / unsupported each get their own
+Persian sentence mapped from the browser's own error name, and the button hides itself
+entirely where a camera is impossible. Proof: `e2e/specs/12-barcode-scan.spec.ts` feeds
+Chrome a GENERATED Y4M containing a real EAN-13 (4 passed) — plus
+`docs/barcode_manual_test.md` for the founder's phone.
+
+### Defects found by the real-UI walk (all fixed)
+1. **Radix `<Tabs>` defaults to `dir="ltr"`.** Omitting the prop stamped it on the root, so
+   EVERY descendant of the payroll page computed `direction:ltr` — right-aligned by
+   Tailwind but not actually RTL, and mixed number/text lines rendered reordered
+   («۱ نفر · خالص …» came out «نفر · خالص … ریال ۱»). **The a11y tree reports LOGICAL order
+   and cannot see this**; it was caught by measuring glyph x-positions. Wrapping the parts
+   in `<bdi>` did NOT fix it — the isolates then become neutral objects the algorithm may
+   itself reorder — so the lines are flex children now.
+2. **The route gate still said «به‌زودی».** `feature-gates` kept `/app/payroll` on
+   `accountingApproved` from when it was a placeholder, so the sidebar link worked and the
+   page showed the accounting «coming soon» card on top of a finished module.
+3. **A merchant in مرداد ۱۴۰۵ could not run payroll at all.** The all-or-nothing rate
+   resolver is correct, but only 1404 rows were seeded. Fixed the way the VAT rate already
+   handles it: the insurance rates carry forward, because they come from the قانون تأمین
+   اجتماعی (structural) rather than the annual budget act.
+4. **The EAN used in the sample xlsx, the form placeholder and the tests had an invalid
+   check digit** (…019; correct …016), so zxing rightly refused it. Found by a fixture
+   self-check that runs FIRST, so a bad fixture can never be mistaken for a bad feature.
+5. **The product UPDATE path committed unguarded** — editing onto a duplicate SKU was a raw
+   500 (which Chrome reports as a CORS failure, gotcha 4). Pre-existing; the new unique
+   column would have made it frequent. Create and update now share one conflict mapper.
+
+### QA-record cleanup (founder decision)
+`RET-2026-000006` on dev — a full return of a ۲,۴۰۰,۰۰۰ + ۱۰٪ purchase recorded with
+`vat_amount 0` because it predates the برگشت-از-خرید VAT fix (`04e5f28`) — deleted via
+`scripts/delete_qa_return.sh` (one explicit UUID, refuses a pattern, refuses a refunded
+return, single transaction, before/after audit). Verified: `purchase_returns` ۲,۴۰۰,۰۰۰ → ۰,
+profit moved by exactly ۲,۴۰۰,۰۰۰, **0 orphan journal entries, 0 journal gaps** (the journal
+is derived, so the سند vanished on regeneration — no manual journal surgery).
+
+### Gates
+- Backend: **1423 passed**, 9 skipped, 7 known FakeDBSession baseline failures
+  (4 identity + 3 moadian) — +41 new tests. ruff + black clean.
+- Frontend: typecheck + build clean; 59 unit tests pass (the guide no-drift test caught
+  duplicate scenario ids and they were renumbered).
+- Harness (local): **15 passed / 1 skipped — GREEN.**
+
+### Follow-ups logged
+- **Accountant questions** (design doc §10): the ۱۴۰۴ ماده ۸۵ steps; whether a سقف دستمزد
+  بیمه applies; اضافه‌کاری/سایر مزایا in the insurance base (file-underived).
+- **Payroll SKU** — ungated today (the roadmap puts the SKU post-launch). Founder call.
+- `/app/employees` and `/app/payslips` are still redirect stubs; their content lives in
+  the payroll tabs.
+- Two private copies of the Jalali month-name tuple remain in the partners module; the
+  shared `jalali_month_label` now exists for new callers.

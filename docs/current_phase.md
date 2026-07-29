@@ -1,6 +1,14 @@
 # Current Phase - Ops
 
-Last updated: 2026-07-19
+Last updated: 2026-07-29
+
+> **2026-07-29 — Batch 5 Parts 4+5 shipped.** حقوق و دستمزد v1 (پرسنل، سند ماهانه،
+> فیش PDF، سند حسابداری، mark-paid، گزارش) and بارکد via the phone camera.
+> Migrations **`rsch1404a005`** (products.barcode) and **`rsch1404a006`** (employees,
+> payroll_runs, payroll_items) must be applied on every deploy, followed by
+> `python -m app.cli.seed_payroll_params_1404` — without the insurance rates a
+> payroll document cannot be created at all (deliberate: an all-or-nothing rate
+> resolver beats a payslip computed with a missing rate). Details: `docs/progress.md`.
 
 > **2026-07-19 — STUFFID catalog shipped locally** (official ~4M-code goods/service
 > catalog: boot-time auto-import from `data/stuffid/` archive, typeahead picker with
