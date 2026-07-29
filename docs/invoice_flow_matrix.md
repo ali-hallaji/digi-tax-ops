@@ -61,7 +61,8 @@ proven at 390px; the rest desktop.
 | A8 | TAX | 1 | customer, legacy 12-digit eco code | real | ACCEPTED with amber nudge «کد اقتصادی جدید همان شناسه ملی (۱۱ رقمی) است»; packet `tinb` = the 11-digit شناسه ملی | UI journey, sandbox | ✅ amber + wire tinb=11digit + org ثبت شد — A8-01*.png |
 | A9 | TAX | 1↔2 switch on existing draft | any | real | Switching type re-evaluates requirements LIVE both directions; no stale blockers; readiness + validate + button text all follow | UI journey | ✅ live both directions — A9-*.png |
 | A10 📱 | INT | — | none | real | No customer demanded at ANY step; no Moadian UI anywhere; finalize + print/PDF work | UI journey | ✅ — A10-D1-*.png |
-| A11 | INT | — | customer | real | Customer optional-attach works; still zero Moadian friction | UI journey | ✅ (optional select verified on internal wizard) |
+| A11 | INT | — | customer | real | Customer optional-attach works AND is **reload-proof** (persists on SELECTION — the select live-saves like the نوع switch; leaving via the stepper must not drop it); still zero Moadian friction | UI journey | ✅ re-walked 2026-07-30 (accountant batch Part 5 — was select-only «verified», the untested seam where the bug lived) |
+| A11b 📱 | INT (پیش‌فاکتور) | — | customer | real | The accountant's exact journey: پیش‌فاکتور «فروش لوازم» → select customer → leave step VIA THE STEPPER → reload → customer still attached; readiness reads «خریدار این سند ثبت شده است.» (never «بدون ثبت مشتری … مصرف‌کنندهٔ نهایی» — rule 1); finalize → badges «پیش‌فاکتور» + «صادرشده» (NEVER the contradictory «نهایی‌شده» pair); list card shows the customer name | UI journey + harness spec 16 | ✅ walked 2026-07-30 — proforma-*.png |
 | A12 | TAX | 2 | none | **zero-total** (100% discount) | THE live smoke on دیباتک: finalize → validate → LIVE submit → org ACCEPTED «ثبت شده»; ZERO-TOTAL law honored | UI journey, دیباتک LIVE | ✅ LIVE ثبت شد، بدون تذکر — A12-*.png |
 
 ## B — Draft lifecycle

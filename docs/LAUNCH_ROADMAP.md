@@ -500,6 +500,89 @@ matrix rows citing old taxids) — NOT DONE**, carried forward under the batch's
 rule. Nothing was half-built or left dangling; the resume plan is in
 `docs/PRIORITY_BATCH_STATE.md`.
 
+## ACCOUNTANT-FEEDBACK batch — real-tester findings, 7 items (2026-07-30)
+
+The first REAL accountant tester's findings: 4 bugs, 2 features, 1 reporting gap.
+All 7 landed. Proof screenshots: `digi-tax-frontend/qa-screens/accountant-batch/`.
+
+- ✅ **Part 1 — «پرداخت‌شده» moves real money (bug, accounting-law class).**
+  Create-purchase read `payment_status` NOWHERE: a خرید saved پرداخت‌شده produced
+  zero payment rows and derived right back to پرداخت‌نشده (the accountant's
+  shots 1–2). Now: paid resolves to full total, جزئی requires the amount, and
+  BOTH require «از کدام حساب؟» (same picker + inline add-account empty state as
+  cheques; default صندوق pre-selected). The payment materializes through the
+  real engine — account debited, vendor ledger row, balanced voucher — and the
+  edit dialog got the same account requirement. Legacy cosmetic-flag purchases
+  left untouched (they honestly derive unpaid). Expense + income quick-creates
+  audited: both already required a real account (no cosmetic flag). 5-case pg
+  test incl. atomic account validation + overpay 422. Proven live: بانک ملت
+  fell exactly ۱۲٬۵۰۰٬۰۰۰ and the list row derived «پرداخت‌شده».
+- ✅ **Part 2 — purchase-return direction (bug).** The shared return dialog
+  showed sales copy on purchases. Now direction-aware: «پول را پس گرفتید؟» +
+  «اگر نه، از بدهی شما به تأمین‌کننده کم می‌شود» (print hints + guide S5-05 +
+  contract doc too). Ledger directions AUDITED with a 4-case pg test (2 types ×
+  2 toggle states, debits/credits + VAT reversal asserted in all 4) — backend
+  postings were already correct. Proven live: refund came INTO بانک ملت, exactly
+  +۲٬۵۰۰٬۰۰۰.
+- ✅ **Part 3 — decimal quantity RTL (bug, «۱۱۲۸۰/»).** `normalizeDecimalInput`
+  now accepts «/», «٫» and a lone «،» as decimal separators (repeated «،» stays
+  pasted grouping); display uses the bidi-AN Persian «٫» so a trailing separator
+  can never flip sides; the live formatter keeps typed fractions VERBATIM
+  («112.80» was literally untypeable — every keystroke re-trimmed the zero);
+  backend Numeric(20,4) padding is stripped at input-init (`rialToInputValue`).
+  The ad-hoc RTL quantity inputs (purchase line تعداد, product stock fields)
+  became `DecimalInput`. Read-only quantities go through a new `formatQuantity`.
+  12 codepoint-pinned unit tests. GRILL CATCH: the caret landed BEFORE a
+  just-typed separator so «0/76» became «۰۷۶٫» — pre-existing (a typed «.» did
+  it too), fixed in `DecimalInput`.
+- ✅ **Part 4 — unit chip + واحد دوم (feature, the stone-shop case).** Products
+  carry an optional free-text واحد دوم + ضریب («۱ جعبه = ۰٫۷۶ متر مربع»,
+  migration `rsch1404a007`). The invoice line editor shows the official-unit
+  chip; dual-unit products get a typing-unit toggle with the live conversion
+  («۹۵ جعبه = ۷۲٫۲ متر مربع») and an optional «گرد کردن به بالا» (primary
+  recomputes from the whole-box count). STORED/Moadian quantity is ALWAYS the
+  primary official unit (`am`/`mu` untouched — spec-safe); the pair is
+  snapshotted per line and prints as «۷۲٫۲ (۹۵ جعبه)». Excel import gained
+  optional column Q «تعداد به واحد دوم» (barcode-resolved products). Purchase
+  lines show the product unit read-only (purchases store no unit — follow-up if
+  the accountant wants more). Guide S4-21 + whats-new.
+- ✅ **Part 5 — پیش‌فاکتور lost its customer + contradictory tags (bug).** Two
+  real defects + one copy defect: (a) the customer Select was the ONLY wizard
+  control with no live-persist — leaving via the stepper (or any refetch)
+  silently dropped it; it now saves on selection like the نوع switch. (b) the
+  readiness message ignored the attached buyer («بدون ثبت مشتری…» while a
+  customer WAS attached) — now buyer-aware, and internal docs get neutral copy
+  (no «مصرف‌کنندهٔ نهایی» Moadian wording — matrix rule 1). (c) tag model: a
+  finalized پیش‌فاکتور now reads «پیش‌فاکتور» + «صادرشده», never the
+  contradictory «نهایی‌شده» pair. New harness spec 16 walks the accountant's
+  exact journey (stepper path + reload + finalize + list card); matrix rows
+  A11 (reload-proof) + A11b added. BONUS walk catch: internal docs' derived
+  title began with a literal «undefined» (`internal` vs `internal_private` map
+  key) — fixed.
+- ✅ **Part 6 — «مرور حساب» (the reporting gap).** New journal-backed statements:
+  `GET /reports/party-statement` (every event touching a customer/vendor —
+  invoices, purchases, payments, returns, cheque lifecycle, manual vouchers —
+  with بدهکار/بستانکار/مانده running balance) and `GET /reports/account-statement`
+  (گردش bank/صندوق from the account's تفصیلی leaf, reconciles the treasury
+  formula by construction). Fresh for merchants WITHOUT accountant-view
+  (best-effort journal regen on read). Server-paginated with a window-function
+  running balance that stays true per row under search AND pagination;
+  PDF/Excel/CSV via the shared export engine; every row deep-links to its
+  source document (+ «جزئیات» voucher link when نمای حسابدار is on). Entry
+  points: customers/vendors row actions, party-balances report names, and
+  «گردش حساب» on every account card. ENGINE EXTENSION: refunded returns with a
+  known party now post in the classical pass-through form (Dr+Cr the party
+  account, net zero) so the برگشت is VISIBLE in the party's statement — batch-B
+  invariants still green. Proven live on the accountant's own ask: the vendor
+  statement shows the Part-1 paid purchase and the Part-2 refunded return,
+  running balance to the ریال (closing = the vendor list's مانده), and the bank
+  گردش closes at exactly the balance «حساب‌های من» shows.
+
+Migration this batch: **`rsch1404a007`** (products second-unit pair + invoice
+line snapshot columns). New pg tests: return ledger directions (4), purchase
+paid-at-creation (5), statements (4). Known-baseline 7 FakeDBSession failures
+unchanged (1441 passed).
+
 ## RESEARCH-APPLICATION batch — the tax numbers stop being «برآوردی» (2026-07-28)
 
 Authority: `docs/tax_research_1404.md` (founder-supplied). Applied numbers with

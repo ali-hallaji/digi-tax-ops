@@ -1,5 +1,41 @@
 # Ops Progress
 
+## ACCOUNTANT-FEEDBACK BATCH (2026-07-30) — 7/7 landed; see LAUNCH_ROADMAP.md for the full narrative
+
+The first real accountant tester's findings: 4 bugs, 2 features, 1 reporting gap.
+Everything landed and was proven on the accountant's exact journeys (screenshots in
+`digi-tax-frontend/qa-screens/accountant-batch/`).
+
+1. **پرداخت‌شده moves real money** — create-purchase honoured `payment_status`
+   nowhere; now paid/جزئی REQUIRE «از کدام حساب؟» and materialize a REAL payment
+   through the engine (status stays derived). Edit dialog too. Expense/income
+   quick-creates audited clean. Legacy cosmetic rows untouched.
+2. **Purchase-return direction** — dialog copy direction-aware («پول را پس
+   گرفتید؟»); 4-case pg direction audit (both types × both toggle states, VAT
+   reversal asserted) — postings were already correct.
+3. **Decimal quantity RTL** — «/»، lone «،» و «٫» accepted as decimal input;
+   display uses bidi-safe «٫»; live formatter keeps typed fractions (112.80 was
+   untypeable); ad-hoc RTL quantity inputs → DecimalInput; caret-before-separator
+   bug fixed (grill catch, pre-existing).
+4. **واحد دوم** — migration `rsch1404a007`; product pair (name+factor), line
+   typing-unit toggle + ceil-to-whole-box, snapshot on the line, print «۷۲٫۲
+   (۹۵ جعبه)», Moadian am/mu untouched, Excel column Q.
+5. **پیش‌فاکتور customer loss + tags** — customer Select live-persists (the
+   stepper path dropped it); readiness copy buyer-aware + internal docs lose
+   Moadian wording; finalized proforma = «صادرشده» (never «نهایی‌شده» pair);
+   harness spec 16; matrix A11 reload-proof + A11b. Bonus: internal derived
+   title literally began with «undefined» — fixed.
+6. **مرور حساب** — `/reports/party-statement` + `/reports/account-statement`:
+   journal-backed (regen-on-read for non-accountant tenants), window-function
+   running balance true under pagination/search, exports, per-row drill links;
+   entry points on customers/vendors/balances/accounts. Engine: refunded
+   returns post through the party (pass-through, net zero) so برگشت shows in
+   the statement; batch-B invariants green.
+
+Gates: backend 1441 pass / 7 (documented FakeDBSession baseline) / 9 skip;
+ruff + black clean; FE typecheck + build + 71 unit tests (12 new codepoint
+tests) green; new pg tests 13. Deploy: migration `rsch1404a007` must be applied.
+
 ## PRE-PRODUCTION BATCH (2026-07-26) — NOT deployed; awaiting founder GO
 
 The production bring-up is no longer a document — it has been **run**, twice from

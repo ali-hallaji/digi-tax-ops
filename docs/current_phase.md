@@ -1,6 +1,14 @@
 # Current Phase - Ops
 
-Last updated: 2026-07-29
+Last updated: 2026-07-30
+
+> **2026-07-30 — ACCOUNTANT-FEEDBACK batch shipped (7/7).** Real-tester findings:
+> پرداخت‌شده now moves real money (account required), purchase-return copy
+> direction-aware (+4-case ledger audit), decimal-separator RTL fix, واحد دوم
+> dual-unit products (migration **`rsch1404a007`** — apply on every deploy),
+> پیش‌فاکتور customer persistence + «صادرشده» tag model, and «مرور حساب» party +
+> account statements with drill-down. Details: `docs/LAUNCH_ROADMAP.md` +
+> `docs/progress.md`.
 
 > **2026-07-29 — Batch 5 Parts 4+5 shipped.** حقوق و دستمزد v1 (پرسنل، سند ماهانه،
 > فیش PDF، سند حسابداری، mark-paid، گزارش) and بارکد via the phone camera.
