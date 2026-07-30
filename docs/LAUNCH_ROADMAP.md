@@ -583,6 +583,30 @@ line snapshot columns). New pg tests: return ledger directions (4), purchase
 paid-at-creation (5), statements (4). Known-baseline 7 FakeDBSession failures
 unchanged (1441 passed).
 
+## MICRO-CLEANUP — the 4 flagged accountant-batch leftovers (2026-07-30)
+
+- ✅ **Negative money formatting.** `formatMoneyIn` fell through to the raw
+  fallback on a leading «-» («-۱۹۵۵۰۰۰۰۰ ریال», the demo صندوق). Negatives now
+  format the magnitude and re-attach the sign in the same «− » form
+  `formatSignedMoney` uses (RTL-safe inside `.num` runs) — fixed centrally, so
+  cards/statements/reports/dashboard all inherit it. Grilled live on the
+  accounts card and the صندوق statement (opening, closing AND per-row running
+  balances all negative-formatted).
+- ✅ **Percent displays.** `formatVatRate` is now string-safe: Numeric padding
+  trimmed, real fractions keep «٫» («10.0000» → «۱۰», «9.5» → «۹٫۵»); the two
+  ad-hoc renders (smart-line summary chip, corrective line-row) now route
+  through it. Chip proven live: «مالیات ۱۰٪».
+- ✅ **Excel samples regenerated.** All four `moadian-import-sample*.xlsx` now
+  carry the column-Q header «تعداد به واحد دوم» (header only — a non-empty Q
+  without a dual-unit barcode row is an importer error by design). Script:
+  `digi-tax-ops/scripts/add_sample_second_unit_column.py` (idempotent).
+- ✅ **Purchase-line unit snapshot.** Migration **`rsch1404a008`**:
+  `purchase_lines.unit_code/unit_name` snapshot from the product at save-time
+  (server-side, one query per purchase), so a later product-unit edit can
+  never rewrite what a historical purchase was bought in. Display-only, no UX
+  change; response additive. pg test pins snapshot + survival of a product
+  edit + null on free-description lines.
+
 ## RESEARCH-APPLICATION batch — the tax numbers stop being «برآوردی» (2026-07-28)
 
 Authority: `docs/tax_research_1404.md` (founder-supplied). Applied numbers with

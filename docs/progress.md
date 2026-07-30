@@ -1,5 +1,14 @@
 # Ops Progress
 
+## MICRO-CLEANUP (2026-07-30) — 4 accountant-batch leftovers closed
+
+Negative money formatted everywhere («− ۱۹۵,۵۰۰,۰۰۰ ریال», fixed centrally in
+formatMoneyIn); percent displays trimmed (formatVatRate string-safe, chip
+«مالیات ۱۰٪»); Excel samples regenerated with the column-Q header (script
+`scripts/add_sample_second_unit_column.py`); purchase lines snapshot the
+product unit at save-time (migration **`rsch1404a008`** — apply on deploy).
+Details: LAUNCH_ROADMAP.md § MICRO-CLEANUP.
+
 ## ACCOUNTANT-FEEDBACK BATCH (2026-07-30) — 7/7 landed; see LAUNCH_ROADMAP.md for the full narrative
 
 The first real accountant tester's findings: 4 bugs, 2 features, 1 reporting gap.
