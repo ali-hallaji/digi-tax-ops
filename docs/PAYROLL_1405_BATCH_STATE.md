@@ -1,32 +1,38 @@
 # PAYROLL-1405 batch — state + resume plan
 
-_Cut 2026-07-31 on the new desktop. Steps 0/1/2 SHIPPED (committed, gates green);
-Parts 3/4 NOT STARTED — this doc is the resume contract so the next session
-starts building, not re-deriving._
+_Updated 2026-07-31 (second session). Step 0-APEX SHIPPED; Part 3 engine + a
+latent voucher bug landed; Part 3 persistence/UI + Part 4 remain._
 
-## Shipped (safe committed baseline)
+## NEW since the first cut
 
-| Piece | Commits | Proof |
+| Piece | Commits | State |
 |---|---|---|
-| Enamad file at web root + landing audit | frontend `b4a71af` (deployed to dev) | `curl https://dev.digiinvoice.ir/15027996.txt` → 200 · text/plain · 0B |
-| 1405 parameter engine (wage decree, ceiling formula, sourced ماده ۸۵, admin page) | backend `b2452e3` · frontend `805fa67` | 22 payroll tests; psql-verified columns; live OpenAPI shows `/admin/tax-parameters` |
-| Insurance export DSKKAR00/DSKWOR00 | backend `bb3b1fb` · frontend `eb2ec79` | DBF round-trip tests; harness spec 17 (fail-path + real zip bytes) |
+| Apex landing bundle + 4 real footer pages (قوانین/حریم/تماس/راهنما) | frontend `bc5fdba` · ops `f756a90` | DONE — dev serves all 4 + txt (curl-proven); zip `dist/landing_apex_2026-07-31.zip` + `docs/apex_landing_deploy_note.md`; contact values are placeholders → founder fills `digi-tax-frontend/src/lib/landing-pages.json` keys `contact.phone/email/postalAddress` (lines 3–5) |
+| Voucher bug: حق مسکن/پایهٔ سنوات missing from PAYROLL_COMPONENTS → unbalanced سند on confirm | backend `8624822` | FIXED (5318/5319), pg-pinned |
+| Settlement ENGINE (pure calc + 8 worked-example tests) | backend `84eb13e` | DONE — `app/modules/payroll/application/settlement.py` |
 
-Migrations applied locally: `pay1405a001`, `pay1405a002` (psql-verified, not
-just alembic). Seeds run locally: `seed_payroll_params_1405` (idempotent — MUST
-be re-run on dev after deploy). Layout doc: `tamin_dbf_layout.md` (most fields
-«تأییدنشده» pending the official لیست دیسک viewer check — that check GATES the
-first real upload).
+## Part 3 — REMAINING (build in this order)
 
-## ⛔ Founder-owned blockers surfaced by this batch
+1. Migration `pay1405a003` — `employee_settlements` exactly per the banked design
+   below (unchanged).
+2. Service: quote (GET preview from engine + `resolve_wage_decree` +
+   `load_active_tax_table_meta(kind="article_84")`; hourly basis = 90-day avg
+   from payroll_items) → create(draft) → pay(treasury account; like
+   set_run_status "paid") → void (standard). employee.is_active=False on pay.
+3. Journal: mirror the payroll block in
+   `app/modules/accounting/application/journal.py` (~line 780) for settlements:
+   debit new components سنوات پایان کار/عیدی/بازخرید مرخصی (add to
+   PAYROLL_COMPONENTS: e.g. 5320/5321/5322), credit 2103/<کارمند> net + 2105
+   tax; pay leg closes 2103 from the treasury account. Balanced-voucher pg test
+   like `test_voucher_balances_with_housing_and_seniority`.
+4. PDF: variant of `payslip.py` renderer titled «تسویه‌حساب».
+5. Routes + contract entries (PAY-1405 section).
+6. UI wizard (employee row action در تب پرسنل): date+reason → leave days +
+   breakdown → account → paid; PDF button; guide walkthrough SAME commit.
+7. Harness settlement spec (persona p2's employee — after spec 17 they have
+   insurance numbers; end assert: employee inactive + zero balance).
 
-1. **Enamad apex**: digiinvoice.ir → 185.46.217.162 («Central Core Front»,
-   cert only for central.digiinvoice.ir, no access from this workspace). The
-   Enamad checker cannot succeed until the apex serves our stack.
-2. **Landing Enamad prerequisites**: dead `#` footer links (قوانین/حریم
-   خصوصی/تماس با ما/راهنما) and NO phone/email/address on the landing.
-3. **Tamin field catalog**: obtain «دفترچهٔ راهنمای تهیهٔ لیست حق بیمه» (new
-   ساختار آذر ۱۴۰۳) from samt.tamin.ir — flips the layout doc's تأییدنشده rows.
+## Part 4 — unchanged from the banked spec below.
 
 ## Part 3 — تسویه‌حساب (NOT started; design decisions BANKED — build these)
 
