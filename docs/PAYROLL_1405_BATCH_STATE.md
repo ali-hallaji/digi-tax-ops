@@ -43,7 +43,19 @@ green local (رضا کارگر: سنوات 772,853,698 + عیدی 42,360,990 + �
 Grill catches: chart sync for settlement-only tenants; wizard تومان/ریال
 label; PDF header unicode. Accountant Qs unchanged (3 toggles + عیدی-excess).
 
-## Part 4 — ⬜ STILL NOT STARTED (97% rule, second stop) — spec unchanged below.
+## Part 4 — ✅ SHIPPED (2026-08-01) — THE BATCH IS COMPLETE
+
+Backend `65ea1c7` · frontend `1e3780d`: payroll_economy/growth/advanced in the
+STANDARD machinery (FEATURES + module_prices + history + partner credit +
+trial — zero new systems). `payroll_tier_enforced` flag DEFAULT OFF (mirror of
+document_cap_enforced; production flip = founder). Flag ON gates: headcount
+۵/۲۰/نامحدود · insurance-export رشد+ · تسویه‌حساب پیشرفته; non-purchasers keep
+basic payroll at economy limits (founder-tunable reading, recorded here).
+`seed_payroll_sku` seeds monthly-rial equivalents of the banked ANNUAL anchors
+(1.8M/3.6M/6.5M toman → 1,500,000/3,000,000/5,416,666 ﷼/ماه ROUND_DOWN),
+notes «پیشنهاد اولیه — تأیید نهایی مؤسس pending» + research §5-2 citation —
+run it on deploy. Marketplace cards + admin editor render from the registry;
+spec 18 asserts flag-OFF access + the three cards on sale.
 
 
 ## Part 3 — تسویه‌حساب (NOT started; design decisions BANKED — build these)
