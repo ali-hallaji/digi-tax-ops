@@ -32,7 +32,19 @@ latent voucher bug landed; Part 3 persistence/UI + Part 4 remain._
 7. Harness settlement spec (persona p2's employee — after spec 17 they have
    insurance numbers; end assert: employee inactive + zero balance).
 
-## Part 4 — unchanged from the banked spec below.
+## Part 3 — ✅ SHIPPED (2026-08-01 session)
+
+Backend `bfca97b`+`e78106c`+`fb8d6c5`, frontend (wizard+spec18): migration
+pay1405a003 · engine+service+routes+journal (5320/5321/5322; leaf==0 pg-proven)
+· برگهٔ تسویه PDF (ASCII filename — Persian in Content-Disposition 500s) ·
+wizard 3 steps + guide · harness spec 18 (self-resetting via void). UI walk
+green local (رضا کارگر: سنوات 772,853,698 + عیدی 42,360,990 + بازخرید
+155,380,624 − مالیات 0 = خالص 970,595,312 ریال; leaf zero; inactive).
+Grill catches: chart sync for settlement-only tenants; wizard تومان/ریال
+label; PDF header unicode. Accountant Qs unchanged (3 toggles + عیدی-excess).
+
+## Part 4 — ⬜ STILL NOT STARTED (97% rule, second stop) — spec unchanged below.
+
 
 ## Part 3 — تسویه‌حساب (NOT started; design decisions BANKED — build these)
 
