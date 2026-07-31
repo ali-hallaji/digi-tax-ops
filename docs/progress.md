@@ -1,5 +1,19 @@
 # Ops Progress
 
+## PAYROLL-1405 BATCH (2026-07-31) — Steps 0/1/2 shipped; Parts 3/4 banked
+
+Enamad `15027996.txt` live on dev (apex digiinvoice.ir is founder-blocked — DNS
+points at a foreign host, see LAUNCH_ROADMAP § PAYROLL-1405). 1405 parameter
+engine (wage decree + insurance ceiling formula + sourced ماده ۸۵ → 1405 payslips
+drop «برآوردی»; admin «پارامترهای سال» page, audited PUT). Insurance-list export
+(pure-python DBF + Iran System, DSKKAR00/DSKWOR00 zip, friendly 422s, layout doc
+`tamin_dbf_layout.md` with per-field source status — viewer check gates first
+real upload). Migrations `pay1405a001..2`; seed `seed_payroll_params_1405`
+(re-run on deploy). Commits: backend `b2452e3`+`bb3b1fb`, frontend
+`b4a71af`+`805fa67`+`eb2ec79`. تسویه‌حساب + SKU gating: NOT built — full resume
+contract in `docs/PAYROLL_1405_BATCH_STATE.md`.
+
+
 ## MICRO-CLEANUP (2026-07-30) — 4 accountant-batch leftovers closed
 
 Negative money formatted everywhere («− ۱۹۵,۵۰۰,۰۰۰ ریال», fixed centrally in

@@ -583,6 +583,42 @@ line snapshot columns). New pg tests: return ledger directions (4), purchase
 paid-at-creation (5), statements (4). Known-baseline 7 FakeDBSession failures
 unchanged (1441 passed).
 
+## PAYROLL-1405 batch — Enamad + parameter engine + insurance export (2026-07-31, IN PROGRESS)
+
+Authority: `docs/research_pricing_modules_1405.md` (founder-supplied). State/resume:
+`docs/PAYROLL_1405_BATCH_STATE.md`. Machine note: this is the first batch cut on
+the NEW desktop (fresh migration; docker client-proxy quirk documented in state doc).
+
+**Step 0 — Enamad ✓ (dev; apex BLOCKED, founder-owned).** Empty `15027996.txt`
+ships from frontend `public/` (commit `b4a71af`, deployed to dev — 200/text-plain/0B
+at dev.digiinvoice.ir). ⛔ The REAL Enamad check hits **https://digiinvoice.ir**,
+whose DNS points at 185.46.217.162 — a host serving an unrelated app («Central
+Core Front») with a cert for `central.digiinvoice.ir` only; no SSH/access exists in
+this workspace (ports 22/6543 refused/timeout). Until the founder points the apex at
+our stack (or grants access + fixes the cert), «تایید بارگذاری» will fail. Landing
+Enamad-prereq gaps (audit, NOT fixed): footer links قوانین/حریم خصوصی/تماس با ما/راهنما
+are dead `#`; no phone/email/postal address anywhere on the landing.
+
+**Part 1 — 1405 parameter engine ✓** (backend `b2452e3` · frontend `805fa67`).
+Migration `pay1405a001` (حق مسکن + پایهٔ سنوات on employees/payroll_items, both in
+the insurance base; حق اولاد exclusion test-pinned). Insurance ceiling as FORMULA
+(7 × min_wage_daily × real month days, بند ۱۳). `seed_payroll_params_1405`: 22
+sourced params (فرمول‌ها به‌صورت ضریب، نه ثابت), ماده ۸۵ table sourced → 1405 runs
+drop «برآوردی»; 3 settlement toggles honest «تأییدنشده». Audited admin
+GET/PUT `/admin/tax-parameters` + new admin page «پارامترهای سال».
+
+**Part 2 — insurance export ✓** (backend `bb3b1fb` · frontend `eb2ec79`).
+Pure-python dBASE III writer + Iran System encoder (contextual forms; Persian runs
+visual-order, identifiers logical — unit-caught bug). `pay1405a002` (کد کارگاه on
+tenants + insurance-number snapshot). One calm button «فایل لیست بیمه این ماه» →
+DSKKAR00+DSKWOR00 zip; friendly 422s. Layout + هر فیلد با وضعیت منبع:
+`docs/tamin_dbf_layout.md` — most mappings «تأییدنشده» until one real month opens in
+the official لیست دیسک viewer (empirical gate BEFORE first real upload; the org
+manual was unreachable from this network). Harness spec 17 (fail-path + real zip).
+
+**Part 3 — تسویه‌حساب ⬜ NOT STARTED** (design decisions banked in the state doc).
+**Part 4 — SKU gating ⬜ NOT STARTED** (pricing seeds specified in the state doc).
+
 ## MICRO-CLEANUP — the 4 flagged accountant-batch leftovers (2026-07-30)
 
 - ✅ **Negative money formatting.** `formatMoneyIn` fell through to the raw
