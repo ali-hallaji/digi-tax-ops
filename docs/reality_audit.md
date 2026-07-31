@@ -2,7 +2,8 @@
 
 **Audit date:** 2026-06-17  
 **Auditor:** Claude Code (read-only, no files modified except this report)  
-**Workspace root:** `/home/hitman47/Public/projects/digitax-workspace`
+**Workspace root:** `<workspace-root>/` (the directory holding the three sibling repos;
+the path differs per machine)
 
 > **Needs re-audit (flagged 2026-06-19):** The following phases completed *after*
 > this audit's capture date. Sections listed below are stale; the rest of this

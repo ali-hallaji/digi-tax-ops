@@ -571,7 +571,7 @@ verify نشد).
 
 ---
 
-## ۲. ریپوها (workspace: /home/hitman47/Public/projects/digitax-workspace)
+## ۲. ریپوها (workspace: `<workspace-root>/` — مسیر در هر ماشین متفاوت است)
 
 - **digi-tax-backend** — FastAPI, PostgreSQL, Alembic, Redis. Docker-first برای تست.
 - **digi-tax-frontend** — React + TanStack Router + TypeScript + Tailwind v4 (RTL)، pnpm. Dev روی localhost:8080. Base URL شامل `/api/v1` است — پس API کالِ فرانت بدون `/api/v1` (مثلاً `/customers`).
