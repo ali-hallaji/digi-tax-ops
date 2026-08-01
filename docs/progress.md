@@ -1,5 +1,45 @@
 # Ops Progress
 
+
+## 2026-08-02 — نسبت مالکانه + دنیای دیباتک + بستن تخفیف همکار
+
+**Part 1 — نسبت مالکانه (backend `9efbd64` · frontend `09e4db0`)**
+- Ratio cards carry `display: percent|ratio`; مالکانه/حاشیه‌ها render as percents.
+- Equity locked to the accountant's definition (سرمایه + اندوختهٔ قانونی + سود
+  انباشته), **excluding جاری شرکا** — which now counts as a current liability.
+- Bands are ADMIN PARAMS `ownership_ratio_low` / `ownership_ratio_high`
+  (percent, defaults 15/20) — red / amber / green. دیباتک reads ۸۷٫۵٪ green.
+- Shared `OwnershipHighlightCard` sits atop «تحلیل‌های مالی» AND above the تراز.
+
+**Part 2 — the books and the world**
+- The «14 legacy short journal rows» premise was FALSE: zero unbalanced entries,
+  every group net exactly 0. The gap was a ratios classification bug, fixed at
+  the cause in `59efeec`; **no correcting entries were injected**. Full write-up:
+  `docs/dibatak_books_and_world.md`.
+- 09120000000 enriched to full-module harmony via
+  `scripts/enrich_dibatak_world.py` (real API, idempotent, NO Moadian call):
+  incomes 0→5, transfers 0→1, cheques 2→5 across four real states, purchases
+  2→5 with mixed payment status, expenses 3→10 across the year, a dual-unit
+  product (جعبه ↔ مترمربع), POS mapping, and a برگشت از خرید.
+- Second blank persona **09300000001** appended (`181f57f`); admin user count
+  20→21 in the same commit and the generated summary line now DERIVES it (it had
+  drifted to ۱۸/۱۳).
+
+**Part 3 — تخفیف همکار closed (frontend `5e0b090`, `e7836c8`)**
+- Partner discount screen (percent + per-module scope, admin bounds shown,
+  server-clamped value rendered honestly) + current discount on «مشتریان من».
+- The flaky checkout was the first-visit TOUR auto-firing over «فعال‌سازی»;
+  auto-fire is now suppressed on `/app/plans/*` only, «؟» replay unaffected.
+- Proof captured at 390px AND desktop by a new harness spec asserting the
+  discount line sits above «مبلغ قابل پرداخت» (۲٬۰۰۰٬۰۰۰ − ۳۰۰٬۰۰۰ = ۱٬۷۰۰٬۰۰۰).
+- No code box at checkout (founder decision) — the line says «از طرف همکار معرف
+  شما — بدون نیاز به وارد کردن کد.» Partner + admin guide entries same commit.
+
+**Part 4 — full guide audit: BANKED** per the batch's own bank order.
+
+**Gates:** pytest 30/30 on the touched suites · ruff/black clean · typecheck 0 ·
+build ✓ · `pnpm harness` 20 passed / 1 skipped (local). Nothing pushed.
+
 ## RATIOS + PARTNER-UX BATCH (2026-08-01 عصر)
 
 «تحلیل‌های مالی» SHIPPED — ratio set built from the accountant's workbook
