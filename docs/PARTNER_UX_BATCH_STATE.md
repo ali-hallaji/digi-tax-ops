@@ -29,7 +29,16 @@ contrasts them first. Behaviour when **both** filled: independent, both apply
 (access + referral are unrelated records). **Neither**: nothing happens; the
 merchant keeps full use of their own books.
 
-## 🟡 Item 1 — backend is ALREADY DONE; only the admin UI is missing
+## ✅ Item 1 — SHIPPED (2026-08-02)
+
+Backend was already complete (rates, 0–100 validation, audit history,
+future-only accruals). Shipped this session: «تاریخچهٔ تغییر نرخ» on the admin
+commission card (reads the existing `partner_commission` audit rows via a new
+additive `entity_id` filter on `/admin/audit-logs`), plus the missing half of
+the future-only pin — `test_a_rate_change_applies_to_the_next_activation`.
+Frontend `<commission-card>`, backend `087ac54`.
+
+## (historical) Item 1 audit — backend was already done
 
 Audited `app/modules/partners/`:
 
@@ -52,7 +61,35 @@ the partner detail page, and render the existing audit rows as a «تاریخچ�
 نرخ» list. Plus the mandated test: change a rate → assert an OLD accrual's
 snapshot is untouched and a NEW activation uses the new rate.
 
-## ⬜ Item 3 — partner discounts (NOT started; build with the rule above)
+## 🟢 Item 3 — SHIPPED backend + checkout line (2026-08-02); ONE proof gap
+
+DONE: migration `pdisc001`; admin floor/ceiling as `tax_parameters`
+(`partner_discount_floor`/`ceiling`, unit `percent`, audited history for free);
+`GET/PUT /partner/discount` with SERVER-side clamp; checkout applies per item,
+keeps list price for the receipt, pays the gateway the net; **commission
+accrues on `net_amount`** (the money rule); order snapshots percent + basis;
+merchant pricing view exposes the discount so the checkout screen shows the
+«تخفیف همکار» line BEFORE paying. 12 anti-gaming tests (monotonicity, tamper,
+rounding, scope). Backend `aedf72c`.
+
+PROVEN LIVE (API): admin bounds 0–20 → partner set 15% → tamper 95% clamped to
+20% → merchant pricing returns `{percent: 15.00}` for پخش آریا (referred by
+HAM-TEST1).
+
+REMAINING (small):
+1. **Screenshot of the checkout discount line** — the temp spec kept timing out
+   on the plans→checkout click (a first-visit guided tour overlays it; even
+   after dismissing, the «فعال‌سازی» → continue path was flaky). The line is
+   implemented + typechecked + built; it just is not photographed yet.
+2. **Partner-panel UI** for setting the discount — only the API exists; the
+   partner currently has no screen (admin can set it for them via DB/API).
+3. **Guides** (partner + admin) for the discount — NOT yet written.
+4. A note for the founder: the merchant does NOT «enter a code at checkout» —
+   the referral code is entered once in settings and the discount follows the
+   referring partner. If you want a code box AT checkout, that is a separate
+   (small) change.
+
+## (historical) Item 3 plan
 
 1. **Admin bounds** — new params (floor/ceiling) with history. Mirror
    `module_prices` + `module_price_history`, or extend `tax_parameters` with a
