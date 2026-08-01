@@ -61,7 +61,32 @@ the partner detail page, and render the existing audit rows as a «تاریخچ�
 نرخ» list. Plus the mandated test: change a rate → assert an OLD accrual's
 snapshot is untouched and a NEW activation uses the new rate.
 
-## 🟢 Item 3 — SHIPPED backend + checkout line (2026-08-02); ONE proof gap
+## ✅ Item 3 — CLOSED (2026-08-02, ownership batch)
+
+All four gaps from the earlier pass are now shut:
+
+1. **Proof captured.** `tests/e2e-harness/specs/checkout-partner-discount.spec.ts`
+   walks پخش آریا (09120001003, referred by HAM-TEST1) plans → checkout at BOTH
+   390px and 1440px and asserts «تخفیف همکار (٪۱۵)» renders ABOVE «مبلغ قابل
+   پرداخت» (bounding-box comparison, not just presence). Live numbers:
+   ۲٬۰۰۰٬۰۰۰ − ۳۰۰٬۰۰۰ = ۱٬۷۰۰٬۰۰۰ ریال.
+2. **Why it was flaky, and the real fix.** The first-visit tour auto-fired ~700ms
+   after mount and its overlay covered «فعال‌سازی», so the click hit the overlay.
+   `PURCHASE_PATHS` in `page-tour.tsx` now blocks AUTO-FIRE on `/app/plans/*`
+   only; the «؟» replay still opens the tour there, and no other page changed.
+   The tour is suppressed on money paths, not weakened.
+3. **Partner panel UI shipped** — `PartnerDiscountCard` on «پروفایل و کد همکار»:
+   percent + per-module scope, shows the admin floor/ceiling, and renders the
+   SERVER-clamped value (with a warning toast when a clamp happened) rather than
+   echoing what was typed. Current discount also shows on «مشتریان من».
+4. **Guides shipped** in the same commit — partner scenario `partner-discount`
+   and admin scenarios `partner-discount-bounds` + `partner-commission-rate`.
+
+FOUNDER DECISION recorded in the UI: **no code box at checkout.** The referral
+code stays a one-time settings entry, and the checkout line now says so —
+«از طرف همکار معرف شما — بدون نیاز به وارد کردن کد.»
+
+## (historical) Item 3 — SHIPPED backend + checkout line (2026-08-02); ONE proof gap
 
 DONE: migration `pdisc001`; admin floor/ceiling as `tax_parameters`
 (`partner_discount_floor`/`ceiling`, unit `percent`, audited history for free);
