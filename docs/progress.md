@@ -1,5 +1,17 @@
 # Ops Progress
 
+## RATIOS + PARTNER-UX BATCH (2026-08-01 عصر)
+
+«تحلیل‌های مالی» SHIPPED — ratio set built from the accountant's workbook
+(formulas extracted, not cached values), computed from the real ledger:
+۱۴ نسبت + سود و زیان درصدی، هر کارت با فرمول و ورودی‌های قابل راستی‌آزمایی،
+۷ واگرایی فایل با فرمول استاندارد + برچسب «سؤال از حسابدار»، بنر کنترل تراز.
+۱۷ تست تطبیقی با مقادیر خود شیت. مستند: `docs/financial_ratios_mapping.md`.
+Partner UX: item 2 (دو کد هم‌شکل) SHIPPED؛ item 1 backend از قبل کامل بود
+(فقط UI مانده)؛ item 3 (تخفیف همکار) با قاعدهٔ پولی نهایی بانک شد →
+`docs/PARTNER_UX_BATCH_STATE.md`.
+
+
 ## EVAL BATCH (2026-08-01) — data + persona shipped; ratios skipped; partner UX banked
 
 دیباتک enriched via real API (4 varied employees, 2 paid 1405 runs, insurance
