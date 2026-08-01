@@ -1,5 +1,18 @@
 # Ops Progress
 
+## EVAL BATCH (2026-08-01) — data + persona shipped; ratios skipped; partner UX banked
+
+دیباتک enriched via real API (4 varied employees, 2 paid 1405 runs, insurance
+zip, paid settlement ۵۶۲٬۸۸۰٬۸۲۳﷼, payroll_advanced active) — script
+`scripts/enrich_dibatak_payroll.py`, idempotent, identical figures local+dev.
+«کاربر خام» 09300000000 appended (dev-OTP only, `seed_blank_persona`); fixtures
+users count 19→20 reconciled (spec 05). Financial-ratios part SKIPPED — gate
+file `accountant_financial_ratios_sample.xls` absent. Partner commission/
+referral/discount part BANKED: `docs/PARTNER_UX_BATCH_STATE.md` (founder's
+spec arrived truncated at the checkout semantics — must be re-sent). Dev:
+backend `7d766b5` · frontend `1e3780d`. Harness 18/1skip green.
+
+
 ## PAYROLL-1405 BATCH (2026-07-31) — Steps 0/1/2 shipped; Parts 3/4 banked
 
 Enamad `15027996.txt` live on dev (apex digiinvoice.ir is founder-blocked — DNS
