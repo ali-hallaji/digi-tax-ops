@@ -21,10 +21,21 @@ x-backend-common: &backend-common
   build:
     context: ../digi-tax-backend
     dockerfile: Dockerfile
+    # Same reason as the frontend build below: a loopback-bound local proxy is
+    # invisible from a bridge-network build container (~/.docker/config.json
+    # rewrites it to 172.17.0.1, which refuses). Host networking lets apt/pip
+    # reach 127.0.0.1. Harmless where no proxy is set (the args default empty).
+    network: host
     args:
       # Deploy-verification: baked into GET /health/version. The deploy exports
       # BACKEND_SHA=$(git -C ../digi-tax-backend rev-parse HEAD) before building.
       GIT_SHA: ${BACKEND_SHA:-unknown}
+      HTTP_PROXY: ${BACKEND_BUILD_HTTP_PROXY:-}
+      HTTPS_PROXY: ${BACKEND_BUILD_HTTPS_PROXY:-}
+      ALL_PROXY: ${BACKEND_BUILD_ALL_PROXY:-}
+      http_proxy: ${BACKEND_BUILD_HTTP_PROXY:-}
+      https_proxy: ${BACKEND_BUILD_HTTPS_PROXY:-}
+      all_proxy: ${BACKEND_BUILD_ALL_PROXY:-}
   env_file: ${STACK_ENV_FILE:-.env}
   networks:
     - digi-tax-network
