@@ -1,6 +1,80 @@
 # Ops Progress
 
 
+## 2026-08-03 — اینماد + درگاه زیبال (خاموش) + حقوق v2.1
+
+**Part A — نماد اعتماد الکترونیکی (frontend `1b20b0f` · ops `03b5642`)**
+- Enamad's own markup (id=7118850), byte-faithful: `referrerpolicy`, the anchor,
+  and the img `code` attribute are what their crawler reads. In the React
+  landing footer AND in all five pages of the apex bundle.
+- The image STAYS on `trustseal.enamad.ir` — self-hosting fails their check. It
+  is the single external request in an otherwise offline bundle.
+- A 96×100 box is reserved so a slow/blocked seal never shifts the footer.
+  Measured CLS contribution from the seal: **zero** (0.00227 at 390px with and
+  without the image — identical).
+- **`logo.aspx` returns 403 from any origin that is not the registered domain**,
+  so the seal will not render until apex is live on `https://digiinvoice.ir`
+  with a valid certificate. That is expected, not a bug — recorded in
+  `docs/apex_landing_deploy_note.md`. Empty `alt` ⇒ no broken-image icon.
+- New bundle: `dist/landing_apex_2026-08-03.zip` (the 07-31 one was removed).
+
+**Part B — درگاه پرداخت زیبال: implemented, tested LIVE, shipped OFF
+(backend `c3e9f0a` · frontend `1c14801` · ops `22f715a`)**
+- Migration **`gwy001`** — `payment_gateway_settings` (one default enforced by a
+  partial unique index).
+- **Two switches, deliberately separate.** `<NAME>_ENABLED` = provisioned (ops,
+  env). The admin screen «درگاه‌های پرداخت» = offered + which is default
+  (commercial, no redeploy). The overlay can only ever NARROW the env.
+  `PAYMENT_GATEWAY` now only picks the default AMONG enabled ones — naming a
+  disabled gateway there no longer enables it.
+- **Found and fixed:** the founder's `.env` carries `ZIBAL_MERCHANT`, the code
+  read `ZIBAL_MERCHANT_ID` — the token was silently empty. Now both spellings
+  resolve.
+- Every adapter DECLARES its unit and converts only inside itself
+  (`wire_amount`, ROUND_DOWN on the تومان path). BitPay is an interface-only
+  stub with `unit=None`, so it refuses rather than guessing an endpoint.
+- **LIVE cycle against real Zibal** (official test merchant `zibal`, no money):
+  our API minted trackId `4713707836` carrying our order id as `orderId` →
+  Zibal's real start page → «پرداخت تستی موفق» → Zibal 302'd to our callback →
+  verify 100 → order paid. **Replay of the identical callback: order unchanged,
+  `paid_at` unchanged, entitlement events 1 (not 2)**, and Zibal's own second
+  verify returned `{"message":"previously verifed","result":201}` — the 201 case,
+  live. An UNPAID trackId is refused by the real gateway (`result: 202`).
+- Hardened along the way: amount-mismatch rejection on verify, a row lock so two
+  callbacks cannot both activate (the `document_pack` consumable is the only SKU
+  that can expose this — pinned), verify goes to the gateway that MINTED the
+  order rather than the current default, and `gateway_ref` falls back to the
+  trackId (the live test merchant returns no `refNumber`).
+- **Disabled-state proven:** admin view `provisioned=false/offered=false`,
+  merchant pricing `choices: []` (invisible), and `gateway:"zibal"|"bitpay"|
+  "zarinpal"` → 409 «درگاه پرداخت انتخاب‌شده در دسترس نیست» with NO order row
+  left behind.
+
+**Part C — حقوق v2.1: اضافه‌کار ساعتی + مأموریت (backend `b3c5213` ·
+frontend `4ad99a7` · ops `c141e3f`)**
+- Migration **`pay1405a004`**, then `python -m app.cli.seed_payroll_params_1405`
+  (without `overtime_multiplier` اضافه‌کار is ZERO — deliberate).
+- اضافه‌کار = (حقوق پایه + پایهٔ سنوات) ÷ D × ۱٫۴ × ساعت, ROUND_DOWN. D is a
+  per-business setting (NULL ⇒ ۲۱۹٫۹ flagged «رویهٔ رایج»). A typed amount is
+  kept but flagged «اضافه‌کار دستی».
+- مأموریت got معین **5323** — without a cost leg the سند would have gone
+  unbalanced, the same way حق مسکن once did.
+- Verified rial-for-rial on دیباتک's مرداد ۱۴۰۵ run: حسن ساعتی ۲۶ ساعت →
+  ۱۴٬۸۹۷٬۶۸۰ ﷼ inside the insurance base; لیلا دوفرزندی ۴ روز مأموریت →
+  ۱۰٬۰۰۰٬۰۰۰ ﷼ in gross and net, and out of BOTH bases (taxable
+  ۳۲۳٬۴۱۱٬۱۱۰ = gross ۳۵۵٬۲۵۱٬۱۱۰ − mission ۱۰٬۰۰۰٬۰۰۰ − بیمهٔ کارگر
+  ۲۱٬۸۴۰٬۰۰۰، to the ریال).
+- **DEFERRED per the batch's own bank order (settlement-v2 first, then loans):
+  وام و مساعده registry and settlement-v2 two-column.** Details + the accounting
+  trap in the loan work: `docs/PAYROLL_1405_BATCH_STATE.md`.
+
+**Gates:** pytest 1571 pass / 4 fail / 9 skip (all 4 inside the documented
+5-failure fake-session baseline — no new failures) · ruff + black clean ·
+typecheck 0 · build clean · guide no-drift 73/73.
+**Captcha stayed ON throughout** — every login (curl and browser) solved a real
+Altcha PoW; nothing was disabled.
+
+
 ## 2026-08-02 — نسبت مالکانه + دنیای دیباتک + بستن تخفیف همکار
 
 **Part 1 — نسبت مالکانه (backend `9efbd64` · frontend `09e4db0`)**

@@ -129,6 +129,23 @@ bash scripts/preflight.sh
 bash scripts/smoke_test.sh          # includes the Deploy-Verification guard (below)
 ```
 
+> **2026-08-03 — after `alembic upgrade head` lands `pay1405a004`, ALSO run:**
+> ```bash
+> docker compose exec api python -m app.cli.seed_payroll_params_1405
+> ```
+> It adds `overtime_multiplier` (ماده ۵۹, ۱٫۴) plus the two مأموریت toggles.
+> **Without `overtime_multiplier`, اضافه‌کار computes as ZERO** — that is
+> deliberate (an unsourced wage number never ships), but on a live box it looks
+> exactly like a broken feature. Verify with psql, not by trusting the CLI:
+> ```bash
+> docker compose exec postgres psql -U digitax -d digitax -c \
+>   "select key,value,is_estimated from tax_parameters where year='1405' \
+>    and key in ('overtime_multiplier','mission_tax_free','mission_insurance_free');"
+> ```
+> Migration `gwy001` (payment_gateway_settings) lands in the same upgrade and
+> seeds nothing — an absent row means «offered», so behaviour is unchanged until
+> an admin touches a switch.
+
 > **Never `docker system prune --volumes`** on this server. The postgres data
 > lives in a named volume; `--volumes` would delete the database. Prune only
 > `image` and `builder` (both safe). See CLAUDE gotcha #14 lineage.

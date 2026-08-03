@@ -1,7 +1,54 @@
 # PAYROLL-1405 batch — state + resume plan
 
-_Updated 2026-07-31 (second session). Step 0-APEX SHIPPED; Part 3 engine + a
-latent voucher bug landed; Part 3 persistence/UI + Part 4 remain._
+_Updated 2026-08-03 (PAYROLL v2.1 session). Overtime-from-hours + مأموریت
+SHIPPED; loans and settlement-v2 DEFERRED per the batch's own bank order._
+
+## PAYROLL v2.1 (2026-08-03) — what shipped
+
+| Piece | Commits | State |
+|---|---|---|
+| اضافه‌کار from HOURS (ماده ۵۹) + per-business «مبنای ساعت ماهانه» | backend `b3c5213` · frontend `4ad99a7` | DONE — migration **`pay1405a004`** |
+| ردیف مأموریت, outside insurance AND tax (two admin toggles) | same | DONE — معین **5323** «فوق‌العادهٔ مأموریت» |
+| Eval data on 09120000000 (مرداد paid w/ hours+mission, شهریور editable draft) | ops `c141e3f` | DONE — `scripts/enrich_dibatak_payroll.py` |
+
+**Deploy steps for this migration:** `alembic upgrade head` (pay1405a004) THEN
+`python -m app.cli.seed_payroll_params_1405` — without `overtime_multiplier`
+اضافه‌کار computes as ZERO (deliberate: an unsourced wage number does not ship).
+
+**The formula, once, so it is never re-derived:**
+اضافه‌کار = (حقوق پایه + پایهٔ سنوات) ÷ D × ضریب × ساعت, ROUND_DOWN.
+· ضریب = `overtime_multiplier` tax parameter (1.4, sourced to ماده ۵۹). Unseeded ⇒ ZERO.
+· D = `tenants.payroll_monthly_hours_basis`. NULL ⇒ 219.9 flagged `is_estimated`
+  («رویهٔ رایج — پیشنهاد حسابدار»); UI offers 219.9 / 220 / 192 / custom.
+· A typed AMOUNT still works but sets `overtime_is_override` and renders as
+  «اضافه‌کار دستی» — the payslip never lets a hand-typed figure look derived.
+· اضافه‌کار stays INSIDE both bases; مأموریت stays OUTSIDE both (pinned).
+· DSKWOR `DSW_MASH` is the stored `insurance_base`, so the بیمه file and the
+  payslip cannot drift: overtime in, mission out (pinned in `test_payroll_pg`).
+
+**Accountant questions raised (both shipped as `is_estimated=True` toggles):**
+`mission_insurance_free` (ماده ۳۰ ق.ت.ا؟) and `mission_tax_free` (بند ۳ ماده ۹۱
+ق.م.م؟) — the research doc quotes neither article's text, so both are visible
+admin switches rather than buried defaults.
+
+## PAYROLL v2.1 — DEFERRED (the founder's own bank order: settlement-v2 first, then loans)
+
+3. **وام و مساعده registry** — per-employee (amount, installment, start month),
+   auto-deduction each run, balance on the employee card, stops at zero,
+   early-settle, outside insurance/tax bases. NOT started. Today's workaround is
+   «سایر کسورات» with a «بابت» note (the row editor's placeholder literally says
+   «مثلاً قسط وام»), which deducts correctly but tracks no balance.
+   Accounting note for whoever builds it: the installment's CREDIT leg belongs
+   on a «وام و مساعده کارکنان» receivable, which means the GRANT has to be
+   booked too — otherwise the asset goes negative. That is the part that makes
+   this bigger than a deduction field.
+4. **Settlement v2 two-column** — additions (pro-rated final-month salary +
+   عیدی + سنوات + مرخصی + سایر) vs deductions (remaining loan + that month's
+   insurance + tax + سایر), NET ROUND_DOWN, balanced voucher, zero leaf, both
+   columns on the PDF. NOT started; v1 (single-column) is live and unchanged.
+   Depends on the loan registry for its «remaining loan» row.
+
+## Earlier state (kept for reference)
 
 ## NEW since the first cut
 
