@@ -12,9 +12,11 @@ skipped, so re-running never duplicates.
 Creates (only if absent):
   · treasury account «بانک حقوق» with a large opening balance
   · workshop code on the business settings
-  · 4 employees: سقف‌شکن (above the insurance ceiling) · دوفرزندی (حق اولاد)
-    · ساعتی (low base + overtime) · مستعفی (to be settled)
-  · payroll runs خرداد+تیر ۱۴۰۵ → confirmed → PAID from «بانک حقوق»
+  · 4 employees: سقف‌شکن (above the insurance ceiling) · دوفرزندی (حق اولاد
+    + a 4-day مأموریت) · ساعتی (low base + ۲۶ ساعت اضافه‌کار from the formula)
+    · مستعفی (to be settled)
+  · payroll runs خرداد+تیر+مرداد ۱۴۰۵ → confirmed → PAID from «بانک حقوق»,
+    plus شهریور left as an editable پیش‌نویس
   · insurance-list zip downloaded once (proof; discarded)
   · settlement for مستعفی (resignation, ۹ روز مرخصی) → paid → PDF (proof)
   · payroll_advanced entitlement for the business (admin_manual, founder actor)
@@ -199,7 +201,14 @@ def main() -> None:
     # ── two paid 1405 runs (خرداد=3، تیر=4) ─────────────────────────────
     st, accounts = req("/treasury/accounts", token=tok)
     bank = next(a for a in accounts["items"] if a["title"] == "بانک حقوق")
-    for month in (3, 4):
+    # مرداد (5) is the PAYROLL v2.1 month: اضافه‌کار from hours and a مأموریت
+    # line. خرداد/تیر stay as they were — a paid document is never rewritten,
+    # so the new behaviour has to arrive on a NEW month, exactly as it would
+    # for a real business.
+    # شهریور (6) is left as a DRAFT on purpose: every other month is paid and
+    # therefore locked, which leaves nowhere to actually TRY «ویرایش ردیف».
+    # An eval world with no editable document is a demo you can only look at.
+    for month in (3, 4, 5, 6):
         st, run = req(
             "/payroll/runs",
             {"jalali_year": "1405", "jalali_month": month},
@@ -218,7 +227,9 @@ def main() -> None:
             print(f"✓ run 1405/{month} created")
         if run["status"] == "paid":
             continue
-        # ساعتی worker gets overtime on his row (hourly-style variability).
+        # PAYROLL v2.1 — the ساعتی worker's اضافه‌کار now comes from HOURS, so
+        # the eval world shows the ماده ۵۹ formula rather than a typed amount
+        # (which would render as «اضافه‌کار دستی» and prove nothing).
         hourly_item = next(
             (
                 i
@@ -230,10 +241,30 @@ def main() -> None:
         if hourly_item and run["status"] == "draft":
             req(
                 f"/payroll/runs/{run['id']}/items/{hourly_item['id']}",
-                {"overtime": "45000000"},
+                {"overtime_hours": "26"},
                 token=tok,
                 method="PATCH",
             )
+        # …and the حسابدار goes on a 4-day مأموریت: paid, but outside both the
+        # insurance base and the taxable base.
+        mission_item = next(
+            (
+                i
+                for i in run["items"]
+                if i["employee_id"] == ids.get("لیلا دوفرزندی")
+            ),
+            None,
+        )
+        if mission_item and run["status"] == "draft":
+            req(
+                f"/payroll/runs/{run['id']}/items/{mission_item['id']}",
+                {"mission_days": "4", "mission_daily_rate": "2500000"},
+                token=tok,
+                method="PATCH",
+            )
+        if month == 6:
+            print("✓ run 1405/6 left as پیش‌نویس — the editable one")
+            continue
         if run["status"] == "draft":
             st, run = req(
                 f"/payroll/runs/{run['id']}/status",
