@@ -262,6 +262,14 @@ def main() -> None:
                 token=tok,
                 method="PATCH",
             )
+        # NEVER confirm/pay a run with no rows. Found the hard way on dev: a
+        # stale EMPTY مرداد draft (created 2026-07-29, zero employees) was
+        # sitting there, and adding months to this loop confirmed and paid it —
+        # turning stale drift into an inert but undeletable «paid» document.
+        # An empty payroll document is not a document.
+        if not run.get("items"):
+            print(f"⚠ run 1405/{month} has no rows — left untouched")
+            continue
         if month == 6:
             print("✓ run 1405/6 left as پیش‌نویس — the editable one")
             continue
