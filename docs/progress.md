@@ -68,6 +68,37 @@ frontend `4ad99a7` · ops `c141e3f`)**
   وام و مساعده registry and settlement-v2 two-column.** Details + the accounting
   trap in the loan work: `docs/PAYROLL_1405_BATCH_STATE.md`.
 
+**Deploy (dev, 2026-08-03):** backend `b3c5213` · frontend `da63fe2` · ops
+`bb00855`. `alembic upgrade head` ran `gwy001` + `pay1405a004`, then
+`seed_payroll_params_1405`; all three parameters and all five payroll columns
+psql-verified on dev. New routes confirmed live from the OpenAPI doc INSIDE the
+container (nginx does not expose `/openapi.json` publicly — deliberate).
+`ZIBAL_ENABLED=false` on dev, `available_gateways() == ['sim']`. The live Zibal
+adapter probe was re-run FROM the dev server against the real gateway
+(trackId `4713784622`, start page 200, unpaid verify refused `result: 202`).
+Harness: green locally (21/2 skipped, single run) and green on dev
+(20 passed / 2 skipped / 1 flaky — the flake is `page.request.get("/og-image.png")`
+timing out over the network, unrelated to this batch, passed on retry).
+
+**Three things found, all recorded rather than smoothed over:**
+1. `smoke_test.sh` FAILS its CORS step on dev because it probes
+   `http://127.0.0.1:8080` while dev's `BACKEND_CORS_ORIGINS` is correctly
+   locked to `https://dev.digiinvoice.ir`. The real origin preflights 200.
+   **Pre-existing script/config mismatch — the smoke script needs an
+   origin argument.** Not caused by this batch, not fixed here.
+2. دیباتک had a stale EMPTY مرداد ۱۴۰۵ payroll draft on dev (created
+   2026-07-29, zero rows). Extending the eval script's month loop confirmed and
+   PAID it, turning stale drift into an inert-but-undeletable «paid» document.
+   Guard added (`bb00855`): a run with no rows is never confirmed or paid. **The
+   empty paid مرداد document is still on dev — it posts nothing to the دفاتر
+   (zero rows), but it needs a founder decision: leave it, or delete the row
+   directly (the app will not delete a paid document, by design).**
+3. Harness spec 18 went red on dev on the first run: نیک‌تجارت's employee was
+   ACTIVE while holding a PAID settlement, and the spec only reset itself when
+   NOBODY was active — a state it could not recover from. The void API was
+   verified healthy (HTTP 200) and the spec now resets unconditionally
+   (`da63fe2`). Not a code regression: the identical code was green locally.
+
 **Gates:** pytest 1571 pass / 4 fail / 9 skip (all 4 inside the documented
 5-failure fake-session baseline — no new failures) · ruff + black clean ·
 typecheck 0 · build clean · guide no-drift 73/73.
