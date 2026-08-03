@@ -15,8 +15,9 @@ Creates (only if absent):
   · 4 employees: سقف‌شکن (above the insurance ceiling) · دوفرزندی (حق اولاد
     + a 4-day مأموریت) · ساعتی (low base + ۲۶ ساعت اضافه‌کار from the formula)
     · مستعفی (to be settled)
-  · payroll runs خرداد+تیر+مرداد ۱۴۰۵ → confirmed → PAID from «بانک حقوق»,
+  · payroll runs خرداد+تیر+مرداد+مهر ۱۴۰۵ → confirmed → PAID from «بانک حقوق»,
     plus شهریور left as an editable پیش‌نویس
+  · two loans (حسن ساعتی، سعید بدهکار) with installments running from شهریور
   · insurance-list zip downloaded once (proof; discarded)
   · settlement for مستعفی (resignation, ۹ روز مرخصی) → paid → PDF (proof)
   · payroll_advanced entitlement for the business (admin_manual, founder actor)
@@ -131,6 +132,17 @@ EMPLOYEES = [
         "allowance_housing": "30000000",
     },
     {
+        "full_name": "سعید بدهکار",  # borrows, then leaves with a balance
+        "national_id": valid_national_id("990000005"),
+        "insurance_number": "70000005",
+        "job_title": "انباردار",
+        "hire_date": "2024-10-01",
+        "base_salary": "180000000",
+        "allowance_bon": "22000000",
+        "allowance_housing": "30000000",
+        "seniority_base": "5000010",
+    },
+    {
         "full_name": "مریم مستعفی",  # settled at the end
         "national_id": valid_national_id("990000004"),
         "insurance_number": "70000004",
@@ -208,7 +220,37 @@ def main() -> None:
     # شهریور (6) is left as a DRAFT on purpose: every other month is paid and
     # therefore locked, which leaves nowhere to actually TRY «ویرایش ردیف».
     # An eval world with no editable document is a demo you can only look at.
-    for month in (3, 4, 5, 6):
+    # ── وام و مساعده ───────────────────────────────────────────────────
+    # حسن ساعتی borrows and repays by installments (شهریور + مهر); سعید
+    # بدهکار borrows and LEAVES with a balance, so his تسویه‌حساب has to close
+    # the receivable. Both idempotent: an existing loan is detected and skipped.
+    st, loans = req("/payroll/loans", token=tok)
+    have = {loan["employee_id"] for loan in loans.get("items", [])}
+    for name, amount, installment, start_month in (
+        ("حسن ساعتی", "12000000", "4000000", 6),
+        ("سعید بدهکار", "20000000", "5000000", 6),
+    ):
+        if ids[name] in have:
+            print(f"· loan for {name} exists")
+            continue
+        st, loan = req(
+            f"/payroll/employees/{ids[name]}/loans",
+            {
+                "kind": "loan",
+                "amount": amount,
+                "installment_amount": installment,
+                "start_jalali_year": "1405",
+                "start_jalali_month": start_month,
+                "granted_from_account_id": bank["id"],
+                "granted_at": "2026-08-01",
+                "note": "وام ضروری",
+            },
+            token=tok,
+        )
+        assert st in (200, 201), loan
+        print(f"✓ loan {name}: {loan['amount']} ﷼، قسط {loan['installment_amount']}")
+
+    for month in (3, 4, 5, 6, 7):
         st, run = req(
             "/payroll/runs",
             {"jalali_year": "1405", "jalali_month": month},
@@ -221,6 +263,10 @@ def main() -> None:
                 for r in runs["items"]
                 if r["jalali_year"] == "1405" and r["jalali_month"] == month
             )
+            # The LIST endpoint strips `items` (a 50-month list with every
+            # payslip would be enormous), so re-read the DETAIL — otherwise the
+            # empty-run guard below reads «no rows» for every existing run.
+            st, run = req(f"/payroll/runs/{run['id']}", token=tok)
             print(f"· run 1405/{month} exists ({run['status']})")
         else:
             assert st in (200, 201), run
@@ -336,6 +382,44 @@ def main() -> None:
             f"مرخصی {paid['leave_buyback']} · مالیات {paid['income_tax']} · "
             f"خالص {paid['net_payable']} rial · PDF {len(pdf)}B"
         )
+
+    # ── settlement that CLOSES a loan — سعید بدهکار ─────────────────────
+    debtor_id = ids["سعید بدهکار"]
+    st, existing_debt = req(f"/payroll/employees/{debtor_id}/settlement", token=tok)
+    if existing_debt.get("settlement"):
+        print(f"· settlement (سعید بدهکار) exists ({existing_debt['settlement']['status']})")
+    else:
+        st, created = req(
+            f"/payroll/employees/{debtor_id}/settlement",
+            {
+                "termination_date": "2026-10-12",  # ۲۰ مهر ۱۴۰۵
+                "reason": "resignation",
+                "unused_leave_days": "5",
+            },
+            token=tok,
+        )
+        assert st in (200, 201), created
+        st, paid = req(
+            f"/payroll/settlements/{created['id']}/pay",
+            {"paid_from_account_id": bank["id"]},
+            token=tok,
+        )
+        assert st == 200, paid
+        st, pdf = req(f"/payroll/settlements/{created['id']}/pdf", token=tok, raw=True)
+        assert st == 200 and pdf[:4] == b"%PDF", (st, pdf[:60])
+        print(
+            "✓ settlement (سعید بدهکار) — افزودنی‌ها "
+            f"{paid['additions_total']} · کسورات {paid['deductions_total']} "
+            f"(وام {paid['loan_deduction']}) · خالص {paid['net_payable']} ﷼ · "
+            f"PDF {len(pdf)}B"
+        )
+        st, after = req("/payroll/loans", token=tok)
+        rest = [
+            loan
+            for loan in after["items"]
+            if loan["employee_id"] == debtor_id
+        ]
+        print(f"  مانده وام سعید پس از تسویه: {rest[0]['balance'] if rest else '—'} ﷼")
 
     # ── marketplace state: payroll_advanced active (admin_manual) ───────
     st, out = req(
