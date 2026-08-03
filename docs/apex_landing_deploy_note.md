@@ -1,15 +1,22 @@
 # استقرار لندینگ ایستا روی سرور apex (digiinvoice.ir) — سه قدم
 
-_Bundle: `digi-tax-ops/dist/landing_apex_2026-07-31.zip` (~450KB، کاملاً
+_Bundle: `digi-tax-ops/dist/landing_apex_2026-08-03.zip` (~450KB، کاملاً
 خودکفا: HTML + CSS + فونت وزیرمتن؛ بدون JS، بدون بک‌اند، بدون CDN). ساخته‌شده
 با `digi-tax-frontend/scripts/build-apex-landing.mjs` از همان متن‌هایی که صفحات
 اصلی رندر می‌کنند (`src/lib/landing-pages.json`)._
+
+> **۱۴۰۵-۰۵-۱۲ (2026-08-03):** «نماد اعتماد الکترونیکی» دیگر placeholder نیست —
+> مارک‌آپ رسمی اینماد (id=7118850) در فوتر هر پنج صفحهٔ این باندل و در فوتر
+> لندینگ React نشسته است. تصویر نماد **عمداً** روی `trustseal.enamad.ir` میزبانی
+> می‌ماند (تنها درخواست بیرونیِ این باندل)؛ اگر آن را روی سرور خودمان کپی کنیم،
+> بررسی اینماد رد می‌شود. جعبهٔ ۹۶×۱۰۰ پیکسلی برایش رزرو شده تا نماد کُند یا
+> در دسترس‌نبودن، فوتر را جابه‌جا نکند (CLS اندازه‌گیری‌شده: صفر سهم از نماد).
 
 ## قدم ۱ — آپلود
 
 ```bash
 # روی سرور apex (وب‌روت را با مسیر واقعی عوض کنید):
-unzip landing_apex_2026-07-31.zip -d /var/www/digiinvoice
+unzip landing_apex_2026-08-03.zip -d /var/www/digiinvoice
 ```
 
 ## قدم ۲ — nginx
@@ -41,9 +48,17 @@ curl -o /dev/null -sw '%{http_code}\n' https://digiinvoice.ir/terms/     # 200
 curl -o /dev/null -sw '%{http_code}\n' https://digiinvoice.ir/privacy/   # 200
 curl -o /dev/null -sw '%{http_code}\n' https://digiinvoice.ir/contact/   # 200
 curl -o /dev/null -sw '%{http_code}\n' https://digiinvoice.ir/guide/     # 200
+# نماد در فوتر هر پنج صفحه (باید ۵ بشود):
+grep -rl "trustseal.enamad.ir" /var/www/digiinvoice | wc -l
 ```
 
 بعد از سبز شدن هر شش خط، در پنل اینماد «تایید بارگذاری» را بزنید.
+
+> **نکتهٔ نماد:** `logo.aspx` از هر مبدأ دلخواهی سرو نمی‌شود — از این ماشین
+> (خارج از دامنهٔ ثبت‌شده) با ۴۰۳ پاسخ می‌دهد. یعنی تصویر نماد فقط وقتی واقعاً
+> رندر می‌شود که از خودِ `https://digiinvoice.ir` با TLS معتبر باز شود. تا آن
+> لحظه جعبهٔ رزروشده خالی می‌ماند (بدون آیکون شکسته، چون `alt=''`) و چیزی
+> نمی‌شکند — ولی «نماد دیده نمی‌شود» قبل از قدم certbot یک باگ نیست.
 
 ## تلفن/ایمیل/آدرس (الان placeholder است)
 
