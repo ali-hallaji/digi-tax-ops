@@ -1,7 +1,7 @@
 # PAYROLL-1405 batch — state + resume plan
 
-_Updated 2026-08-03 (PAYROLL v2.1 session). Overtime-from-hours + مأموریت
-SHIPPED; loans and settlement-v2 DEFERRED per the batch's own bank order._
+_Updated 2026-08-04. **The batch is complete**: overtime-from-hours, مأموریت,
+وام و مساعده, and the two-column تسویه‌حساب have all shipped. Nothing is banked._
 
 ## PAYROLL v2.1 (2026-08-03) — what shipped
 
@@ -31,22 +31,63 @@ SHIPPED; loans and settlement-v2 DEFERRED per the batch's own bank order._
 ق.م.م؟) — the research doc quotes neither article's text, so both are visible
 admin switches rather than buried defaults.
 
-## PAYROLL v2.1 — DEFERRED (the founder's own bank order: settlement-v2 first, then loans)
+## PAYROLL v2.1 — items 4 + 5 SHIPPED (2026-08-04)
 
-3. **وام و مساعده registry** — per-employee (amount, installment, start month),
-   auto-deduction each run, balance on the employee card, stops at zero,
-   early-settle, outside insurance/tax bases. NOT started. Today's workaround is
+| Piece | Commits | State |
+|---|---|---|
+| وام و مساعده as a REAL receivable (grant voucher, installments, early settle, void) | backend `04e831f`+`5358d7c` · frontend `f13a966` | DONE — migration **`pay1405a005`** |
+| تسویه‌حساب v2, the accountant's two columns | same | DONE — engine EXTENDED, not rebuilt |
+| Eval data: two loans running, one settlement closing a balance | ops `3d57958` | DONE |
+
+**The accounting, once:**
+```
+grant        بدهکار 1202/<کارمند>        بستانکار خزانه
+قسط (payslip) بدهکار — (withheld)        بستانکار 1202/<کارمند>
+early settle  بدهکار خزانه               بستانکار 1202/<کارمند>
+settlement    … افزودنی‌ها …             بستانکار 1202/<کارمند> (مانده) + 2104 + 2105
+                                          + 2101 (سایر کسورات) + 2103/<کارمند> (خالص)
+```
+معین **1202 «وام و مساعدهٔ کارکنان»** is in `_SKELETON`, so `ensure_chart`
+creates it for EXISTING tenants too — the settlement lesson, applied.
+
+**Guards that carry it (all pinned in `test_loans_pg.py`):**
+· repayment rows are UNIQUE per (loan, run) — a run recomputes on every edit
+· the installment clamps twice: never > the installment, never > what is owed
+· a repaid loan deducts NOTHING (no negative receivable)
+· deleting a run returns its installment to the balance
+· the installment credits the RECEIVABLE, never the payable leaf
+· voiding a settlement re-opens the loan it closed
+· an employee with a live loan cannot be deleted (friendly 409, not an FK 500)
+
+**Bug found and fixed mid-batch (`5358d7c`):** `active_loans_for_employee`
+filtered on `status == "active"`. An early settlement flipped the loan to
+«settled», the open draft then recomputed, found no active loan and DELETED the
+installment it had already withheld — the employee paid the lot and still owed
+one installment. **Status is a derived LABEL; the balance is the truth.** Pinned.
+
+**Known divergence, documented in the merchant guide:** «مانده» on the employee
+card counts the installment reserved by an OPEN DRAFT; the دفاتر only count
+confirmed documents. Confirming the run makes them agree. Not a bug — a draft
+is a working copy — but it is visible, so it is written down.
+
+**Accountant question raised:** the settlement's «سایر کسورات» free rows credit
+**2101 حساب‌های پرداختنی** (withheld and owed onward). Crediting the employee's
+own leaf would leave it non-zero after the payment closes only the net, which
+breaks the zero-leaf identity. Where each free row really belongs is per-case —
+worth confirming.
+
+**Deploy:** `alembic upgrade head` (pay1405a005). No new seed step.
+
+## PAYROLL v2.1 — the DEFERRED list, now closed
+
+3. **وام و مساعده registry** — ✅ SHIPPED 2026-08-04 (see above). Original note: Today's workaround is
    «سایر کسورات» with a «بابت» note (the row editor's placeholder literally says
    «مثلاً قسط وام»), which deducts correctly but tracks no balance.
    Accounting note for whoever builds it: the installment's CREDIT leg belongs
    on a «وام و مساعده کارکنان» receivable, which means the GRANT has to be
    booked too — otherwise the asset goes negative. That is the part that makes
    this bigger than a deduction field.
-4. **Settlement v2 two-column** — additions (pro-rated final-month salary +
-   عیدی + سنوات + مرخصی + سایر) vs deductions (remaining loan + that month's
-   insurance + tax + سایر), NET ROUND_DOWN, balanced voucher, zero leaf, both
-   columns on the PDF. NOT started; v1 (single-column) is live and unchanged.
-   Depends on the loan registry for its «remaining loan» row.
+4. **Settlement v2 two-column** — ✅ SHIPPED 2026-08-04 (see above).
 
 ## Earlier state (kept for reference)
 

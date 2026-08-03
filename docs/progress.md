@@ -1,6 +1,51 @@
 # Ops Progress
 
 
+## 2026-08-04 — وام و مساعده + تسویه‌حساب دوستونه (فهرست حسابدار بسته شد)
+
+**Part 1 — وام و مساعده (backend `04e831f` + `5358d7c` · frontend `f13a966`)**
+- Migration **`pay1405a005`**: `employee_loans`, `employee_loan_repayments`,
+  `payroll_items.loan_deduction`, and the settlement's deductions columns.
+- **A loan is a receivable, not a deduction field.** Granting one posts a real
+  voucher (بدهکار ۱۲۰۲/<کارمند>، بستانکار خزانه); each installment credits that
+  receivable, never the employee's payable leaf. معین **1202** lives in the
+  chart SKELETON so `ensure_chart` builds it for EXISTING tenants too.
+- Repayment rows are UNIQUE per (loan, run): a run recomputes on every edit, and
+  a running-total column would have drifted down one installment at a time.
+- The installment clamps twice — never more than the installment, never more
+  than what is owed. ۱۲م at ۴م/ماه ends ۴+۴+۴, and a repaid loan deducts zero.
+- Outside BOTH bases (pinned in both directions) and invisible to DSKWOR.
+- **Bug found and fixed mid-batch:** `active_loans_for_employee` filtered on
+  `status=="active"`. An early settlement flipped the loan to «settled», the open
+  draft recomputed, found no active loan and DELETED the installment it had
+  already withheld — the employee paid the whole loan and still owed ۳٬۰۰۰٬۰۰۰.
+  Status is a derived LABEL; the balance is the truth. Pinned by a named test.
+- Deleting an employee who holds a loan is now a friendly 409, not the raw FK
+  500 it would have been (gotcha 13 — the fake-session harness bypasses it).
+
+**Part 2 — تسویه‌حساب v2 (same commits)**
+- The existing engine EXTENDED, not rebuilt. افزودنی‌ها (حقوق ماه آخر به نسبت
+  روزهای کارکرد + سنوات + عیدی + مرخصی + سایر) vs کسورات (مانده وام + بیمهٔ همان
+  ماه + مالیات + سایر); NET = افزودنی‌ها − کسورات, ROUND_DOWN.
+- Proven on دیباتک's سعید بدهکار: حقوق ۲۰ روز ۱۲۰٬۰۰۰٬۰۰۰ + سنوات ۳۶۵٬۹۱۷٬۸۰۸
+  + عیدی ۱۱٬۸۳۵٬۶۱۶ + مرخصی ۳۹٬۵۰۰٬۰۰۱ = **۵۳۷٬۲۵۳٬۴۲۵**؛ کسورات وام
+  ۱۵٬۰۰۰٬۰۰۰ + بیمه ۸٬۴۰۰٬۰۰۰ (= ۷٪ × حقوق ماه آخر) = **۲۳٬۴۰۰٬۰۰۰**؛ خالص
+  **۵۱۳٬۸۵۳٬۴۲۵**. In the دفاتر, BOTH `12020002` (طلب وام) and `21030005`
+  (پرداختنی) net to **exactly 0.0000**, trial balance equal.
+- The PDF prints both columns side by side; historical single-column
+  settlements were back-filled by the migration so they still read correctly.
+- If the net cannot cover the loan, the deduction CLAMPS and the rest stays
+  owed — you cannot withhold more than you are paying.
+
+**Known divergence (documented in the merchant guide, not a bug):** «مانده» on
+the employee card counts the installment reserved by an OPEN DRAFT; the دفاتر
+only count confirmed documents. Confirming the run makes them agree.
+
+**Accountant question raised:** the settlement's «سایر کسورات» free rows credit
+2101 حساب‌های پرداختنی. Crediting the employee's own leaf would break the
+zero-leaf identity; where each free row really belongs is per-case.
+
+
 ## 2026-08-03 — اینماد + درگاه زیبال (خاموش) + حقوق v2.1
 
 **Part A — نماد اعتماد الکترونیکی (frontend `1b20b0f` · ops `03b5642`)**
