@@ -12,11 +12,20 @@ export code was corrected against them (21 header mismatches → 1 deliberate)._
 | **S1** | **«دستورالعمل تولید فایل های لیست بیمه سازمان تامین اجتماعی»** (PDF, 5pp, dated ۱۳۹۲/۰۸/۱۵) — <https://www.tamin.ir/file/file/8460>, linked from <https://www.tamin.ir/news/1673.html> | The org's written spec **addressed to third parties**: «چنانچه شما برای ایجاد فایل لیست بیمه خود از نرم افزار موجود روی سایت تامین اجتماعی استفاده نمی نمایید … فایل مورد نظر طبق فرمت ذیل باید ایجاد گردد». Field names, types, **maximum** lengths, column order, and the content rules. | direct download |
 | **S2** | **The template `DSKKAR00.DBF` / `DSKWOR00.DBF` shipped inside the official software** — `ListDisk-V2.7` (`/news/1673.html` → 5×RAR parts → `setup/Setup.msi` → `Cabs.w1.cab`) | The **binary header** the org's own program uses: exact names, types, **actual** lengths, order, and the codepage (LDID) byte. | direct download + header parsed programmatically |
 
-> **Version reality-check.** tamin.ir publishes **ListDisk v2.7** only (page «کد
-> مطلب: 1673», «تاریخ به روز رسانی: ۱۴۰۰/۰۲/۰۷»). There is **no v6 on the
-> official site** — the v6.x release notes seen elsewhere belong to **DSKEditor**,
-> a *third-party* tool (tavafi.ir). Our earlier «new structure since آذر ۱۴۰۳ /
-> v6» note traced to that third party, not to the سازمان.
+> **Version reality-check — CORRECTED 2026-08-04 (second pass).** An earlier
+> version of this doc said "there is no official v6". **That was wrong.**
+> tamin.ir's download page (`/news/1673.html`) hosts the **v2.7 full installer
+> only**, which is what led to the error — but **ListDisk v6 is official**,
+> released «در **دی ۱۴۰۳** توسط تامین اجتماعی» and distributed as an *update
+> patch* (`PrjList-V6.5.exe`) applied on top of an installed v2.7. Its own
+> setup guide says «فایل های DSKKAR00.DBF و DSKWOR00.DBF را … جایگزین دو فایل
+> قبلی نمایید (**ساختار فایل ها تغییر یافته است**)» and the in-app step is
+> «بروزرسانی به ورژن جدید **1403**». Separately, **DSKEditor** (tavafi.ir) is a
+> genuinely third-party tool that also has a v6.x — conflating the two is what
+> produced the bad call.
+> **S3** = the v6.5 update package, `bidbarg.net/blog/list-disk/` →
+> `documents/39/ListDisk_v6_5_zlNm5tK.rar`, retrieved 2026-08-04. It carries its
+> own `DSKKAR00.DBF`/`DSKWOR00.DBF` templates, parsed byte-for-byte below.
 
 > **Network note.** Iranian hosts are only reachable from the founder's machine
 > on the **direct (un-proxied)** route; the shell's default proxy egresses in
@@ -79,17 +88,17 @@ export code was corrected against them (21 header mismatches → 1 deliberate)._
 | 5 | DSW_ID1 | C | **8** | **10** | **شماره بیمه** | `employee.insurance_number` | ✅ name · **deviation ↓** |
 | 6 | DSW_FNAME | C | 60 | 100 | نام | first token of `full_name` | ✅ · gap ↓ |
 | 7 | DSW_LNAME | C | 60 | 100 | نام خانوادگی | rest of `full_name` | ✅ · gap ↓ |
-| 8 | DSW_DNAME | C | 60 | 100 | نام پدر | خالی | ✅ · gap ↓ |
-| 9 | DSW_IDNO | C | 15 | 15 | شماره شناسنامه | خالی | ✅ · gap ↓ |
-| 10 | DSW_IDPLC | C | 30 | 100 | محل صدور | خالی | ✅ · gap ↓ |
-| 11 | DSW_IDATE | C | 8 | 8 | تاریخ صدور | خالی | ✅ · gap ↓ |
-| 12 | DSW_BDATE | C | 8 | 8 | تاریخ تولد | خالی | ✅ · gap ↓ |
-| 13 | DSW_SEX | C | 3 | 3 | جنسیت («مرد»/«زن») | خالی | ✅ · gap ↓ |
-| 14 | DSW_NAT | C | 10 | 10 | ملیت | خالی | ✅ · gap ↓ |
+| 8 | DSW_DNAME | C | 60 | 100 | نام پدر | `employee.father_name` | ✅ (**now filled**) |
+| 9 | DSW_IDNO | C | 15 | 15 | شماره شناسنامه | `employee.birth_certificate_no` | ✅ (**now filled**) |
+| 10 | DSW_IDPLC | C | 30 | 100 | محل صدور | `employee.birth_certificate_place` | ✅ (**now filled**) |
+| 11 | DSW_IDATE | C | 8 | 8 | تاریخ صدور | `employee.birth_certificate_date` → Shamsi8 | ✅ (**now filled**) |
+| 12 | DSW_BDATE | C | 8 | 8 | تاریخ تولد | `employee.birth_date` → Shamsi8 | ✅ (**now filled**) |
+| 13 | DSW_SEX | C | 3 | 3 | جنسیت («مرد»/«زن») | `employee.gender` | ✅ (**now filled**) |
+| 14 | DSW_NAT | C | 10 | 10 | ملیت | `employee.nationality` | ✅ (**now filled**) |
 | 15 | DSW_OCP | C | 50 | 100 | شرح شغل | `employee.job_title` | ✅ (**now filled**) |
 | 16 | DSW_SDATE | C | 8 | 8 | تاریخ شروع به کار | `employee.hire_date` → Shamsi8 | ✅ (**now filled**) |
-| 17 | DSW_EDATE | C | 8 | 8 | تاریخ ترک کار | خالی | ✅ · gap ↓ |
-| 18 | DSW_DD | N | 2 | 2 | تعداد روزهای کارکرد | روزهای ماه | ✅ · **model gap** ↓ |
+| 17 | DSW_EDATE | C | 8 | 8 | تاریخ ترک کار | `employee.termination_date` → Shamsi8 | ✅ (**now filled**) |
+| 18 | DSW_DD | N | 2 | 2 | تعداد روزهای کارکرد | real overlap of [استخدام، ترک کار] with the period | ✅ (**was full-month**) |
 | 19 | DSW_ROOZ | N | 12 | 12 | دستمزد روزانه | `base_salary/30` ROUND_DOWN | ✅ |
 | 20 | DSW_MAH | N | 12 | 12 | دستمزد ماهانه | `base_salary` | ✅ |
 | 21 | DSW_MAZ | N | 12 | 12 | مزایای ماهانه | `insurance_base − base_salary` | ✅ |
@@ -97,7 +106,7 @@ export code was corrected against them (21 header mismatches → 1 deliberate)._
 | 23 | DSW_TOTL | N | 12 | 12 | جمع کل دستمزد و مزایا | `= MASH` | ✅ name · ⚠ mapping ↓ |
 | 24 | DSW_BIME | N | 12 | 12 | حق بیمه سهم بیمه‌شده | `insurance_employee` | ✅ |
 | 25 | DSW_PRATE | N | 2 | 2 | نرخ پورسانتاژ | `0` | ✅ |
-| 26 | DSW_JOB | C | 6 | 6 | کد شغل | خالی | ✅ · gap ↓ |
+| 26 | DSW_JOB | C | 6 | 6 | کد شغل | `employee.job_code` (از فهرست رسمی) | ✅ (**now filled**) |
 | 27 | PER_NATCOD | C | 10 | 10 | کد ملی | `national_id` snapshot | ✅ |
 
 ## What the diff caught — 21 header mismatches, all fixed
@@ -175,12 +184,15 @@ The structure is now sourced; **legibility and acceptance are not yet proven**.
 These are **data-model** gaps (the column is correct, we have nothing to put in
 it), not layout gaps:
 
-- **نام/نام‌خانوادگی** are split from one `full_name` on the first space — wrong
-  for compound first names. `DSW_DNAME` (نام پدر), `DSW_IDNO` (شماره شناسنامه),
-  `DSW_IDPLC`, `DSW_IDATE`, `DSW_BDATE`, `DSW_SEX`, `DSW_NAT`, `DSW_JOB` (کد شغل)
-  and `DSW_EDATE` have no field on `Employee` at all.
-- **روزهای کارکرد per item** — full month is assumed; a mid-month joiner/leaver
-  is currently over-reported.
+- **CLOSED 2026-08-04 (migration `ins1405a001`):** نام پدر، شمارهٔ شناسنامه،
+  محل/تاریخ صدور، تاریخ تولد، جنسیت، ملیت، کد شغل and تاریخ ترک کار are now real
+  `Employee` columns, and the export REFUSES with a friendly Persian message
+  naming who is missing what rather than shipping a blank legal column.
+- **CLOSED 2026-08-04:** روزهای کارکرد is the real overlap of the employment
+  window with the period (mid-month hire/termination), snapshotted per payroll
+  line so an issued payslip never changes retroactively.
+- **نام/نام‌خانوادگی** are still split from one `full_name` on the first space —
+  wrong for compound first names. Remaining gap.
 - **شمارهٔ لیست / نوع لیست** have no UI (both written empty; `DSK_KIND=0` is the
   required value so that one is fine).
 - **`DSK_TTOTL`/`DSW_TOTL`** are set equal to the مشمول total. Per S1 they are the
@@ -205,3 +217,80 @@ curl --noproxy '*' -L https://www.tamin.ir/news/1673.html      # download page
 7z x Cabs.w1.cab                      # → DSKKAR00.DBF, DSKWOR00.DBF
 ```
 Then read header byte 29 (LDID) and the 32-byte field descriptors from offset 32.
+
+
+---
+
+# ListDisk v6 (دی ۱۴۰۳) — the superset layout
+
+**Verdict: v6 is a strict SUPERSET of v2.7.** Parsed from the v6.5 update's own
+template DBFs (**S3**) and diffed against the v2.7 templates (**S2**):
+
+| | v2.7 | v6 | Relationship |
+|---|---|---|---|
+| DSKKAR00 | 23 cols, reclen 287 | **25** cols, reclen 311 | first 23 **byte-identical** (name/type/width/order) + 2 appended |
+| DSKWOR00 | 27 cols, reclen 447 | **29** cols, reclen 469 | first 27 **byte-identical** + 2 appended |
+| LDID (codepage) | KAR `0x7E`, WOR `0x00` | **`0x7E` on BOTH** | v6 settles it: **cp1256** |
+
+Not one existing column changed name, type, width or position. The «ساختار
+فایل ها تغییر یافته است» in the guide means *columns were added*, not moved.
+
+### The four new columns
+
+| File | # | Field | Type | Meaning | Our mapping |
+|---|---|---|---|---|---|
+| DSKKAR00 | 24 | `DSK_INC` | N12 | مجموع پایهٔ سنوات | `Σ seniority_base` |
+| DSKKAR00 | 25 | `DSK_SPOUSE` | N12 | مجموع حق تأهل | `Σ allowance_marriage` |
+| DSKWOR00 | 28 | `DSW_INC` | N12 | پایهٔ سنوات | `PayrollItem.seniority_base` |
+| DSKWOR00 | 29 | `DSW_SPOUSE` | **C10** | حق تأهل | `PayrollItem.allowance_marriage` |
+
+This is exactly the v6 headline feature: «امکان **جداسازی پایه سنوات و حق تاهل**
+در لیست بیمه». We already hold both figures per payroll line (they were folded
+into `DSW_MAZ` under 2.7), so v6 is fully populatable today.
+
+> ⚠️ **`DSW_SPOUSE` is Character(10) while `DSK_SPOUSE` is Numeric(12)** — an
+> asymmetry read straight from the org's binary, not a transcription slip. We
+> write the worker figure as a digit string. Semantics are inferred from the
+> release note, not from a field-by-field org spec: treat the *meaning* as
+> «تأییدنشده» until the viewer confirms, even though the *structure* is certain.
+
+### Which layout we emit
+
+Per-workshop setting **«نسخهٔ فایل لیست بیمه»** (`tenants.insurance_file_version`),
+default **`2.7`**, `6` selectable. Rationale: which build a given شعبه accepts
+cannot be established without a real upload, so the default is the layout the
+org's own full installer ships, and two workshops on different ListDisk builds
+are independently configurable. Flip to `6` once a workshop has run the ۱۴۰۳
+update — the two extra columns then carry real figures instead of hiding inside
+`DSW_MAZ`.
+
+Our emitted v6 header was diffed against S3 byte-for-byte: **25/25 and 29/29
+columns match** name/type/width/order, LDID `0x7E` on both, with the single
+deliberate `DSW_ID1` difference below.
+
+### `DSW_ID1` width — founder decision, now configurable
+
+Founder ruling: **KEEP 10** — truncating a شمارهٔ بیمه falsifies an identity.
+The org template says 8; the دستورالعمل publishes 10 as the maximum. Now
+`tenants.insurance_id1_width` (default 10) so the answer can change without a
+deploy.
+
+> **STANDING GATE — the final answer comes from the viewer, not from us.**
+> Before any real upload: open one real month in the official لیست دیسک program,
+> confirm the names are legible and `DSW_ID1` shows the شمارهٔ بیمه intact. If
+> the file is rejected or the column is mangled, set `insurance_id1_width = 8`
+> and re-export. Nothing here is proven until that happens.
+
+# کد شغل — the official occupational catalog
+
+`DSW_JOB` is **C6**, and the سازمان's published job list has **87,835 unique
+codes, max length 6** — the width match is the cross-check that this is the list
+the column expects.
+
+| Fact | Value |
+|---|---|
+| Source | «جدول مشاغل تأمین اجتماعی» official Excel — `bidbarg.net/blog/job-title-sso-list/` → `documents/94/440656.xlsm` |
+| Retrieved | 2026-08-04 |
+| Rows | 87,835 unique codes (from 175,578 sheet rows) |
+| Stored | `sso_job_codes` (code, title, **source**, **retrieved_at** per row) |
+| Import | `python -m app.cli.import_sso_job_codes` (gzipped TSV in `data/sso_job_codes/`, chunked upsert — the stuffid pattern) |

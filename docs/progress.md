@@ -3011,3 +3011,36 @@ still open and unstarted — see the follow-up note below.
 - The auth rate limiter (`authrl:*`) trips during a FULL harness run and fails
   `checkout-partner-discount` with a 429. Not a product bug, but the harness
   should clear or bypass it between specs rather than look red.
+
+## 2026-08-04 (second batch) — LISTDISK v6 VERDICT + EMPLOYEE FIELDS + HARNESS
+
+**v6 verdict — correcting my own earlier call.** I previously reported "no
+official v6; that belongs to a third-party tool". **Wrong.** ListDisk **v6 is
+official**, released «در دی ۱۴۰۳ توسط تامین اجتماعی» as an *update patch*
+(`PrjList-V6.5.exe`) applied over an installed v2.7 — which is why
+tamin.ir/news/1673.html hosts only the 2.7 full installer and I drew the wrong
+conclusion. DSKEditor (tavafi.ir) is a separate third-party tool that also has a
+v6.x; conflating them caused the error.
+Parsed the v6.5 package's own templates: **v6 is a strict SUPERSET** — all 23
+KAR + 27 WOR columns identical in name/type/width/order, plus `DSK_INC`/
+`DSK_SPOUSE` and `DSW_INC`/`DSW_SPOUSE` (پایهٔ سنوات + حق تأهل). v6 declares
+LDID `0x7E` on BOTH files, independently confirming last batch's cp1256 fix.
+**We emit:** per-workshop `tenants.insurance_file_version`, default **2.7**,
+`6` selectable. `insurance_id1_width` default 10 (founder ruling).
+**STANDING GATE unchanged:** the final word comes from opening one real month in
+the official viewer, not from us.
+
+**Employee fields + worked days.** Migration **`ins1405a001`** + `python -m
+app.cli.import_sso_job_codes` on every deploy. Six legal columns that had been
+shipping BLANK are now real data, the export refuses with a friendly Persian
+message naming who is missing what, and روزهای کارکرد is the real employment
+overlap instead of an assumed full month. 87,835 official کد شغل rows imported
+with source + retrieval date per row.
+Backend `d011e33`, frontend `0001bc6`.
+
+**Harness limiter (PART D).** The limiter itself is untouched — it is a real
+defence. The login helpers clear only `authrl:*`, and only against a local base
+URL. Full local run: **23 passed, 2 skipped, 0 failed**.
+
+**Still NOT shipped: PART C (intacode helper catalog).** Second batch running
+out of budget on it. Unstarted, nothing faked. It remains the top follow-up.
