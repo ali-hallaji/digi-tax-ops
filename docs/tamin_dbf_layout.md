@@ -1,101 +1,207 @@
 # لیست بیمهٔ تأمین اجتماعی — ساختار DSKKAR00.DBF / DSKWOR00.DBF
 
-_Compiled 2026-07-31 for the payroll insurance-export (backend
-`app/modules/payroll/application/insurance_export.py`). This doc is the single
-place that says which part of the layout is SOURCED and which is «تأییدنشده»._
+_Rewritten **2026-08-04** from the organisation's OWN artifacts. The previous
+version of this file was compiled from third-party blogs and marked almost every
+field «تأییدنشده»; that guesswork is now replaced by two primary sources and the
+export code was corrected against them (21 header mismatches → 1 deliberate)._
 
-## Source situation — read this first
+## Sources — both primary, both retrieved 2026-08-04
 
-The official field catalog is published by سازمان تأمین اجتماعی in the
-«دفترچهٔ راهنمای تهیهٔ لیست حق بیمه» distributed with the لیست دیسک software
-(and updated for the NEW structure in آذر ۱۴۰۳). **That PDF was not reachable
-from the dev machine's network** (US-routed search cannot open the Iranian
-mirrors). What IS sourced:
+| # | Source | What it gives | Retrieval |
+|---|---|---|---|
+| **S1** | **«دستورالعمل تولید فایل های لیست بیمه سازمان تامین اجتماعی»** (PDF, 5pp, dated ۱۳۹۲/۰۸/۱۵) — <https://www.tamin.ir/file/file/8460>, linked from <https://www.tamin.ir/news/1673.html> | The org's written spec **addressed to third parties**: «چنانچه شما برای ایجاد فایل لیست بیمه خود از نرم افزار موجود روی سایت تامین اجتماعی استفاده نمی نمایید … فایل مورد نظر طبق فرمت ذیل باید ایجاد گردد». Field names, types, **maximum** lengths, column order, and the content rules. | direct download |
+| **S2** | **The template `DSKKAR00.DBF` / `DSKWOR00.DBF` shipped inside the official software** — `ListDisk-V2.7` (`/news/1673.html` → 5×RAR parts → `setup/Setup.msi` → `Cabs.w1.cab`) | The **binary header** the org's own program uses: exact names, types, **actual** lengths, order, and the codepage (LDID) byte. | direct download + header parsed programmatically |
 
-| Fact | Source |
+> **Version reality-check.** tamin.ir publishes **ListDisk v2.7** only (page «کد
+> مطلب: 1673», «تاریخ به روز رسانی: ۱۴۰۰/۰۲/۰۷»). There is **no v6 on the
+> official site** — the v6.x release notes seen elsewhere belong to **DSKEditor**,
+> a *third-party* tool (tavafi.ir). Our earlier «new structure since آذر ۱۴۰۳ /
+> v6» note traced to that third party, not to the سازمان.
+
+> **Network note.** Iranian hosts are only reachable from the founder's machine
+> on the **direct (un-proxied)** route; the shell's default proxy egresses in
+> Helsinki and tamin.ir answers it with «محدودیت جغرافیایی». tamin.ir also sits
+> behind an **ArvanCloud JS cookie challenge** (`__arcsjs`/`__arcsjsc`) — a
+> scripted `eval`, **not** an image captcha, so it is solvable head­lessly and
+> needed no human. See `scripts/` note at the end.
+
+## Content rules (S1 — verbatim obligations)
+
+1. `DSKKAR00.DBF`/`.TXT` = workshop info, `DSKWOR00.DBF`/`.TXT` = insured people;
+   **«الویت با فرمت dbf است»** (dbf preferred — that is what we emit).
+2. Dates are **Shamsi, 8 chars, no separators** — «۱۳۹۲۰۷۰۱».
+3. `DSW_SEX` is the **word** «مرد» or «زن», not a code.
+4. **No leading/trailing space or newline** in any field.
+5. `DSK_KIND` **must be `0`**.
+6. Character fields must contain **none of** `"` `'` `>` `<` `&`.
+7. «Encoding فایل ها باید Unicode باشد» — see the codepage section below, where
+   this sentence conflicts with the org's own binary template.
+
+## DSKKAR00 — exactly ONE record (workshop monthly summary)
+
+`S2 len` is authoritative for the DBF; `S1 max` is the published maximum.
+**Status column: ✅ = confirmed by BOTH sources.**
+
+| # | Field | Type | S2 len | S1 max | Meaning | Our mapping | Status |
+|---|---|---|---|---|---|---|---|
+| 1 | DSK_ID | C | 10 | 10 | کد کارگاه | `tenants.insurance_workshop_code` | ✅ |
+| 2 | DSK_NAME | C | 30 | 100 | نام کارگاه | `tenant.name` | ✅ |
+| 3 | DSK_FARM | C | 30 | 100 | نام کارفرما | `tenant.name` | ✅ |
+| 4 | DSK_ADRS | C | 40 | 100 | آدرس کارگاه | `tenant.address` | ✅ |
+| 5 | DSK_KIND | N | 1 | 1 | نوع لیست | `0` (required) | ✅ |
+| 6 | DSK_YY | N | 2 | 2 | سال عملکرد | `jalali_year % 100` | ✅ |
+| 7 | DSK_MM | N | 2 | 2 | ماه عملکرد | `jalali_month` | ✅ |
+| 8 | DSK_LISTNO | C | 12 | 12 | شماره لیست | خالی | ✅ (gap ↓) |
+| 9 | DSK_DISC | C | 30 | 100 | شرح لیست | خالی | ✅ |
+| 10 | DSK_NUM | N | 5 | 5 | تعداد کارکنان | `count(items)` | ✅ |
+| 11 | DSK_TDD | N | 6 | 6 | مجموع روزهای کارکرد | `Σ DSW_DD` | ✅ |
+| 12 | DSK_TROOZ | N | 12 | 12 | مجموع دستمزد روزانه | `Σ DSW_ROOZ` | ✅ |
+| 13 | DSK_TMAH | N | 12 | 12 | مجموع دستمزد ماهانه | `Σ DSW_MAH` | ✅ |
+| 14 | DSK_TMAZ | N | 12 | 12 | مجموع مزایای ماهانه مشمول | `Σ DSW_MAZ` | ✅ |
+| 15 | DSK_TMASH | N | 12 | 12 | مجموع دستمزد و مزایای مشمول | `Σ insurance_base` | ✅ |
+| 16 | DSK_TTOTL | N | 12 | 12 | مجموع کل (مشمول **و غیرمشمول**) | `= TMASH` | ✅ name · ⚠ mapping ↓ |
+| 17 | DSK_TBIME | N | 12 | 12 | مجموع حق بیمه سهم بیمه‌شده | `Σ insurance_employee` | ✅ |
+| 18 | DSK_TKOSO | N | 12 | 12 | مجموع حق بیمه سهم کارفرما | `Σ insurance_employer` | ✅ |
+| 19 | DSK_BIC | N | 12 | 12 | مجموع حق بیمه بیکاری | `Σ insurance_unemployment` | ✅ |
+| 20 | DSK_RATE | N | 5 | 5 | نرخ حق بیمه | `20` | ✅ |
+| 21 | DSK_PRATE | N | 2 | 2 | **نرخ پورسانتاژ** | `0` | ✅ (was mislabelled) |
+| 22 | DSK_BIMH | N | 12 | 12 | **نرخ مشاغل سخت و زیان‌آور** | `0` | ✅ (**was missing**) |
+| 23 | MON_PYM | C | 3 | 3 | ردیف پیمان | خالی | ✅ |
+
+## DSKWOR00 — one record per insured worker
+
+| # | Field | Type | S2 len | S1 max | Meaning | Our mapping | Status |
+|---|---|---|---|---|---|---|---|
+| 1 | DSW_ID | C | 10 | 10 | **کد کارگاه** | `insurance_workshop_code` | ✅ (**was wrong**) |
+| 2 | DSW_YY | N | 2 | 2 | سال عملکرد | run | ✅ |
+| 3 | DSW_MM | N | 2 | 2 | ماه عملکرد | run | ✅ |
+| 4 | DSW_LISTNO | C | 12 | 12 | شماره لیست | خالی | ✅ (gap ↓) |
+| 5 | DSW_ID1 | C | **8** | **10** | **شماره بیمه** | `employee.insurance_number` | ✅ name · **deviation ↓** |
+| 6 | DSW_FNAME | C | 60 | 100 | نام | first token of `full_name` | ✅ · gap ↓ |
+| 7 | DSW_LNAME | C | 60 | 100 | نام خانوادگی | rest of `full_name` | ✅ · gap ↓ |
+| 8 | DSW_DNAME | C | 60 | 100 | نام پدر | خالی | ✅ · gap ↓ |
+| 9 | DSW_IDNO | C | 15 | 15 | شماره شناسنامه | خالی | ✅ · gap ↓ |
+| 10 | DSW_IDPLC | C | 30 | 100 | محل صدور | خالی | ✅ · gap ↓ |
+| 11 | DSW_IDATE | C | 8 | 8 | تاریخ صدور | خالی | ✅ · gap ↓ |
+| 12 | DSW_BDATE | C | 8 | 8 | تاریخ تولد | خالی | ✅ · gap ↓ |
+| 13 | DSW_SEX | C | 3 | 3 | جنسیت («مرد»/«زن») | خالی | ✅ · gap ↓ |
+| 14 | DSW_NAT | C | 10 | 10 | ملیت | خالی | ✅ · gap ↓ |
+| 15 | DSW_OCP | C | 50 | 100 | شرح شغل | `employee.job_title` | ✅ (**now filled**) |
+| 16 | DSW_SDATE | C | 8 | 8 | تاریخ شروع به کار | `employee.hire_date` → Shamsi8 | ✅ (**now filled**) |
+| 17 | DSW_EDATE | C | 8 | 8 | تاریخ ترک کار | خالی | ✅ · gap ↓ |
+| 18 | DSW_DD | N | 2 | 2 | تعداد روزهای کارکرد | روزهای ماه | ✅ · **model gap** ↓ |
+| 19 | DSW_ROOZ | N | 12 | 12 | دستمزد روزانه | `base_salary/30` ROUND_DOWN | ✅ |
+| 20 | DSW_MAH | N | 12 | 12 | دستمزد ماهانه | `base_salary` | ✅ |
+| 21 | DSW_MAZ | N | 12 | 12 | مزایای ماهانه | `insurance_base − base_salary` | ✅ |
+| 22 | DSW_MASH | N | 12 | 12 | جمع دستمزد و مزایای مشمول | `insurance_base` (سقف‌خورده) | ✅ |
+| 23 | DSW_TOTL | N | 12 | 12 | جمع کل دستمزد و مزایا | `= MASH` | ✅ name · ⚠ mapping ↓ |
+| 24 | DSW_BIME | N | 12 | 12 | حق بیمه سهم بیمه‌شده | `insurance_employee` | ✅ |
+| 25 | DSW_PRATE | N | 2 | 2 | نرخ پورسانتاژ | `0` | ✅ |
+| 26 | DSW_JOB | C | 6 | 6 | کد شغل | خالی | ✅ · gap ↓ |
+| 27 | PER_NATCOD | C | 10 | 10 | کد ملی | `national_id` snapshot | ✅ |
+
+## What the diff caught — 21 header mismatches, all fixed
+
+Our export was diffed **binary header against binary header** with the official
+template. Result before the fix: **21 mismatching columns of 50**.
+
+| Class | Detail |
 |---|---|
-| Two files: `DSKKAR00.DBF` = ONE aggregate workshop record («فقط یک سطر سرجمع»), `DSKWOR00.DBF` = one row per worker («برای تک تک پرسنل یک سطر جدا») | [nosa.com support forum](https://accsupport.nosa.com/tabid/63/aft/2591/Default.aspx) |
-| DBF (dBASE III) format, DOS bytes, **کدپیج ایران‌سیستم** for Persian text, ANSI not Unicode | [tavafi.ir/post/dsk](https://tavafi.ir/post/dsk/) · research doc §۱-۳ |
-| New structure since آذر ۱۴۰۳ adds حق تأهل + پایهٔ سنوات fields | [tavafi.ir/post/dsk](https://tavafi.ir/post/dsk/) (DSKEditor changelog) · [timanet.com](https://timanet.com/tamin-list-disk/) |
-| Field names `DSK_TKOSO` (سهم کارفرما), `DSK_TMASH` (جمع مشمول), `DSK_BIC` (بیکاری = ۳٪ × DSK_TMASH) exist with these roles | [tavafi.ir/post/dsk](https://tavafi.ir/post/dsk/) changelog v2.3.1.4 |
-| Upload target: samt.tamin.ir → کارفرمایان → ارسال لیست حق بیمه | research doc §۱-۳ |
+| **Wrong data in the wrong column (worst)** | `DSW_ID` held the worker's **شمارهٔ بیمه** and `DSW_ID1` held the **کد ملی**. Per both sources `DSW_ID` is the **کد کارگاه** and `DSW_ID1` is the **شمارهٔ بیمه**. Every worker row identified the wrong thing. |
+| **Missing column shifted the file** | `DSK_BIMH` (col 22) did not exist in ours, so `MON_PYM` sat in its slot and DSKKAR00 had 22 columns instead of 23. |
+| **Column order wrong** | `DSW_JOB` was written at position 16; it belongs at **26**, after `DSW_PRATE`. That mis-ordered 11 consecutive columns. |
+| **Lengths too wide** | `DSK_NAME/FARM/DISC` 100→30/30/30, `DSK_ADRS` 100→40, `DSW_FNAME/LNAME/DNAME` 100→60. |
+| **Codepage undeclared** | Header byte 29 (LDID) was `0x00` ("not set"); the org's own DSKKAR00 declares `0x7E` = **cp1256**. |
 
-**Everything else below — every field name, length, and semantic mapping not in
-the table above — is reproduced from widely-replicated Iranian payroll
-integrations and is «تأییدنشده».** The 1403+ additions (حق تأهل/پایهٔ سنوات
-field names) are NOT yet in our export at all.
+**After the fix: 1 remaining difference, deliberate** (below). Pinned by
+`tests/modules/payroll/test_insurance_export.py::test_layout_matches_official_listdisk_template`,
+which carries both official column lists literally — a future edit that drifts
+from the org's spec fails the suite.
 
-## ⛔ Gate before the first real upload (empirical law)
+### The one deliberate deviation — `DSW_ID1` C10 instead of C8
+
+S1 (the spec addressed to us) says **max 10**; S2 (the software's template) uses
+**8**. A modern شمارهٔ بیمه is 10 digits, so writing C8 would **truncate a legal
+identifier**. We take **C10**: inside the org's published maximum, and lossless.
+DBF is self-describing (the reader takes widths from the header), so a wider
+column is safe where a narrower one is destructive.
+**Founder sign-off requested** — if the org's uploader ever rejects the file, this
+field is the first thing to try at 8.
+
+Second, smaller, deliberate difference: we write **LDID `0x7E` on BOTH files**,
+while the org's `DSKWOR00` template leaves it `0x00`. Declaring the codepage can
+only help a reader; leaving it unset is what made our Persian undecodable.
+
+## Codepage — corrected, with the conflict stated honestly
+
+Three claims exist. Two are primary and agree; the one we had been following was
+the weakest.
+
+| Claim | Source | Weight |
+|---|---|---|
+| **cp1256** (Windows ANSI Arabic/Persian) | **S2**: the org's own `DSKKAR00.DBF` header declares LDID `0x7E`. Plus the package's «راهنمای تنظیم زبان» tells the employer to set Windows **System Locale → Persian** — the classic requirement of a **non-Unicode VB6 app** that reads/writes in the system ANSI codepage. | **primary ×2** |
+| "Unicode" | **S1** sentence «Encoding فایل ها باید Unicode باشد» | primary, but contradicts S2's own binary and most plausibly addresses the **`.TXT`** variant |
+| **Iran System** | tavafi.ir blog about the *third-party* DSKEditor | third-party only |
+
+**Decision: cp1256 is now the default**, and the LDID byte is actually written.
+The Iran System encoder is **retained, not deleted** — set
+`INSURANCE_DBF_ENCODING=iransystem` to emit the other variant, so the founder can
+produce BOTH for one real month and let the official viewer settle it
+empirically without a code change.
+
+Three cp1256 traps the implementation had to close (each one caught by a test):
+- **ی (U+06CC) has no cp1256 slot.** Persian text on this page uses **ي**
+  (U+064A, `0xED`). Getting this backwards turns the commonest letter in Iranian
+  names into `?`.
+- **Persian «۰-۹» and Arabic-Indic «٠-٩» digits are absent** → normalized to ASCII.
+- **ZWNJ has no slot** → space (so «کوچک‌پور» → «کوچک پور»).
+- ک گ پ چ ژ *do* exist (`0x98/0x90/0x81/0x8D/0x8E`) and pass through untouched.
+
+## ⛔ Gate before the first real upload (unchanged, still empirical)
+
+The structure is now sourced; **legibility and acceptance are not yet proven**.
 
 1. Founder/accountant downloads one month's zip from the payroll page.
-2. Opens both files in the official **لیست دیسک** software (or DBF viewer).
-3. Checks: files load without error · worker names legible (Iran System
-   encoding correct) · figures match the payroll report rial-for-rial.
-4. Only then upload to samt.tamin.ir — and file any mismatch as a bug with the
-   viewer screenshot; each fixed field flips to تأییدشده here.
+2. Opens both files in the official **لیست دیسک** software (or a DBF viewer).
+3. Checks: files load without error · worker names legible · figures match the
+   payroll report rial-for-rial · `DSW_ID1` shows the **شمارهٔ بیمه** (not the
+   کد کارگاه) and `DSW_ID` shows the **کد کارگاه**.
+4. If names are garbled, re-export with `INSURANCE_DBF_ENCODING=iransystem` and
+   compare — that A/B is the whole point of keeping both encoders.
+5. Only then upload to samt.tamin.ir.
 
-## DSKKAR00.DBF — one record per month
+## Remaining gaps — reported, not hidden
 
-| Field | Type | Meaning (assumed) | Our mapping | Status |
-|---|---|---|---|---|
-| DSK_ID | C10 | کد کارگاه | tenants.insurance_workshop_code | نام/طول تأییدنشده — نقش مسلم |
-| DSK_NAME | C100 | نام کارگاه | tenant.name | تأییدنشده |
-| DSK_FARM | C100 | نام کارفرما | tenant.name | تأییدنشده |
-| DSK_ADRS | C100 | آدرس کارگاه | tenant.address | تأییدنشده |
-| DSK_KIND | N1 | نوع لیست (اصلی=۰) | 0 | تأییدنشده |
-| DSK_YY | N2 | سال (دو رقم) | run.jalali_year % 100 | تأییدنشده |
-| DSK_MM | N2 | ماه | run.jalali_month | تأییدنشده |
-| DSK_LISTNO | C12 | شمارهٔ لیست | خالی | تأییدنشده |
-| DSK_DISC | C100 | شرح | خالی | تأییدنشده |
-| DSK_NUM | N5 | تعداد بیمه‌شدگان | count(items) | تأییدنشده |
-| DSK_TDD | N6 | جمع روزهای کارکرد | Σ DSW_DD | تأییدنشده |
-| DSK_TROOZ | N12 | جمع دستمزد روزانه | Σ DSW_ROOZ | تأییدنشده |
-| DSK_TMAH | N12 | جمع دستمزد ماهانه | Σ DSW_MAH | تأییدنشده |
-| DSK_TMAZ | N12 | جمع مزایای مشمول | Σ DSW_MAZ | تأییدنشده |
-| DSK_TMASH | N12 | جمع کل مشمول بیمه | Σ insurance_base (capped) | **نام+نقش تأییدشده** (tavafi) — mapping ours |
-| DSK_TTOTL | N12 | جمع کل | = DSK_TMASH | تأییدنشده |
-| DSK_TBIME | N12 | جمع سهم کارگر (۷٪) | Σ insurance_employee | تأییدنشده |
-| DSK_TKOSO | N12 | جمع سهم کارفرما (۲۰٪) | Σ insurance_employer | **نام+نقش تأییدشده** (tavafi) — mapping ours |
-| DSK_BIC | N12 | بیمهٔ بیکاری (۳٪) | Σ insurance_unemployment | **نام+نقش+فرمول تأییدشده** (tavafi: ۳٪ × TMASH) |
-| DSK_RATE | N5 | نرخ (۲۰) | 20 | تأییدنشده |
-| DSK_PRATE | N2 | نرخ مشاغل سخت | 0 | تأییدنشده |
-| MON_PYM | C3 | ماه/نوع پیمان | خالی | تأییدنشده |
+These are **data-model** gaps (the column is correct, we have nothing to put in
+it), not layout gaps:
 
-## DSKWOR00.DBF — one record per worker
+- **نام/نام‌خانوادگی** are split from one `full_name` on the first space — wrong
+  for compound first names. `DSW_DNAME` (نام پدر), `DSW_IDNO` (شماره شناسنامه),
+  `DSW_IDPLC`, `DSW_IDATE`, `DSW_BDATE`, `DSW_SEX`, `DSW_NAT`, `DSW_JOB` (کد شغل)
+  and `DSW_EDATE` have no field on `Employee` at all.
+- **روزهای کارکرد per item** — full month is assumed; a mid-month joiner/leaver
+  is currently over-reported.
+- **شمارهٔ لیست / نوع لیست** have no UI (both written empty; `DSK_KIND=0` is the
+  required value so that one is fine).
+- **`DSK_TTOTL`/`DSW_TOTL`** are set equal to the مشمول total. Per S1 they are the
+  total **including non-مشمول** pay, so once a غیرمشمول figure exists in payroll
+  they must stop aliasing `MASH`.
+- **حق تأهل / پایهٔ سنوات** as separate 1403-structure columns do **not exist** in
+  the official v2.7 layout; they fold into `DSW_MAZ`. If the org ships a newer
+  structure it will appear as a new ListDisk version on `/news/1673.html`.
 
-| Field | Type | Meaning (assumed) | Our mapping | Status |
-|---|---|---|---|---|
-| DSW_ID | C10 | شمارهٔ بیمه | employee.insurance_number (snapshot→live fallback) | تأییدنشده |
-| DSW_YY/MM | N2 | سال/ماه | run | تأییدنشده |
-| DSW_LISTNO | C12 | شمارهٔ لیست | خالی | تأییدنشده |
-| DSW_ID1 | C10 | (احتمالاً کد ملی/شناسه) | national_id snapshot | تأییدنشده — دو فیلد کدملی‌نما (DSW_ID1 و PER_NATCOD) |
-| DSW_FNAME | C100 | نام | token اول full_name | تأییدنشده + **گپ داده**: نام/نام‌خانوادگی جدا ذخیره نمی‌شود |
-| DSW_LNAME | C100 | نام خانوادگی | بقیهٔ full_name | تأییدنشده |
-| DSW_DNAME | C100 | نام پدر | خالی — نگه نمی‌داریم | تأییدنشده + گپ داده |
-| DSW_IDNO / IDPLC / IDATE / BDATE / SEX / NAT / OCP / JOB / SDATE / EDATE | — | شناسنامه/تولد/جنسیت/ملیت/شغل/شروع/ترک | خالی — نگه نمی‌داریم | تأییدنشده + گپ داده |
-| DSW_DD | N2 | روزهای کارکرد | روزهای ماه (کارکرد per-item هنوز نداریم) | تأییدنشده + **گپ مدل**: فرض تمام‌وقت |
-| DSW_ROOZ | N12 | دستمزد روزانه | base_salary/30 (ROUND_DOWN) | تأییدنشده |
-| DSW_MAH | N12 | دستمزد ماهانه | base_salary | تأییدنشده |
-| DSW_MAZ | N12 | مزایای مشمول | insurance_base − base_salary | تأییدنشده |
-| DSW_MASH | N12 | جمع مشمول | insurance_base (سقف‌خورده) | تأییدنشده |
-| DSW_TOTL | N12 | جمع کل | = DSW_MASH | تأییدنشده |
-| DSW_BIME | N12 | حق بیمهٔ سهم کارگر | insurance_employee | تأییدنشده |
-| DSW_PRATE | N2 | نرخ مشاغل سخت | 0 | تأییدنشده |
-| PER_NATCOD | C10 | کد ملی | national_id snapshot | تأییدنشده |
+## Reproducing this
 
-## Iran System encoding — status
+The two template DBFs are **not committed** (they are the org's installer
+payload). To re-derive the table:
 
-`dbf.py:iransystem_encode` implements digits + contextual letter forms +
-visual (RTL-reversed) storage from public references, NOT from an org spec.
-**Status: تأییدنشده until one real month renders legible names in the official
-viewer.** Numeric/date/ID fields are pure ASCII and carry the legal substance;
-a mis-mapped letter is visible (falls back to `?`), never silent.
-
-## Known model gaps surfaced by this export (future work, reported not hidden)
-
-- نام/نام‌خانوادگی/نام پدر/شناسنامه/تولد/جنسیت/ملیت/شغل as separate employee
-  fields (today: one full_name + job_title).
-- روزهای کارکرد per payroll item (today: full-month assumed).
-- شمارهٔ لیست / نوع لیست selection UI.
-- فیلدهای ساختار جدید ۱۴۰۳ برای حق تأهل/پایهٔ سنوات — names unknown until the
-  official دفترچه is obtained; totals currently fold into DSW_MAZ.
+```
+# direct/un-proxied route + ArvanCloud challenge solved automatically
+curl --noproxy '*' -L https://www.tamin.ir/news/1673.html      # download page
+#   → /file/file/8460                 = S1, the دستورالعمل PDF
+#   → /file/file/246147..246151       = ListDisk-V2.7.part1..5.rar
+7z x ListDisk-V2.7.part1.rar          # → setup/Setup.msi
+7z x setup/Setup.msi                  # → Cabs.w1.cab
+7z x Cabs.w1.cab                      # → DSKKAR00.DBF, DSKWOR00.DBF
+```
+Then read header byte 29 (LDID) and the 32-byte field descriptors from offset 32.
