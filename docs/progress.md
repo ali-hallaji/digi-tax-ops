@@ -2968,3 +2968,46 @@ is derived, so the سند vanished on regeneration — no manual journal surgery
   the payroll tabs.
 - Two private copies of the Jalali month-name tuple remain in the partners module; the
   shared `jalali_month_label` now exists for new callers.
+
+## 2026-08-04 — TAMIN DBF (empirical) + PRICING v2
+
+**PART 1 — لیست بیمه structure, from the org's own artifacts.** The layout doc
+rested on third-party blogs with almost every field «تأییدنشده». Replaced with
+two PRIMARY sources retrieved 2026-08-04: the org's «دستورالعمل تولید فایل های
+لیست بیمه» (tamin.ir/file/file/8460) and the binary header of the template
+DSKKAR00/DSKWOR00 DBFs inside the official ListDisk v2.7 installer.
+Header diff: **21 mismatching columns of 50 → 1 (deliberate)**. Worst finding:
+`DSW_ID`/`DSW_ID1` were swapped, so every worker row carried the شمارهٔ بیمه and
+کد ملی in the wrong columns. `DSK_BIMH` was missing entirely (22 cols not 23),
+`DSW_JOB` sat at position 16 instead of 26, six C fields were over-wide, and the
+codepage byte was never written. Encoding corrected Iran System → **cp1256**
+(the org's own template declares LDID 0x7E; its «راهنمای تنظیم زبان» requires
+Windows System Locale = Persian). Backend `f7fa29f`, doc `4b6cd58`.
+> Founder decision needed: `DSW_ID1` is C10 (the دستورالعمل's published maximum)
+> not the template's C8, so a 10-digit شمارهٔ بیمه is never truncated.
+> Note: tamin.ir publishes **v2.7 only** — there is no official v6; the v6.x
+> release notes belong to the third-party DSKEditor.
+
+**PART 3 — PRICING v2 (anchor + founding-member campaign).** Migration
+**`prc1405a001`** (apply on every deploy) then `python -m app.cli.seed_pricing_v2`.
+`module_prices` gains an annual anchor, a named date-bounded campaign and a
+source_note; `tenant_entitlements` gains the grandfathering price lock.
+`price_resolver.py` is the single decision point: LIST → CAMPAIGN → LOCK.
+Partner discount composes on top and commission still computes on the NET paid —
+re-pinned with a campaign live, since a campaign is a new gaming surface.
+Backend `be29591`, frontend `f8aa103`.
+
+**Not shipped this batch: PART 2 (intacode helper catalog).** Ran out of batch
+budget after PART 1 + PART 3; nothing was half-built and nothing was faked. It is
+still open and unstarted — see the follow-up note below.
+
+### Follow-ups opened
+- **PART 2 — intacode helper catalog**: import the public ISIC/intacode level-5
+  tables + published ضرایب اینتاکد, honest-labelled «فهرست کمکی», searchable
+  optional picker on the business/taxpayer profile. Not started.
+- Founder sign-off on the `DSW_ID1` C10 deviation.
+- The insurance-export encoding A/B (`INSURANCE_DBF_ENCODING=iransystem`) must be
+  run in the official لیست دیسک viewer before the first real upload.
+- The auth rate limiter (`authrl:*`) trips during a FULL harness run and fails
+  `checkout-partner-discount` with a 429. Not a product bug, but the harness
+  should clear or bypass it between specs rather than look red.
