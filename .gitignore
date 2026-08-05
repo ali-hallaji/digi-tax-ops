@@ -29,6 +29,14 @@ qa-screens/
 .reseed-snapshots/
 *.sql.gz
 
+# Third-party reference printouts (another company's real books: سند/فاکتور/کاردکس).
+# LOCAL ONLY — they carry a real شرکت's شناسهٔ ملی، کد اقتصادی، کد ملیِ خریدار،
+# نشانی و تلفن، and git history is forever. Everything we actually need from them
+# (anatomy, column lists, the pinned moving-average test) is extracted into the
+# COMMITTED docs/inventory_reference_notes.md + docs/invoice_print_gap_audit.md.
+# Same rule as _design_reference/.
+docs/reference_outputs/
+
 # STUFFID catalog archives (~150MB compressed / ~2GB raw) — NEVER in git.
 # The convention (naming, download, packing) is documented in data/stuffid/README.md,
 # which IS committed. Operators drop the archive; the api imports it at boot.
