@@ -71,6 +71,35 @@ Altcha PoW solved by the real widget — never disable captcha for the harness).
 Artifacts land in `qa-screens/harness-<ts>/`. A red spec blocks the deploy — fix
 first, never "deploy anyway".
 
+> **`--base-url` MUST be `https://dev.digiinvoice.ir` — never the apex (2026-08-07).**
+> The two dev origins are not interchangeable:
+> | origin | serves the app | serves `/api` | CORS on the API |
+> |---|---|---|---|
+> | `dev.digiinvoice.ir` | yes | yes | **allowed** |
+> | `digiinvoice.ir` (apex) | yes | **no** — `/api/*` falls through to the SPA | **blocked** |
+>
+> Point the harness at the apex and the browser loads the app fine, then every API
+> call is CORS-blocked, login never completes, and **all 25 specs time out at exactly
+> 1.0m** — a uniform red that looks like a total outage while the code is perfect.
+> Verify the origin before believing a broadly-red harness:
+> ```bash
+> curl -s -D - -o /dev/null -X OPTIONS https://dev.digiinvoice.ir/api/v1/auth/otp/request \
+>   -H "Origin: https://dev.digiinvoice.ir" -H "Access-Control-Request-Method: POST" \
+>   | grep -i '^access-control-allow-origin'      # must echo the origin back
+> ```
+> Two traps that wasted a cycle here, both worth remembering:
+> - `curl -o /dev/null -w '%{http_code}'` against the apex returns **200 for any
+>   `/api/...` path** — it is the SPA's HTML, not the API. Always inspect the BODY
+>   (`/health/version` must return JSON) before concluding an API is up or down.
+> - `/api/v1/health` does not exist; backend health is `/health/version` at the
+>   ROOT. A 404 there means the path is wrong, not that the API is down.
+>
+> Diagnostic order for a **broadly** red harness (every spec, uniform timeout):
+> **(1)** the `--base-url` origin + its CORS, **(2)** `df -h /` on the server (a full
+> disk crash-loops postgres — 2026-08 lesson), **(3)** `docker compose ps`. Do not
+> change server config until one of these is proven — a wrong guess here edits `.env`
+> and rebuilds an image that was never at fault.
+
 ### Repo cleanliness
 
 Check all three repos before pulling or deploying:
