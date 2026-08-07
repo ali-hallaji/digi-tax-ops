@@ -139,3 +139,12 @@ NEXT — not done by this script, deliberately:
   4. Install the nightly backup timer (docs/server_deploy_runbook.md).
   5. The admin created above must change its bootstrap password at first login.
 EOF
+
+# ── Disk hygiene ────────────────────────────────────────────────────────────
+# A --no-cache build leaves the previous image dangling. Repeated deploys filled
+# a 38G dev disk to 100% and put postgres into a checkpoint crash-loop
+# (runbook § فضای دیسک). Volumes are never touched — only unused images older
+# than 6h, which can no longer be anything this deploy needs.
+echo "→ pruning unused images (volumes untouched)"
+docker image prune -af --filter 'until=6h' >/dev/null 2>&1 || true
+df -h / | tail -1

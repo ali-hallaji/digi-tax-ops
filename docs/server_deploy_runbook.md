@@ -1077,3 +1077,34 @@ potentially mid-way through recreating multiple services.
 
 **هنگام مهاجرت به تولید، این فهرست باید خالی شود** (چک‌لیست:
 `docs/production_handover_checklist.md` بند ۲).
+
+## ⚠️ فضای دیسک — `--no-cache` سرور را پر می‌کند (حادثهٔ ۱۴۰۵/۰۵/۱۷)
+
+**چه شد:** چند بار `docker compose build --no-cache` پشت‌سرهم، ۵۲ ایمیج و ۲۴٫۱ گیگ
+لایهٔ بی‌استفاده جا گذاشت. دیسک ۳۸ گیگی **۱۰۰٪** پر شد و پستگرس وارد حلقهٔ کرش شد:
+
+```
+PANIC: could not write to file "pg_logical/replorigin_checkpoint.tmp":
+       No space left on device
+```
+
+نشانهٔ بیرونی گمراه‌کننده است: سایت ۲۰۰ می‌دهد و کانتینرها Up‌اند، ولی **هر اسپکِ
+داده‌محورِ هارنس تایم‌اوت می‌شود**. اگر هارنس یکجا و گسترده قرمز شد، **اول
+`df -h /` را ببینید**، نه کد را.
+
+**درمان (بی‌خطر — هیچ ولیومی دست نمی‌خورد):**
+```bash
+df -h /                                   # اول تشخیص
+docker system df                          # چقدرش قابل‌بازیافت است؟
+docker image prune -af --filter 'until=6h'   # فقط ایمیج‌های بی‌استفادهٔ کهنه
+docker compose restart postgres           # پستگرس خودش WAL را replay می‌کند
+```
+در حادثهٔ واقعی ۲۰٫۸۸ گیگ آزاد شد و پستگرس سالم بالا آمد؛ **هیچ داده‌ای از دست
+نرفت** (۱۵ مستأجر، ۱۰۷۲ فاکتور، ۱۸۱۵ سند سالم ماندند).
+
+> ❌ **هرگز `docker system prune --volumes`** — ولیومِ `postgres_data` کلِ دیتابیس
+> dev است. فقط `image prune` با فیلتر زمانی.
+
+**قاعدهٔ دائمی:** بعد از هر استقراری که `--no-cache` داشته،
+`docker image prune -af --filter 'until=6h'` را بزنید. `--no-cache` لازم است (تلهٔ
+لایهٔ کش‌شدهٔ `COPY ./app`)، ولی بهایش زباله است و زباله باید همان‌جا جمع شود.
