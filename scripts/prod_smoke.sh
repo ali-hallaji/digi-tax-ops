@@ -111,6 +111,26 @@ echo "      docker compose exec -T postgres psql -U digitax -d digitax \\"
 echo "        -c 'SELECT count(*) FROM tax_units;'   # expect 102 (RC_UMGS v1.18)"
 
 echo
+echo "4. Production config (the two settings that fail silently)"
+# Read from the RUNNING api container, not the file on disk: what matters is
+# what the process actually loaded.
+allowlist=$(docker compose exec -T api python -c \
+  'from app.core.config import settings; print(settings.sms_allowlist or "")' 2>/dev/null | tr -d '\r\n')
+if [ -n "$allowlist" ]; then
+  bad "SMS_ALLOWLIST is «$allowlist» — production MUST be empty, or every real customer's OTP is silently suppressed (exactly what hid the dev blocker for weeks)"
+else
+  ok "SMS_ALLOWLIST empty — every number receives real SMS"
+fi
+
+debug=$(docker compose exec -T api python -c \
+  'from app.core.config import settings; print(str(settings.debug).lower())' 2>/dev/null | tr -d '\r\n')
+if [ "$debug" = "false" ]; then
+  ok "DEBUG=false"
+else
+  bad "DEBUG is «$debug» — production must be false, or OTP codes leak into API responses"
+fi
+
+echo
 echo "────────────────────────────────────────────"
 echo "  passed: $pass    failed: $fail"
 if [ "$fail" -gt 0 ]; then
