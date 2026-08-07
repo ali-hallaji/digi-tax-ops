@@ -293,3 +293,25 @@ if [ -n "$fe_sha" ] && [ "$fe_sha" != "null" ]; then
 else
   info "Deploy-verify: /version.json unavailable — skipping frontend SHA check"
 fi
+
+# The SHA check above passes even when the bundle is unusable: VITE_API_BASE_URL is
+# baked in at BUILD time from the server .env, not from the commit. A stale absolute
+# host there ships a correct-SHA frontend whose every API call 404s (2026-08-07: the
+# .env still held a pre-cutover host; login hung and the whole harness timed out).
+# The base must stay RELATIVE — nginx serves app and API on one origin.
+fe_login_html="$(curl -sS "${FRONTEND_BASE_URL%/}/login" 2>/dev/null || true)"
+if [ -n "$fe_login_html" ]; then
+  api_base_leak=""
+  for asset in $(printf '%s' "$fe_login_html" | grep -oE '"/[^"]*\.js"' | tr -d '"' | sort -u); do
+    leak="$(curl -sS "${FRONTEND_BASE_URL%/}${asset}" 2>/dev/null \
+      | grep -oE 'https?://[a-zA-Z0-9._:-]*/api/v1' | sort -u | head -1)"
+    if [ -n "$leak" ]; then api_base_leak="$leak ($asset)"; break; fi
+  done
+  if [ -n "$api_base_leak" ]; then
+    fail "Deploy-verify: bundle hardcodes ${api_base_leak} — VITE_API_BASE_URL must be the relative /api/v1"
+  else
+    pass "Deploy-verify: frontend bundle uses a relative /api/v1"
+  fi
+else
+  info "Deploy-verify: /login unavailable — skipping baked-API-base check"
+fi

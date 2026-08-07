@@ -489,6 +489,43 @@ FE_SHA="$(curl -fsS localhost:3000/version.json | python3 -c 'import sys,json;pr
 echo "OK deploy-verification: api=$SERVED_SHA frontend=$FE_SHA alembic=$CODE_HEAD"
 ```
 
+### The SHA guard is NOT enough — also assert the BAKED API BASE (2026-08-07)
+
+A frontend image can carry the **right commit** and still be **unusable**, because
+`VITE_API_BASE_URL` is baked in at build time from the server's `.env` — not from the
+commit. The SHA guard above passes happily while every API call in the browser 404s.
+
+**What happened.** The server `.env` still held a pre-cutover
+`VITE_API_BASE_URL=https://dev.digiinvoice.ir/api/v1`. The running image predated that
+value, so the site worked. A routine `docker compose build --no-cache frontend` then
+baked the stale host into the new bundle: `https://digiinvoice.ir/api/v1/health` → 200,
+but `https://dev.digiinvoice.ir/api/v1/health` → **404**. Result: login hung, and the
+whole harness went red at exactly 1.0m per spec — with the correct SHA serving and the
+disk healthy, so both existing red-harness heuristics pointed the wrong way.
+
+**The rule.** `VITE_API_BASE_URL` must be the **relative** `/api/v1`. nginx serves the
+app and the API on the same origin, so a relative base is domain-agnostic and survives
+any future domain change; an absolute host is a landmine armed for the next rebuild.
+This matches the compose default (`${VITE_API_BASE_URL:-/api/v1}`).
+
+Assert it after any frontend rebuild — a served bundle must contain **no** absolute
+`/api/v1` host:
+
+```bash
+BASE=https://digiinvoice.ir          # the origin the browser actually uses
+for f in $(curl -fsS "$BASE/login" | grep -oE '"/[^"]*\.js"' | tr -d '"'); do
+  HOST="$(curl -fsS "$BASE$f" | grep -oE 'https?://[a-zA-Z0-9._:-]*/api/v1' | sort -u)"
+  [ -n "$HOST" ] && { echo "DEPLOY FAIL: bundle $f hardcodes $HOST — expected a relative /api/v1"; exit 1; }
+done
+echo "OK api-base: bundle uses a relative /api/v1"
+```
+
+> Diagnostic order when the harness goes **broadly** red (every spec, uniform timeout):
+> 1. `df -h /` on the server (a full disk crash-loops postgres — 2026-08 lesson);
+> 2. `docker compose ps` — all services `Up`/healthy;
+> 3. **the baked API base above** — a green SHA and a healthy stack still can't save a
+>    bundle that is calling the wrong host.
+
 `GET /health/version` returns the git SHA baked into the api image + that image's alembic
 head. `GET /version.json` (frontend) returns the frontend build SHA. If either SHA differs
 from the just-deployed HEAD, or the image's migration graph doesn't match the DB, a stale
