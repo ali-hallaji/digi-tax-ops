@@ -3397,3 +3397,44 @@ fake-session baseline) / 9 skipped**.
 measured layouts in `docs/tamin_dbf_layout.md`. v6 confirmed a strict superset
 (+2 columns per file). `DSW_ID1` is C10 in both; the viewer settles whether the
 template's C8 is binding, and nothing but the viewer can.
+
+### Harness specs — three latent bugs the reboot exposed (frontend `11f0586`, `4970eaa`, `ab88aab`)
+
+None was a product defect. All three were specs that had been passing **by
+accident**, and the batch's own interruptions turned them red — which is exactly
+how a green harness lies.
+
+**1. `archive-and-delete-protection` probed the wrong machine.** Its direct-API
+call defaulted to a hardcoded `http://localhost:8000/api/v1`, so a
+`--base-url https://dev…` run asserted against the *developer's local API*, not
+dev. It only ever passed because a local stack happened to be running; with the
+stack down after a reboot it failed `ECONNREFUSED` while dev was perfectly
+healthy — indistinguishable from a product regression. Now derived from the
+run's own `baseURL`: an assertion about dev must be made against dev.
+
+**2. `17-insurance-export` kept its cure behind the patient.** §3.5 knows how to
+delete empty runs and rebuild one, but step 1 clicks a run row *before* that.
+A run interrupted between §3.5's delete and its rebuild leaves the world with
+zero runs, and the spec can then never reach its own repair. Fixed by making
+step 1 self-heal too.
+
+**3. …and the repair itself had two blind spots**, each found by running the
+spec alone against dev rather than reasoning about it:
+- A rebuild populates from whoever is **currently active**. Spec 18
+  (تسویه‌حساب) deactivates someone by design, so an interrupted run leaves
+  nobody active and the rebuild silently produces a 0-person run — the
+  populated-row assertion then fails against a run it was never about.
+- A month may already hold a 0-person run whose **row label carries no «نفر»**.
+  Invisible to the locator, entirely visible to the server, which answers the
+  create with a 409 «سند این ماه قبلاً ساخته شده»; the dialog then just sits
+  there until timeout. Step 1 now clears empty runs before creating, like §3.5.
+
+Dev world confirmed healed through the product's own paths (`payroll_runs`
+1405/5 back to `items=1`) — no hand-edited rows, no reseed.
+
+**The transferable lesson.** A self-healing spec must place its heal *before*
+its first consumer, and must be able to run in a world where **every**
+precondition is absent — not merely a drifted one. The rate-limiter interaction
+is the same shape: the limiter is a real defence and was never touched; probing
+dev auth by hand while the harness runs simply consumes the same budget, so
+diagnostics must not run alongside a harness run.
