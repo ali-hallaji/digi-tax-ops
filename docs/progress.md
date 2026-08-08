@@ -3311,3 +3311,89 @@ URL. Full local run: **23 passed, 2 skipped, 0 failed**.
 
 **Still NOT shipped: PART C (intacode helper catalog).** Second batch running
 out of budget on it. Unstarted, nothing faked. It remains the top follow-up.
+
+---
+
+## 2026-08-08 — GUIDE AUDIT (completed) + INVOICE PRINT P1 + INSURANCE FILE
+
+The three items that had slipped across earlier batches, closed in order.
+
+### 1. Guide audit — the one that slipped three times
+
+Audited in **three directions**, each with a mechanical check rather than a
+spot-read, because "I read the guides and they look fine" is what let this slip
+three times:
+
+**(a) Stale — describing what is no longer true. One real find.**
+`S11-01` told the merchant a **paid** payroll run «اصلاً برنمی‌گردد». The
+2026-08-07 «بازگرداندن به پیش‌نویس» button made exactly that possible. The guide
+was actively telling a merchant a shipped capability did not exist — the worst
+class of drift, and the class `prose-drift` structurally cannot catch (it checks
+that quoted labels EXIST, and «بازگشت به پیش‌نویس» does exist — it is the
+*approved*-state button, a different control). Pitfall corrected + the reversal
+flow written up (it reverses the payment AND the month's loan instalment).
+
+**(b) Missing — nothing for surfaces shipped in the last month.** Four sidebar
+destinations had no guide that so much as named them, plus five in-page features
+from the last month:
+
+| gap | where | fix |
+|---|---|---|
+| «ورود از نرم‌افزار» | merchant sidebar → `/app/accounting/import` | new `S9-21` |
+| «ارسال‌های مودیان» | admin sidebar | new `moadian-submissions-log` |
+| «شناسه‌های کالا و خدمت» | admin sidebar | new `stuff-catalog-upload` |
+| «تسویهٔ همکاران» | admin sidebar | added to existing `partner-commission-payout` — same job, second entry point, so NOT a duplicate scenario |
+| «قیمت رسمی» / campaign / renewal lock | pricing v2 (08-04) | new `S10-06` |
+| «تخفیف همکار» on the merchant's own invoice | checkout (08-02) | new `S10-07` — it was documented for partners and admins, never for the merchant who SEES it |
+| «کد شغل» + «اطلاعات لیست بیمه» columns | personnel form (08-04) | added to `S11-01` |
+| «فهرست کمکی کد فعالیت (اینتاکد)» | tax-lens (08-05) | added to `S7-08` |
+| وام و مساعده / بازگرداندن به پیش‌نویس | payroll | added to `S11-01` |
+
+**(c) Describing what no longer exists — clean.** Every `/app` and `/admin` link
+in every guide file resolves to a real route (95 routes derived from the route
+tree and matched, dynamic segments included). Nothing to remove.
+
+### The durable artifact — `coverage.test.ts`, the third guard
+
+The other two guards can only ever check text that ALREADY EXISTS:
+
+| guard | proves | blind to |
+|---|---|---|
+| `no-drift` | the guides' own ids/links resolve | — |
+| `prose-drift` | every QUOTED label still exists | a feature nobody wrote about |
+| **`coverage`** (new) | every sidebar destination is named somewhere | in-page controls |
+
+Run against the pre-fix tree it fails with exactly the four destinations in the
+table above; it passes now. It carries a `checked > 40` floor so a sidebar
+refactor cannot make it vacuously green — the precise way a guard rots into
+decoration. `ALLOWED_UNDOCUMENTED` has one entry (the guide's own route) and
+requires a stated reason. Frontend unit suite: **75 passed / 0 failed**.
+
+Deliberately NOT claimed: this is a floor, not a ceiling. No honest automatic
+rule exists for "is this button explained?", so in-page coverage is still human
+work.
+
+### 2. Invoice print — the three priority-1 gaps (backend `c8ff182`)
+
+«جمع به حروف» · «شرایط و نحوهٔ تسویه» · «مهر و امضا». Detail in
+`docs/invoice_print_gap_audit.md` (table now marked closed). Two decisions worth
+keeping:
+
+- The words reuse the payslip's `number_to_persian_words` rather than growing a
+  second speller — one number-to-words implementation, one place to be wrong.
+  ROUND_DOWN throughout: a printed figure must never exceed the real debt.
+- Settlement is DERIVED (`payment_status` + `due_date` + balance on the same
+  total − returned − paid basis the status uses) and the **whole block is
+  omitted when the status is unknown**. Printing a guessed «نقدی» would misstate
+  a real debt; printing nothing does not.
+
+Proven on real «ترازپیشه دیبا» invoices in all three settlement states plus PDF,
+not only unit tests. 10 new tests. Suite **1664 passed / 5 failed (documented
+fake-session baseline) / 9 skipped**.
+
+### 3. Insurance file — built and waiting on the viewer
+
+`~/digiinvoice-listdisk-tarazpishe-diba-1405-07.zip` — مهر ۱۴۰۵, both versions,
+measured layouts in `docs/tamin_dbf_layout.md`. v6 confirmed a strict superset
+(+2 columns per file). `DSW_ID1` is C10 in both; the viewer settles whether the
+template's C8 is binding, and nothing but the viewer can.

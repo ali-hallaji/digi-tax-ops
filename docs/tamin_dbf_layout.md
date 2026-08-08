@@ -226,6 +226,33 @@ The structure is now sourced; **legibility and acceptance are not yet proven**.
    compare — that A/B is the whole point of keeping both encoders.
 5. Only then upload to samt.tamin.ir.
 
+### The file for that gate is BUILT and waiting (۱۴۰۵/۰۵/۱۷)
+
+A real month is generated and sitting on the founder's machine — the gate is
+now waiting on one human action, not on any code:
+
+```
+~/digiinvoice-listdisk-tarazpishe-diba-1405-07.zip
+  README.txt
+  v2.7/DSKKAR00.DBF   v2.7/DSKWOR00.DBF
+  v6/DSKKAR00.DBF     v6/DSKWOR00.DBF
+```
+
+«ترازپیشه دیبا» · مهر ۱۴۰۵ · کد کارگاه `0148430838` · ۱ رکورد کارگاه + ۴ بیمه‌شده.
+Both versions ship together because the org has both in circulation, and the
+structural difference is now measured rather than assumed:
+
+| | DSKKAR00 fields | DSKWOR00 fields | DSKWOR00 reclen |
+|---|---|---|---|
+| v2.7 | 23 | 27 | 449 |
+| v6 | 25 | 29 | 471 |
+
+v6 is a strict superset (+2 columns on each file), which matches the source
+reading. `DSW_ID1` is C10 in **both** — that is the one deliberate deviation
+(§ below), and it is exactly what the viewer settles: a 10-digit شمارهٔ بیمه
+does not fit the template's C8, so either the viewer accepts C10 or the org
+truncates and we need a different answer. No amount of reading decides it.
+
 ## Remaining gaps — reported, not hidden
 
 These are **data-model** gaps (the column is correct, we have nothing to put in
