@@ -95,10 +95,39 @@ first, never "deploy anyway".
 >   ROOT. A 404 there means the path is wrong, not that the API is down.
 >
 > Diagnostic order for a **broadly** red harness (every spec, uniform timeout):
-> **(1)** the `--base-url` origin + its CORS, **(2)** `df -h /` on the server (a full
-> disk crash-loops postgres — 2026-08 lesson), **(3)** `docker compose ps`. Do not
-> change server config until one of these is proven — a wrong guess here edits `.env`
-> and rebuilds an image that was never at fault.
+> **(1)** the `--base-url` origin + its CORS, **(2)** the auth rate limiter (below),
+> **(3)** `df -h /` on the server (a full disk crash-loops postgres — 2026-08 lesson),
+> **(4)** `docker compose ps`. Do not change server config until one of these is
+> proven — a wrong guess here edits `.env` and rebuilds an image that was never at
+> fault.
+
+#### Drain the auth limiter BEFORE a dev harness run (2026-08-08)
+
+The harness signs in ~25 times from one IP. That fits inside the limiter's budget
+on its own, but it has **no headroom to share**. Anything else authenticating
+against dev at the same time — a `curl` login while diagnosing, a single-spec
+re-run started too soon, a previous run still winding down — pushes it over, and
+`authrl:block:ip:<addr>` then blocks the harness itself. Its retries keep renewing
+the block, so a run poisoned at spec 3 stays poisoned to the end and reads as a
+catastrophic regression.
+
+**The limiter is a real defence — never clear the keys.** They expire in seconds.
+Wait for them:
+
+```bash
+ssh $DIGI_TEST_SSH "cd $DIGI_TEST_PATH && \
+  until [ \"\$(docker compose exec -T redis redis-cli --scan --pattern 'authrl:*' | wc -l)\" -eq 0 ]; \
+  do sleep 5; done; echo drained"
+```
+
+Rules that follow from it:
+- Start a full run only from **zero** `authrl:*` keys, and drain again **between**
+  consecutive runs.
+- **Never probe dev auth while a run is in flight.** Read-only `psql`/`redis-cli`
+  and unauthenticated `curl` are fine; a login is not. If you need a token to check
+  something, wait for the run to finish.
+- A block is not a product bug and not a reason to touch Redis. Diagnose the
+  ordering, not the limiter.
 
 ### Repo cleanliness
 
